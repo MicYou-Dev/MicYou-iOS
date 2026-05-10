@@ -85,6 +85,9 @@ jobs:
             ls -la iosApp/build/bin/iosArm64/debug/ 2>/dev/null || echo "No debug dir"
             ls -la iosApp/build/libs/ 2>/dev/null || echo "No libs dir"
           fi
+          echo ""
+          echo "=== Verifying copied framework ==="
+          ls -la iosApp/build/libs/ 2>/dev/null || echo "No libs directory"
 
       - name: Install XcodeGen
         run: |
@@ -106,6 +109,17 @@ jobs:
           CODE_SIGNING_ALLOWED: "NO"
         run: |
           cd iosApp
+          echo "=== Verifying framework exists before build ==="
+          ls -la build/libs/ 2>/dev/null || echo "No libs directory found"
+          if [ -f "build/libs/iosApp.framework/iosApp" ]; then
+            echo "Framework binary found, size: $(ls -lh build/libs/iosApp.framework/iosApp | awk '{print $5}')"
+          else
+            echo "ERROR: Framework binary not found!"
+            ls -laR build/libs/ 2>/dev/null || echo "No libs directory"
+            exit 1
+          fi
+          echo ""
+          echo "=== Starting Xcode build ==="
           xcodebuild -project iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Debug \
@@ -114,7 +128,9 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            FRAMEWORK_SEARCH_PATHS="$(pwd)/build/libs" \
+            OTHER_LDFLAGS="-F $(pwd)/build/libs -framework iosApp" \
+            build 2>&1 | tee build/xcode_build.log
 
       - name: Find .app Bundle
         id: find-app
