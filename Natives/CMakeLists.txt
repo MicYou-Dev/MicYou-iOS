@@ -10,6 +10,7 @@ set(MICYOU_SOURCES
     Audio/AudioBufferQueue.m
     Network/TransportClient.m
     Network/Protocol.m
+    Utils/MicYouLogger.m
 )
 
 set(MICYOU_HEADERS
@@ -21,6 +22,7 @@ set(MICYOU_HEADERS
     Audio/AudioBufferQueue.h
     Network/TransportClient.h
     Network/Protocol.h
+    Utils/MicYouLogger.h
 )
 
 add_executable(MicYou MACOSX_BUNDLE
@@ -59,6 +61,7 @@ target_include_directories(MicYou PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ViewControllers
     ${CMAKE_CURRENT_SOURCE_DIR}/Audio
     ${CMAKE_CURRENT_SOURCE_DIR}/Network
+    ${CMAKE_CURRENT_SOURCE_DIR}/Utils
 )
 
 set_property(TARGET MicYou PROPERTY

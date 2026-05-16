@@ -1,5 +1,6 @@
 #import "TransportClient.h"
 #import "Protocol.h"
+#import "MicYouLogger.h"
 #import <CFNetwork/CFNetwork.h>
 #import <UIKit/UIKit.h>
 #import <sys/socket.h>
@@ -43,6 +44,8 @@
 
     self.host = host;
     self.port = port;
+    
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"TransportClient: Connecting to %@:%d", host, port]];
 
     dispatch_async(self.networkQueue, ^{
         CFReadStreamRef readStream = NULL;
@@ -50,6 +53,7 @@
         CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)host, port, &readStream, &writeStream);
 
         if (!readStream || !writeStream) {
+            [[MicYouLogger sharedLogger] logError:@"TransportClient: Failed to create socket pair"];
             if (completion) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     completion(NO);
@@ -74,6 +78,7 @@
 
         if (self.outputStream.streamStatus == NSStreamStatusOpen) {
             self.isConnected = YES;
+            [[MicYouLogger sharedLogger] log:@"TransportClient: TCP connected successfully"];
             [self sendHello];
             [self startKeepAliveTimer];
             if (completion) {
@@ -87,6 +92,7 @@
                 });
             }
         } else {
+            [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:@"TransportClient: Failed to open stream, status=%ld", (long)self.outputStream.streamStatus]];
             [self cleanupStreams];
             if (completion) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -292,8 +298,11 @@
 }
 
 - (void)handleMessageWithType:(uint32_t)type payload:(NSData *)payload {
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"TransportClient: Received message type=%u, payload=%lu bytes", type, (unsigned long)payload.length]];
+    
     switch (type) {
         case MicYouMessageTypeAck: {
+            [[MicYouLogger sharedLogger] log:@"TransportClient: Received ACK"];
             [self handleAckPayload:payload];
             break;
         }
@@ -312,7 +321,10 @@
 }
 
 - (void)handleAckPayload:(NSData *)payload {
-    if (payload.length < 5) return;
+    if (payload.length < 5) {
+        [[MicYouLogger sharedLogger] logError:@"TransportClient: ACK payload too short"];
+        return;
+    }
 
     const uint8_t *bytes = payload.bytes;
     BOOL success = bytes[0] != 0;
@@ -325,9 +337,12 @@
     memcpy(&msgLen, &bytes[5], sizeof(msgLen));
     msgLen = ntohl(msgLen);
 
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"TransportClient: ACK success=%d, udpPort=%u", success, (unsigned int)udpPort]];
+
     if (success && udpPort > 0) {
         self.udpPort = udpPort;
         [self setupUDPSocket:self.host port:udpPort];
+        [[MicYouLogger sharedLogger] log:@"TransportClient: UDP socket setup complete"];
     }
 }
 
