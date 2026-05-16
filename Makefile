@@ -96,7 +96,13 @@ native:
 
 kmp:
 	echo '[MicYou v$(VERSION)] kmp - start'
-	cd $(SOURCEDIR)/KMP && ./gradlew :linkDebugFrameworkIosArm64 || ./gradlew :linkReleaseFrameworkIosArm64
+	if [ -f $(SOURCEDIR)/KMP/gradlew ]; then \
+		cd $(SOURCEDIR)/KMP && ./gradlew :linkDebugFrameworkIosArm64 || ./gradlew :linkReleaseFrameworkIosArm64; \
+	elif command -v gradle >/dev/null 2>&1; then \
+		cd $(SOURCEDIR)/KMP && gradle :linkDebugFrameworkIosArm64 || gradle :linkReleaseFrameworkIosArm64; \
+	else \
+		echo 'Warning: Gradle not found, skipping KMP build'; \
+	fi
 	mkdir -p $(WORKINGDIR)/MicYou.app/Frameworks
 	cp -R $(SOURCEDIR)/KMP/build/bin/iosArm64/*Framework/MicYouProtocol.framework $(WORKINGDIR)/MicYou.app/Frameworks/ || true
 	echo '[MicYou v$(VERSION)] kmp - end'
