@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.16)
+project(MicYou VERSION 1.0.0 LANGUAGES C OBJC)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_OBJC_STANDARD 11)
+set(CMAKE_OBJC_STANDARD_REQUIRED ON)
+
+if(NOT DEFINED CONFIG_BRANCH)
+    set(CONFIG_BRANCH "unknown")
+endif()
+if(NOT DEFINED CONFIG_COMMIT)
+    set(CONFIG_COMMIT "unknown")
+endif()
+if(NOT DEFINED CONFIG_RELEASE)
+    set(CONFIG_RELEASE 0)
+endif()
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum iOS deployment version")
+set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures")
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+add_subdirectory(Natives)

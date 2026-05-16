@@ -1,0 +1,4 @@
+# Placeholder for LaunchScreen.storyboardc
+# This directory should contain compiled storyboard files.
+# Run: ibtool --compile Natives/Resources/Base.lproj/LaunchScreen.storyboardc Natives/Resources/LaunchScreen.storyboard
+# Or use xcrun ibtool on macOS.

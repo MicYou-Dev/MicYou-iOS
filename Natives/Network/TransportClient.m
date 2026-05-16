@@ -1,0 +1,334 @@
+#import "TransportClient.h"
+#import "Protocol.h"
+#import <CFNetwork/CFNetwork.h>
+
+@interface TransportClient ()
+
+@property (nonatomic, strong) NSInputStream *inputStream;
+@property (nonatomic, strong) NSOutputStream *outputStream;
+@property (nonatomic, strong) dispatch_queue_t networkQueue;
+@property (nonatomic, assign, readwrite) BOOL isConnected;
+@property (nonatomic, strong, readwrite) NSString *host;
+@property (nonatomic, assign, readwrite) int port;
+@property (nonatomic, strong) NSMutableData *readBuffer;
+@property (nonatomic, assign) CFSocketRef udpSocket;
+@property (nonatomic, assign) int udpPort;
+@property (nonatomic, assign) uint32_t sequenceCounter;
+@property (nonatomic, strong) NSTimer *keepAliveTimer;
+
+@end
+
+@implementation TransportClient
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _networkQueue = dispatch_queue_create("com.lanrhyme.micyou.network", DISPATCH_QUEUE_SERIAL);
+        _readBuffer = [[NSMutableData alloc] init];
+        _udpPort = 0;
+        _sequenceCounter = 0;
+    }
+    return self;
+}
+
+- (void)connectToHost:(NSString *)host port:(int)port completion:(void (^)(BOOL success))completion {
+    if (self.isConnected) {
+        if (completion) completion(YES);
+        return;
+    }
+
+    self.host = host;
+    self.port = port;
+
+    dispatch_async(self.networkQueue, ^{
+        CFReadStreamRef readStream = NULL;
+        CFWriteStreamRef writeStream = NULL;
+        CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)host, port, &readStream, &writeStream);
+
+        if (!readStream || !writeStream) {
+            if (completion) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(NO);
+                });
+            }
+            return;
+        }
+
+        self.inputStream = (__bridge_transfer NSInputStream *)readStream;
+        self.outputStream = (__bridge_transfer NSOutputStream *)writeStream;
+
+        [self.inputStream setDelegate:self];
+        [self.outputStream setDelegate:self];
+
+        [self.inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+
+        [self.inputStream open];
+        [self.outputStream open];
+
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode, 2.0, false);
+
+        if (self.outputStream.streamStatus == NSStreamStatusOpen) {
+            self.isConnected = YES;
+            [self sendHello];
+            [self startKeepAliveTimer];
+            if (completion) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(YES);
+                });
+            }
+            if ([self.delegate respondsToSelector:@selector(transportClientDidConnect:)]) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate transportClientDidConnect:self];
+                });
+            }
+        } else {
+            [self cleanupStreams];
+            if (completion) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(NO);
+                });
+            }
+        }
+    });
+}
+
+- (void)setupUDPSocket:(NSString *)host port:(int)port {
+    if (self.udpSocket) {
+        CFSocketInvalidate(self.udpSocket);
+        CFRelease(self.udpSocket);
+        self.udpSocket = NULL;
+    }
+
+    CFSocketContext context = {0, (__bridge void *)self, NULL, NULL, NULL};
+    self.udpSocket = CFSocketCreate(NULL, AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, &context);
+
+    if (self.udpSocket) {
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_len = sizeof(addr);
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        inet_pton(AF_INET, [host UTF8String], &addr.sin_addr);
+
+        CFDataRef addressData = CFDataCreate(NULL, (const UInt8 *)&addr, sizeof(addr));
+        CFSocketConnectToAddress(self.udpSocket, addressData, 0);
+        if (addressData) CFRelease(addressData);
+    }
+}
+
+- (void)disconnect {
+    if (!self.isConnected) return;
+
+    [self sendDisconnect];
+
+    dispatch_async(self.networkQueue, ^{
+        [self cleanupStreams];
+        self.isConnected = NO;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([self.delegate respondsToSelector:@selector(transportClientDidDisconnect:)]) {
+                [self.delegate transportClientDidDisconnect:self];
+            }
+        });
+    });
+}
+
+- (void)cleanupStreams {
+    [self stopKeepAliveTimer];
+
+    [self.inputStream close];
+    [self.outputStream close];
+    [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    self.inputStream = nil;
+    self.outputStream = nil;
+
+    if (self.udpSocket) {
+        CFSocketInvalidate(self.udpSocket);
+        CFRelease(self.udpSocket);
+        self.udpSocket = NULL;
+    }
+
+    self.udpPort = 0;
+}
+
+- (void)sendHello {
+    NSString *deviceName = [[UIDevice currentDevice] name];
+    NSString *deviceId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    if (!deviceId) deviceId = @"unknown";
+
+    NSData *hello = [MicYouProtocol encodeHelloWithDeviceName:deviceName
+                                                       deviceId:deviceId
+                                                     sampleRate:44100
+                                                    channelCount:1];
+    [self sendControlMessage:hello];
+}
+
+- (void)sendDisconnect {
+    NSData *disconnect = [MicYouProtocol encodeDisconnectWithReason:@"User disconnected"];
+    [self sendControlMessage:disconnect];
+}
+
+- (void)sendKeepAlive {
+    if (!self.isConnected) return;
+    NSData *keepAlive = [MicYouProtocol encodeKeepAliveWithSequence:++self.sequenceCounter];
+    [self sendControlMessage:keepAlive];
+}
+
+- (void)startKeepAliveTimer {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.keepAliveTimer = [NSTimer scheduledTimerWithTimeInterval:5.0
+                                                                 target:self
+                                                               selector:@selector(sendKeepAlive)
+                                                               userInfo:nil
+                                                                repeats:YES];
+    });
+}
+
+- (void)stopKeepAliveTimer {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.keepAliveTimer invalidate];
+        self.keepAliveTimer = nil;
+    });
+}
+
+- (void)sendAudioData:(NSData *)data timestamp:(uint64_t)timestamp {
+    if (!self.isConnected || !data) return;
+
+    uint32_t seq = ++self.sequenceCounter;
+    NSData *packet = [MicYouProtocol encodeAudioFrame:data
+                                            timestamp:timestamp
+                                             sequence:seq
+                                           sampleRate:44100
+                                          channelCount:1];
+
+    if (self.udpSocket && self.udpPort > 0) {
+        CFSocketError result = CFSocketSendData(self.udpSocket, NULL, (__bridge CFDataRef)packet, 0);
+        if (result != kCFSocketSuccess) {
+            [self sendControlMessage:packet];
+        }
+    } else {
+        [self sendControlMessage:packet];
+    }
+}
+
+- (void)sendControlMessage:(NSData *)data {
+    if (!self.outputStream || self.outputStream.streamStatus != NSStreamStatusOpen) return;
+
+    dispatch_async(self.networkQueue, ^{
+        const uint8_t *bytes = data.bytes;
+        NSUInteger length = data.length;
+        NSUInteger totalWritten = 0;
+
+        while (totalWritten < length) {
+            NSInteger written = [self.outputStream write:&bytes[totalWritten] maxLength:length - totalWritten];
+            if (written <= 0) break;
+            totalWritten += written;
+        }
+    });
+}
+
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
+    switch (eventCode) {
+        case NSStreamEventOpenCompleted:
+            break;
+        case NSStreamEventHasBytesAvailable: {
+            uint8_t buffer[4096];
+            NSInteger read = [self.inputStream read:buffer maxLength:sizeof(buffer)];
+            if (read > 0) {
+                [self.readBuffer appendBytes:buffer length:read];
+                [self processReadBuffer];
+            }
+            break;
+        }
+        case NSStreamEventHasSpaceAvailable:
+            break;
+        case NSStreamEventErrorOccurred: {
+            NSError *error = [aStream streamError];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([self.delegate respondsToSelector:@selector(transportClient:didReceiveError:)]) {
+                    [self.delegate transportClient:self didReceiveError:error];
+                }
+            });
+            [self disconnect];
+            break;
+        }
+        case NSStreamEventEndEncountered:
+            [self disconnect];
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)processReadBuffer {
+    while (self.readBuffer.length >= sizeof(MicYouMessageHeader)) {
+        MicYouMessageHeader header;
+        [self.readBuffer getBytes:&header length:sizeof(header)];
+
+        header.magic = ntohl(header.magic);
+        header.type = ntohl(header.type);
+        header.payloadLength = ntohl(header.payloadLength);
+        header.sequence = ntohl(header.sequence);
+
+        if (header.magic != kMicYouMagicHeader) {
+            [self.readBuffer replaceBytesInRange:NSMakeRange(0, 1) withBytes:NULL length:0];
+            continue;
+        }
+
+        NSUInteger totalLength = sizeof(MicYouMessageHeader) + header.payloadLength;
+        if (self.readBuffer.length < totalLength) break;
+
+        NSData *payload = [self.readBuffer subdataWithRange:NSMakeRange(sizeof(MicYouMessageHeader), header.payloadLength)];
+        [self.readBuffer replaceBytesInRange:NSMakeRange(0, totalLength) withBytes:NULL length:0];
+
+        [self handleMessageWithType:header.type payload:payload];
+    }
+}
+
+- (void)handleMessageWithType:(uint32_t)type payload:(NSData *)payload {
+    switch (type) {
+        case MicYouMessageTypeAck: {
+            [self handleAckPayload:payload];
+            break;
+        }
+        case MicYouMessageTypeKeepAlive: {
+            break;
+        }
+        default:
+            break;
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([self.delegate respondsToSelector:@selector(transportClient:didReceiveData:)]) {
+            [self.delegate transportClient:self didReceiveData:payload];
+        }
+    });
+}
+
+- (void)handleAckPayload:(NSData *)payload {
+    if (payload.length < 5) return;
+
+    const uint8_t *bytes = payload.bytes;
+    BOOL success = bytes[0] != 0;
+
+    uint32_t udpPort;
+    memcpy(&udpPort, &bytes[1], sizeof(udpPort));
+    udpPort = ntohl(udpPort);
+
+    uint32_t msgLen;
+    memcpy(&msgLen, &bytes[5], sizeof(msgLen));
+    msgLen = ntohl(msgLen);
+
+    if (success && udpPort > 0) {
+        self.udpPort = udpPort;
+        [self setupUDPSocket:self.host port:udpPort];
+    }
+}
+
+- (void)dealloc {
+    [self disconnect];
+}
+
+@end
