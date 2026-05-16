@@ -2,13 +2,9 @@ name: iOS Build
 
 on:
   push:
-    branches: [ main, master, develop ]
-    paths:
-      - 'MicYou-iOS/**'
+    branches: [ main, master, develop, v2 ]
   pull_request:
     branches: [ main, master ]
-    paths:
-      - 'MicYou-iOS/**'
   workflow_dispatch:
 
 jobs:
@@ -44,7 +40,6 @@ jobs:
         run: |
           set -o pipefail
           export PATH=/opt/homebrew/bin:$PATH
-          cd MicYou-iOS
           gmake -j$(sysctl -n hw.ncpu) all PLATFORM=2
 
       - name: Upload IPA artifact
@@ -52,11 +47,11 @@ jobs:
         if: success()
         with:
           name: MicYou-iOS.ipa
-          path: MicYou-iOS/artifacts/MicYou-*.ipa
+          path: artifacts/MicYou-*.ipa
 
       - name: Upload dSYM artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: MicYou-iOS.dSYM
-          path: MicYou-iOS/artifacts/MicYou.dSYM
+          path: artifacts/MicYou.dSYM
