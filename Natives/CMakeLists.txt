@@ -52,7 +52,6 @@ set_target_properties(MicYou PROPERTIES
 target_compile_options(MicYou PRIVATE
     -fobjc-arc
     -fmodules
-    -fcache-modules
 )
 
 target_include_directories(MicYou PRIVATE
