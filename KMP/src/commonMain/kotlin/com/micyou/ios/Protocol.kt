@@ -60,7 +60,3 @@ data class MicYouConfigPacket(
     val key: String,
     val value: String
 )
-
-expect class Platform() {
-    val name: String
-}
