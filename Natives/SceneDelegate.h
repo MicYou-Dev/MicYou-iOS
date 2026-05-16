@@ -4,4 +4,6 @@
 
 @property (strong, nonatomic) UIWindow *window;
 
+- (void)setupWindow;
+
 @end

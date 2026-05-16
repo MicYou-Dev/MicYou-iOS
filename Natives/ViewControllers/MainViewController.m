@@ -27,7 +27,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"MicYou";
-    self.view.backgroundColor = [UIColor systemBackgroundColor];
+    self.view.backgroundColor = [UIColor whiteColor];
 
     [self setupUI];
     [self setupAudioAndNetwork];
@@ -39,7 +39,7 @@
     UIColor *primaryColor = [UIColor colorWithRed:0.13 green:0.59 blue:0.95 alpha:1.0];
 
     self.statusCard = [[UIView alloc] init];
-    self.statusCard.backgroundColor = [UIColor secondarySystemBackgroundColor];
+    self.statusCard.backgroundColor = [UIColor colorWithWhite:0.95 alpha:1.0];
     self.statusCard.layer.cornerRadius = cardCornerRadius;
     self.statusCard.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.statusCard];
@@ -47,13 +47,13 @@
     self.statusLabel = [[UILabel alloc] init];
     self.statusLabel.text = @"未连接";
     self.statusLabel.font = [UIFont systemFontOfSize:18 weight:UIFontWeightMedium];
-    self.statusLabel.textColor = [UIColor labelColor];
+    self.statusLabel.textColor = [UIColor blackColor];
     self.statusLabel.textAlignment = NSTextAlignmentCenter;
     self.statusLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.statusCard addSubview:self.statusLabel];
 
     self.audioLevelContainer = [[UIView alloc] init];
-    self.audioLevelContainer.backgroundColor = [UIColor tertiarySystemBackgroundColor];
+    self.audioLevelContainer.backgroundColor = [UIColor colorWithWhite:0.9 alpha:1.0];
     self.audioLevelContainer.layer.cornerRadius = 8.0;
     self.audioLevelContainer.translatesAutoresizingMaskIntoConstraints = NO;
     [self.statusCard addSubview:self.audioLevelContainer];
@@ -84,7 +84,7 @@
     self.hostLabel = [[UILabel alloc] init];
     self.hostLabel.text = @"主机: 未配置";
     self.hostLabel.font = [UIFont systemFontOfSize:14];
-    self.hostLabel.textColor = [UIColor secondaryLabelColor];
+    self.hostLabel.textColor = [UIColor grayColor];
     self.hostLabel.textAlignment = NSTextAlignmentCenter;
     self.hostLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.hostLabel];
@@ -92,7 +92,7 @@
     self.infoLabel = [[UILabel alloc] init];
     self.infoLabel.text = @"MicYou v1.0 | 将 iPhone 变成无线麦克风";
     self.infoLabel.font = [UIFont systemFontOfSize:12];
-    self.infoLabel.textColor = [UIColor tertiaryLabelColor];
+    self.infoLabel.textColor = [UIColor lightGrayColor];
     self.infoLabel.textAlignment = NSTextAlignmentCenter;
     self.infoLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.infoLabel];

@@ -1,6 +1,10 @@
 #import "TransportClient.h"
 #import "Protocol.h"
 #import <CFNetwork/CFNetwork.h>
+#import <UIKit/UIKit.h>
+#import <sys/socket.h>
+#import <netinet/in.h>
+#import <arpa/inet.h>
 
 @interface TransportClient ()
 

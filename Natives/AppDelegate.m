@@ -10,8 +10,7 @@
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     SceneDelegate *sceneDelegate = [[SceneDelegate alloc] init];
-    UIWindowScene *scene = nil;
-    [sceneDelegate scene:scene willConnectToSession:nil options:nil];
+    [sceneDelegate setupWindow];
     self.window.rootViewController = sceneDelegate.window.rootViewController;
     [self.window makeKeyAndVisible];
 

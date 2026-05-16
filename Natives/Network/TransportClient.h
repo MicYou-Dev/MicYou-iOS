@@ -12,7 +12,7 @@
 
 @end
 
-@interface TransportClient : NSObject
+@interface TransportClient : NSObject <NSStreamDelegate>
 
 @property (nonatomic, weak) id<TransportClientDelegate> delegate;
 @property (nonatomic, readonly) BOOL isConnected;
