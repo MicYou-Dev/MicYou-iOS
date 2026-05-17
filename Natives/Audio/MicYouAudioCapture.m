@@ -85,10 +85,10 @@
         return;
     }
 
-    [self.audioEngine stop];
     [self.inputNode removeTapOnBus:0];
-    self.audioEngine = nil;
+    [self.audioEngine stop];
     self.inputNode = nil;
+    self.audioEngine = nil;
 
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];

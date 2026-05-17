@@ -13,6 +13,7 @@
 @property (nonatomic, strong) NSOutputStream *outputStream;
 @property (nonatomic, strong) dispatch_queue_t networkQueue;
 @property (nonatomic, assign, readwrite) BOOL isConnected;
+@property (nonatomic, assign, readwrite) BOOL disconnecting;
 @property (nonatomic, strong, readwrite) NSString *host;
 @property (nonatomic, assign, readwrite) int port;
 @property (nonatomic, strong) NSMutableData *readBuffer;
@@ -68,8 +69,9 @@
         [self.inputStream setDelegate:self];
         [self.outputStream setDelegate:self];
 
-        [self.inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        [self.outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [self.inputStream scheduleInRunLoop:runLoop forMode:NSDefaultRunLoopMode];
+        [self.outputStream scheduleInRunLoop:runLoop forMode:NSDefaultRunLoopMode];
 
         [self.inputStream open];
         [self.outputStream open];
@@ -93,7 +95,7 @@
             }
         } else {
             [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:@"TransportClient: Failed to open stream, status=%ld", (long)self.outputStream.streamStatus]];
-            [self cleanupStreams];
+            [self cleanupStreamsInRunLoop:runLoop];
             if (completion) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     completion(NO);
@@ -113,28 +115,70 @@
     CFSocketContext context = {0, (__bridge void *)self, NULL, NULL, NULL};
     self.udpSocket = CFSocketCreate(NULL, AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, &context);
 
-    if (self.udpSocket) {
-        struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_len = sizeof(addr);
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(port);
-        inet_pton(AF_INET, [host UTF8String], &addr.sin_addr);
-
-        CFDataRef addressData = CFDataCreate(NULL, (const UInt8 *)&addr, sizeof(addr));
-        CFSocketConnectToAddress(self.udpSocket, addressData, 0);
-        if (addressData) CFRelease(addressData);
+    if (!self.udpSocket) {
+        [[MicYouLogger sharedLogger] logError:@"TransportClient: Failed to create UDP socket"];
+        return;
     }
+
+    struct sockaddr_in localAddr;
+    memset(&localAddr, 0, sizeof(localAddr));
+    localAddr.sin_len = sizeof(localAddr);
+    localAddr.sin_family = AF_INET;
+    localAddr.sin_port = htons(0);
+    localAddr.sin_addr.s_addr = INADDR_ANY;
+
+    CFDataRef localAddressData = CFDataCreate(NULL, (const UInt8 *)&localAddr, sizeof(localAddr));
+    CFSocketError bindResult = CFSocketSetAddress(self.udpSocket, localAddressData);
+    if (localAddressData) CFRelease(localAddressData);
+
+    if (bindResult != kCFSocketSuccess) {
+        [[MicYouLogger sharedLogger] logError:@"TransportClient: Failed to bind UDP socket"];
+        CFSocketInvalidate(self.udpSocket);
+        CFRelease(self.udpSocket);
+        self.udpSocket = NULL;
+        return;
+    }
+
+    CFDataRef addrData = CFSocketCopyAddress(self.udpSocket);
+    if (addrData) {
+        struct sockaddr_in *boundAddr = (struct sockaddr_in *)CFDataGetBytePtr(addrData);
+        int localPort = ntohs(boundAddr->sin_port);
+        [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"TransportClient: UDP socket bound to local port %d", localPort]];
+        CFRelease(addrData);
+    }
+
+    struct sockaddr_in remoteAddr;
+    memset(&remoteAddr, 0, sizeof(remoteAddr));
+    remoteAddr.sin_len = sizeof(remoteAddr);
+    remoteAddr.sin_family = AF_INET;
+    remoteAddr.sin_port = htons(port);
+    inet_pton(AF_INET, [host UTF8String], &remoteAddr.sin_addr);
+
+    CFDataRef remoteAddressData = CFDataCreate(NULL, (const UInt8 *)&remoteAddr, sizeof(remoteAddr));
+    CFSocketError connectResult = CFSocketConnectToAddress(self.udpSocket, remoteAddressData, 0);
+    if (remoteAddressData) CFRelease(remoteAddressData);
+
+    if (connectResult != kCFSocketSuccess) {
+        [[MicYouLogger sharedLogger] logError:@"TransportClient: Failed to connect UDP socket to remote address"];
+        CFSocketInvalidate(self.udpSocket);
+        CFRelease(self.udpSocket);
+        self.udpSocket = NULL;
+        return;
+    }
+
+    [[MicYouLogger sharedLogger] log:@"TransportClient: UDP socket setup complete"];
 }
 
 - (void)disconnect {
-    if (!self.isConnected) return;
+    if (!self.isConnected || self.disconnecting) return;
+    self.disconnecting = YES;
 
     [self sendDisconnect];
 
     dispatch_async(self.networkQueue, ^{
         [self cleanupStreams];
         self.isConnected = NO;
+        self.disconnecting = NO;
 
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([self.delegate respondsToSelector:@selector(transportClientDidDisconnect:)]) {
@@ -145,12 +189,20 @@
 }
 
 - (void)cleanupStreams {
+    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+    [self cleanupStreamsInRunLoop:runLoop];
+}
+
+- (void)cleanupStreamsInRunLoop:(NSRunLoop *)runLoop {
     [self stopKeepAliveTimer];
+
+    [self.inputStream setDelegate:nil];
+    [self.outputStream setDelegate:nil];
 
     [self.inputStream close];
     [self.outputStream close];
-    [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [self.inputStream removeFromRunLoop:runLoop forMode:NSDefaultRunLoopMode];
+    [self.outputStream removeFromRunLoop:runLoop forMode:NSDefaultRunLoopMode];
     self.inputStream = nil;
     self.outputStream = nil;
 
@@ -188,6 +240,8 @@
 
 - (void)startKeepAliveTimer {
     dispatch_async(dispatch_get_main_queue(), ^{
+        [self.keepAliveTimer invalidate];
+        self.keepAliveTimer = nil;
         self.keepAliveTimer = [NSTimer scheduledTimerWithTimeInterval:5.0
                                                                  target:self
                                                                selector:@selector(sendKeepAlive)
@@ -321,7 +375,7 @@
 }
 
 - (void)handleAckPayload:(NSData *)payload {
-    if (payload.length < 5) {
+    if (payload.length < 9) {
         [[MicYouLogger sharedLogger] logError:@"TransportClient: ACK payload too short"];
         return;
     }
@@ -342,11 +396,11 @@
     if (success && udpPort > 0) {
         self.udpPort = udpPort;
         [self setupUDPSocket:self.host port:udpPort];
-        [[MicYouLogger sharedLogger] log:@"TransportClient: UDP socket setup complete"];
     }
 }
 
 - (void)dealloc {
+    self.delegate = nil;
     [self disconnect];
 }
 

@@ -181,6 +181,8 @@
 
 - (void)disconnect {
     [self.audioCapture stopCapture];
+    self.audioCapture = nil;
+    [self.bufferQueue clear];
     [self.transportClient disconnect];
     self.isConnected = NO;
     [self.connectButton setTitle:@"连接" forState:UIControlStateNormal];

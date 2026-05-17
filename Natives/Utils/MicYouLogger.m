@@ -43,10 +43,35 @@
 
 - (void)log:(NSString *)message {
     dispatch_async(self.logQueue, ^{
+        if (!self.fileHandle) {
+            return;
+        }
         NSString *timestamp = [self.dateFormatter stringFromDate:[NSDate date]];
         NSString *line = [NSString stringWithFormat:@"[%@] %@\n", timestamp, message];
         NSData *data = [line dataUsingEncoding:NSUTF8StringEncoding];
         [self.fileHandle writeData:data];
+    });
+}
+
+- (void)closeFile {
+    dispatch_sync(self.logQueue, ^{
+        [self.fileHandle closeFile];
+        self.fileHandle = nil;
+    });
+}
+
+- (void)reopenFile {
+    dispatch_sync(self.logQueue, ^{
+        if (self.fileHandle) {
+            return;
+        }
+        NSString *logPath = [self logFilePath];
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if (![fm fileExistsAtPath:logPath]) {
+            [fm createFileAtPath:logPath contents:nil attributes:nil];
+        }
+        self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:logPath];
+        [self.fileHandle seekToEndOfFile];
     });
 }
 
