@@ -26,14 +26,13 @@ set(MICYOU_HEADERS
     Utils/MicYouLogger.h
 )
 
-file(GLOB_RECURSE MICYOU_ASSETS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Assets.xcassets/*"
+set(MICYOU_ASSETS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Assets.xcassets"
 )
 
 add_executable(MicYou MACOSX_BUNDLE
     ${MICYOU_SOURCES}
     ${MICYOU_HEADERS}
-    ${MICYOU_ASSETS}
 )
 
 target_link_libraries(MicYou PRIVATE
@@ -56,7 +55,7 @@ set_target_properties(MicYou PROPERTIES
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
     XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
     XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
-    RESOURCE "${MICYOU_ASSETS}"
+    RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Assets.xcassets"
 )
 
 target_compile_options(MicYou PRIVATE
