@@ -112,7 +112,7 @@ assets:
 	if [ '$(IOS)' = '0' ] && [ '$(DETECTPLAT)' = 'Darwin' ]; then \
 		mkdir -p $(WORKINGDIR)/MicYou.app/Base.lproj; \
 		xcrun actool $(SOURCEDIR)/Natives/Resources/Assets.xcassets \
-			--compile $(WORKINGDIR)/MicYou.app \
+			--compile $(SOURCEDIR)/Natives/Resources \
 			--platform iphoneos \
 			--minimum-deployment-target 11.0 \
 			--app-icon AppIcon \
@@ -127,6 +127,7 @@ payload: native kmp assets
 	$(call METHOD_DIRCHECK,$(OUTPUTDIR)/Payload)
 	cp -R $(WORKINGDIR)/MicYou.app $(OUTPUTDIR)/Payload/
 	cp -R $(SOURCEDIR)/Natives/Resources/Base.lproj $(OUTPUTDIR)/Payload/MicYou.app/ || true
+	find $(SOURCEDIR)/Natives/Resources -not -name 'Assets.xcassets' -not -name 'Base.lproj' -mindepth 1 -maxdepth 1 -exec cp -R {} $(OUTPUTDIR)/Payload/MicYou.app/ \; || true
 	ldid -S $(OUTPUTDIR)/Payload/MicYou.app || true
 	ldid -S$(SOURCEDIR)/Natives/entitlements.sideload.xml $(OUTPUTDIR)/Payload/MicYou.app/MicYou || true
 	chmod -R 755 $(OUTPUTDIR)/Payload
