@@ -1,0 +1,97 @@
+/* Connection status */
+"status_not_connected" = "未连接";
+"status_connected" = "已连接";
+"status_connecting" = "连接中...";
+"status_disconnected" = "已断开";
+"status_connection_failed" = "连接失败";
+"status_error" = "错误";
+
+/* Main buttons */
+"button_connect" = "连接";
+"button_disconnect" = "断开";
+"button_settings" = "设置";
+"button_done" = "完成";
+"button_cancel" = "取消";
+"button_mute" = "静音";
+"button_unmute" = "取消静音";
+
+/* Network */
+"network_host_label" = "主机地址";
+"network_port_label" = "端口";
+"network_host_placeholder" = "192.168.1.100";
+"network_config_first" = "请先配置主机地址";
+"host_label_format" = "主机: %@:%ld";
+"host_not_configured" = "主机: 未配置";
+
+/* Audio */
+"audio_sample_rate" = "采样率";
+"audio_channel" = "声道";
+"audio_mono" = "单声道";
+"audio_stereo" = "立体声";
+"audio_visualizer" = "音频可视化";
+
+/* Settings sections */
+"settings_section_network" = "网络";
+"settings_section_audio" = "音频";
+"settings_section_appearance" = "外观";
+"settings_section_general" = "通用";
+
+/* Appearance */
+"appearance_theme" = "主题风格";
+"theme_traditional" = "传统风格";
+"theme_micyou" = "MicYou 风格";
+"appearance_seed_color" = "主题颜色";
+"appearance_dark_mode" = "深色模式";
+"dark_mode_auto" = "跟随系统";
+"dark_mode_on" = "开启";
+"dark_mode_off" = "关闭";
+"appearance_oled_black" = "OLED 纯黑";
+
+/* General */
+"general_language" = "语言";
+"language_follow_system" = "跟随系统";
+"language_chinese" = "中文";
+"language_english" = "English";
+"language_traditional_chinese" = "繁体中文";
+"general_screen_awake" = "屏幕常亮";
+"general_about" = "关于";
+
+/* App info */
+"app_tagline" = "将 iPhone 变成无线麦克风";
+"app_version_format" = "MicYou v%@ | 将 iPhone 变成无线麦克风";
+
+/* Connection modes */
+"mode_wifi" = "WiFi";
+"mode_usb" = "USB";
+
+/* Live streaming */
+"live_badge" = "LIVE";
+
+/* Errors */
+"error_connection_failed" = "连接失败: %@";
+"error_microphone_permission" = "需要麦克风权限";
+"error_network_permission" = "需要本地网络权限";
+
+/* Seed colors */
+"seed_default_green" = "默认绿";
+"seed_red" = "红色";
+"seed_pink" = "粉色";
+"seed_purple" = "紫色";
+"seed_deep_purple" = "深紫";
+"seed_indigo" = "靛蓝";
+"seed_blue" = "蓝色";
+"seed_light_blue" = "浅蓝";
+"seed_cyan" = "青色";
+"seed_deep_green" = "深绿";
+"seed_green" = "绿色";
+"seed_light_green" = "浅绿";
+"seed_lime" = "青柠";
+"seed_yellow" = "黄色";
+"seed_amber" = "琥珀";
+"seed_orange" = "橙色";
+"seed_deep_orange" = "深橙";
+"seed_brown" = "棕色";
+"seed_gray" = "灰色";
+
+/* Plugin */
+"plugin_not_connected" = "插件未连接";

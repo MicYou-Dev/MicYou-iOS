@@ -6,6 +6,7 @@
 @property (nonatomic, strong) AVAudioInputNode *inputNode;
 @property (nonatomic, assign, readwrite) BOOL isCapturing;
 @property (nonatomic, strong) dispatch_queue_t audioQueue;
+@property (atomic, assign) float currentLevel;
 
 @end
 
@@ -105,8 +106,8 @@
     NSUInteger sampleCount = frameLength * channels;
 
     const int16_t *pcmData = buffer.int16ChannelData[0];
-    NSData *audioData = [NSData dataWithBytes:pcmData length:sampleCount * sizeof(int16_t)];
 
+    // Calculate level on the audio callback thread (fast float math only, no dispatch needed).
     float maxLevel = 0.0f;
     for (NSUInteger i = 0; i < sampleCount; i++) {
         float normalized = (float)pcmData[i] / 32768.0f;
@@ -116,12 +117,28 @@
         }
     }
 
+    // Update atomic property directly — no dispatch needed, thread-safe via atomic accessor.
+    self.currentLevel = maxLevel;
+
+    // Dispatch level callback to main queue (lightweight, decoupled from audioQueue).
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (strongSelf && strongSelf.delegate) {
+            [strongSelf.delegate audioCapture:strongSelf didUpdateLevel:strongSelf.currentLevel];
+        }
+    });
+
+    // Audio data must be copied here because pcmData is only valid during this
+    // AVAudioEngine tap callback. The copy ensures the data outlives the stack frame
+    // when dispatched asynchronously to audioQueue.
+    NSData *audioData = [NSData dataWithBytes:pcmData length:sampleCount * sizeof(int16_t)];
     uint64_t timestamp = (uint64_t)(when.sampleTime * 1000.0 / self.sampleRate);
 
     dispatch_async(self.audioQueue, ^{
-        if (self.delegate) {
-            [self.delegate audioCapture:self didCaptureBuffer:audioData timestamp:timestamp];
-            [self.delegate audioCapture:self didUpdateLevel:maxLevel];
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (strongSelf && strongSelf.delegate) {
+            [strongSelf.delegate audioCapture:strongSelf didCaptureBuffer:audioData timestamp:timestamp];
         }
     });
 }

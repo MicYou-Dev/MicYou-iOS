@@ -1,0 +1,97 @@
+/* Connection status */
+"status_not_connected" = "Not Connected";
+"status_connected" = "Connected";
+"status_connecting" = "Connecting...";
+"status_disconnected" = "Disconnected";
+"status_connection_failed" = "Connection Failed";
+"status_error" = "Error";
+
+/* Main buttons */
+"button_connect" = "Connect";
+"button_disconnect" = "Disconnect";
+"button_settings" = "Settings";
+"button_done" = "Done";
+"button_cancel" = "Cancel";
+"button_mute" = "Mute";
+"button_unmute" = "Unmute";
+
+/* Network */
+"network_host_label" = "Host Address";
+"network_port_label" = "Port";
+"network_host_placeholder" = "192.168.1.100";
+"network_config_first" = "Please configure host address first";
+"host_label_format" = "Host: %@:%ld";
+"host_not_configured" = "Host: Not Configured";
+
+/* Audio */
+"audio_sample_rate" = "Sample Rate";
+"audio_channel" = "Channel";
+"audio_mono" = "Mono";
+"audio_stereo" = "Stereo";
+"audio_visualizer" = "Audio Visualizer";
+
+/* Settings sections */
+"settings_section_network" = "Network";
+"settings_section_audio" = "Audio";
+"settings_section_appearance" = "Appearance";
+"settings_section_general" = "General";
+
+/* Appearance */
+"appearance_theme" = "Theme Style";
+"theme_traditional" = "Traditional";
+"theme_micyou" = "MicYou Style";
+"appearance_seed_color" = "Theme Color";
+"appearance_dark_mode" = "Dark Mode";
+"dark_mode_auto" = "Follow System";
+"dark_mode_on" = "On";
+"dark_mode_off" = "Off";
+"appearance_oled_black" = "OLED Pure Black";
+
+/* General */
+"general_language" = "Language";
+"language_follow_system" = "Follow System";
+"language_chinese" = "Chinese";
+"language_english" = "English";
+"language_traditional_chinese" = "Traditional Chinese";
+"general_screen_awake" = "Keep Screen Awake";
+"general_about" = "About";
+
+/* App info */
+"app_tagline" = "Turn your iPhone into a wireless microphone";
+"app_version_format" = "MicYou v%@ | Turn your iPhone into a wireless microphone";
+
+/* Connection modes */
+"mode_wifi" = "WiFi";
+"mode_usb" = "USB";
+
+/* Live streaming */
+"live_badge" = "LIVE";
+
+/* Errors */
+"error_connection_failed" = "Connection failed: %@";
+"error_microphone_permission" = "Microphone permission required";
+"error_network_permission" = "Local network permission required";
+
+/* Seed colors */
+"seed_default_green" = "Default Green";
+"seed_red" = "Red";
+"seed_pink" = "Pink";
+"seed_purple" = "Purple";
+"seed_deep_purple" = "Deep Purple";
+"seed_indigo" = "Indigo";
+"seed_blue" = "Blue";
+"seed_light_blue" = "Light Blue";
+"seed_cyan" = "Cyan";
+"seed_deep_green" = "Deep Green";
+"seed_green" = "Green";
+"seed_light_green" = "Light Green";
+"seed_lime" = "Lime";
+"seed_yellow" = "Yellow";
+"seed_amber" = "Amber";
+"seed_orange" = "Orange";
+"seed_deep_orange" = "Deep Orange";
+"seed_brown" = "Brown";
+"seed_gray" = "Gray";
+
+/* Plugin */
+"plugin_not_connected" = "Plugin not connected";

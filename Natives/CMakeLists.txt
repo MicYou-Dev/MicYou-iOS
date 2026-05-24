@@ -7,11 +7,15 @@ set(MICYOU_SOURCES
     SceneDelegate.m
     ViewControllers/MainViewController.m
     ViewControllers/SettingsViewController.m
+    ViewControllers/MicYouViewController.m
     Audio/MicYouAudioCapture.m
     Audio/AudioBufferQueue.m
     Network/TransportClient.m
     Network/Protocol.m
     Utils/MicYouLogger.m
+    Animation/MicYouAnimator.m
+    Animation/MicYouEasing.m
+    Theme/MicYouColors.m
 )
 
 set(MICYOU_HEADERS
@@ -19,11 +23,15 @@ set(MICYOU_HEADERS
     SceneDelegate.h
     ViewControllers/MainViewController.h
     ViewControllers/SettingsViewController.h
+    ViewControllers/MicYouViewController.h
     Audio/MicYouAudioCapture.h
     Audio/AudioBufferQueue.h
     Network/TransportClient.h
     Network/Protocol.h
     Utils/MicYouLogger.h
+    Animation/MicYouAnimator.h
+    Animation/MicYouEasing.h
+    Theme/MicYouColors.h
 )
 
 set(MICYOU_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Assets.xcassets")
@@ -72,6 +80,8 @@ target_include_directories(MicYou PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Audio
     ${CMAKE_CURRENT_SOURCE_DIR}/Network
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/Animation
+    ${CMAKE_CURRENT_SOURCE_DIR}/Theme
 )
 
 set_property(TARGET MicYou PROPERTY
