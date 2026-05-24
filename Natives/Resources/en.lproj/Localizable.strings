@@ -93,5 +93,11 @@
 "seed_brown" = "Brown";
 "seed_gray" = "Gray";
 
+/* Settings footers */
+"settings_footer_network" = "Enter the PC's IP address and port. Make sure your phone and PC are on the same network.";
+"settings_footer_audio" = "Adjust audio sample rate and channel count. Disabling audio visualizer reduces CPU usage.";
+"settings_footer_appearance" = "Choose theme style and color. OLED pure black sets background to pure black to save battery.";
+"settings_footer_general" = "Change language and screen awake settings. Screen awake keeps the display on during audio transmission.";
+
 /* Plugin */
 "plugin_not_connected" = "Plugin not connected";

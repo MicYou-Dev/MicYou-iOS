@@ -431,6 +431,20 @@ static NSArray<NSString *> *seedColorKeys(void) {
     }
 }
 
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    switch (section) {
+        case SettingsSectionNetwork:
+            return NSLocalizedString(@"settings_footer_network", nil);
+        case SettingsSectionAudio:
+            return NSLocalizedString(@"settings_footer_audio", nil);
+        case SettingsSectionAppearance:
+            return NSLocalizedString(@"settings_footer_appearance", nil);
+        case SettingsSectionGeneral:
+            return NSLocalizedString(@"settings_footer_general", nil);
+        default: return nil;
+    }
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     switch (indexPath.section) {
         case SettingsSectionNetwork:

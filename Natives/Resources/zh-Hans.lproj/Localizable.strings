@@ -93,5 +93,11 @@
 "seed_brown" = "棕色";
 "seed_gray" = "灰色";
 
+/* Settings footers */
+"settings_footer_network" = "输入 PC 端的 IP 地址和端口，确保手机和电脑在同一网络下。";
+"settings_footer_audio" = "调整音频采样率和声道数。关闭音频可视化可减少 CPU 占用。";
+"settings_footer_appearance" = "选择主题风格和颜色。OLED 纯黑模式可将背景设为纯黑色以节省电量。";
+"settings_footer_general" = "更改语言和屏幕常亮设置。屏幕常亮在传输音频时保持屏幕不熄灭。";
+
 /* Plugin */
 "plugin_not_connected" = "插件未连接";

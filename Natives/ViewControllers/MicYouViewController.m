@@ -80,9 +80,13 @@ static const CGFloat kPillHeight = 44.0;
     [super viewDidLoad];
 
     self.title = @"MicYou";
-    self.view.backgroundColor = [MicYouColors shared].background;
     self.isWiFiMode = YES;
     self.isMuted = NO;
+
+    // Apply saved color scheme before building UI
+    [self applySavedColorScheme];
+
+    self.view.backgroundColor = [MicYouColors shared].background;
 
     [self setupScrollView];
     [self setupHeaderView];
@@ -92,6 +96,57 @@ static const CGFloat kPillHeight = 44.0;
     [self setupAudioAndNetwork];
     [self applyColors];
     [self loadSavedSettings];
+
+    // Listen for settings changes
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(settingsDidChange:)
+                                                 name:@"MicYouSettingsDidChange"
+                                               object:nil];
+}
+
+- (void)applySavedColorScheme {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger darkModeValue = [defaults integerForKey:@"micyou_dark_mode"];
+    BOOL useOLED = [defaults boolForKey:@"micyou_oled_black"];
+    NSInteger seedIndex = [defaults integerForKey:@"micyou_seed_color_index"];
+
+    MicYouColors *colors = [MicYouColors shared];
+
+    // Apply seed color
+    NSArray<UIColor *> *presetColors = [MicYouColors presetColors];
+    if (seedIndex >= 0 && seedIndex < (NSInteger)presetColors.count) {
+        colors.seedColor = presetColors[seedIndex];
+    }
+
+    // Apply color scheme
+    if (@available(iOS 13.0, *)) {
+        if (darkModeValue == 0) {
+            // Auto
+            if (useOLED && self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+                colors.colorScheme = MicYouColorSchemeOLED;
+            } else if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+                colors.colorScheme = MicYouColorSchemeDark;
+            } else {
+                colors.colorScheme = MicYouColorSchemeLight;
+            }
+        } else if (darkModeValue == 1) {
+            // On
+            colors.colorScheme = useOLED ? MicYouColorSchemeOLED : MicYouColorSchemeDark;
+        } else {
+            // Off
+            colors.colorScheme = MicYouColorSchemeLight;
+        }
+    } else {
+        // iOS <13: no dark mode support
+        colors.colorScheme = MicYouColorSchemeLight;
+    }
+}
+
+- (void)settingsDidChange:(NSNotification *)notification {
+    [self applySavedColorScheme];
+    [UIView animateWithDuration:0.3 animations:^{
+        [self applyColors];
+    }];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -154,26 +209,27 @@ static const CGFloat kPillHeight = 44.0;
     self.headerView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.contentView addSubview:self.headerView];
 
-    // App icon
+    // App icon - use app_icon.png from bundle (matches Android)
     self.appIconView = [[UIImageView alloc] init];
     self.appIconView.translatesAutoresizingMaskIntoConstraints = NO;
     self.appIconView.contentMode = UIViewContentModeScaleAspectFit;
     self.appIconView.layer.cornerRadius = kIconSize / 2.0;
     self.appIconView.clipsToBounds = YES;
-    self.appIconView.image = [UIImage imageNamed:@"app_icon"];
 
-    // Use a microphone emoji if no icon loaded
-    if (!self.appIconView.image) {
-        UILabel *iconLabel = [[UILabel alloc] init];
-        iconLabel.text = @"🎤";
-        iconLabel.font = [UIFont systemFontOfSize:kIconSize * 0.55];
-        iconLabel.textAlignment = NSTextAlignmentCenter;
-        iconLabel.frame = CGRectMake(0, 0, kIconSize, kIconSize);
-        UIGraphicsBeginImageContextWithOptions(CGSizeMake(kIconSize, kIconSize), NO, 0);
-        [iconLabel.layer renderInContext:UIGraphicsGetCurrentContext()];
-        self.appIconView.image = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
+    // Try multiple paths to find the app icon
+    UIImage *appIcon = [UIImage imageNamed:@"app_icon"];
+    if (!appIcon) {
+        // Try loading from Resources directory
+        NSString *resourcePath = [[NSBundle mainBundle] pathForResource:@"app_icon" ofType:@"png"];
+        if (resourcePath) {
+            appIcon = [UIImage imageWithContentsOfFile:resourcePath];
+        }
     }
+    if (!appIcon) {
+        // Try Assets.xcassets
+        appIcon = [UIImage imageNamed:@"AppIcon"];
+    }
+    self.appIconView.image = appIcon;
     [self.headerView addSubview:self.appIconView];
 
     // Title
@@ -778,17 +834,26 @@ static const CGFloat kPillHeight = 44.0;
 
 - (void)updateColorSchemeFromTrait {
     if (@available(iOS 13.0, *)) {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSInteger darkModeValue = [defaults integerForKey:@"micyou_dark_mode"];
+
+        // Only auto-switch if user set "Auto" (0)
+        if (darkModeValue != 0) return;
+
         MicYouColors *colors = [MicYouColors shared];
-        if (colors.colorScheme != MicYouColorSchemeOLED) {
-            if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
-                colors.colorScheme = MicYouColorSchemeDark;
-            } else {
-                colors.colorScheme = MicYouColorSchemeLight;
-            }
-            [UIView animateWithDuration:0.3 animations:^{
-                [self applyColors];
-            }];
+        BOOL useOLED = [defaults boolForKey:@"micyou_oled_black"];
+
+        if (useOLED && self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+            colors.colorScheme = MicYouColorSchemeOLED;
+        } else if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+            colors.colorScheme = MicYouColorSchemeDark;
+        } else {
+            colors.colorScheme = MicYouColorSchemeLight;
         }
+
+        [UIView animateWithDuration:0.3 animations:^{
+            [self applyColors];
+        }];
     }
 }
 
@@ -1036,6 +1101,7 @@ static const CGFloat kPillHeight = 44.0;
 #pragma mark - Dealloc
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.audioCapture stopCapture];
     [self.transportClient disconnect];
     [UIApplication sharedApplication].idleTimerDisabled = NO;
