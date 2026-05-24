@@ -12,6 +12,7 @@ set(MICYOU_SOURCES
     Network/TransportClient.m
     Network/Protocol.m
     Utils/MicYouLogger.m
+    Utils/MicYouLanguageManager.m
     Animation/MicYouAnimator.m
     Animation/MicYouEasing.m
     Theme/MicYouColors.m
@@ -27,6 +28,7 @@ set(MICYOU_HEADERS
     Network/TransportClient.h
     Network/Protocol.h
     Utils/MicYouLogger.h
+    Utils/MicYouLanguageManager.h
     Animation/MicYouAnimator.h
     Animation/MicYouEasing.h
     Theme/MicYouColors.h
