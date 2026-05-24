@@ -54,6 +54,7 @@
 "language_english" = "English";
 "language_traditional_chinese" = "繁体中文";
 "general_screen_awake" = "屏幕常亮";
+"general_launch_animation" = "开屏动画";
 "general_about" = "关于";
 
 /* App info */

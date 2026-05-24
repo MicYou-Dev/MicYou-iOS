@@ -3,13 +3,17 @@
 #import "MicYouViewController.h"
 #import "MicYouLanguageManager.h"
 #import "MicYouColors.h"
+#import "LaunchAnimationViewController.h"
+
+@interface SceneDelegate () <LaunchAnimationDelegate>
+@end
 
 @implementation SceneDelegate
 
-- (UIViewController *)createRootViewController {
+- (UIViewController *)createMainViewController {
     // Initialize language manager early
     [MicYouLanguageManager shared];
-    
+
     // Setup default settings
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (![defaults objectForKey:@"micyou_theme"]) {
@@ -21,17 +25,18 @@
             @"micyou_audio_visualizer": @YES,
             @"micyou_language": @0,
             @"micyou_screen_awake": @YES,
+            @"micyou_launch_animation": @YES,  // Default: launch animation ON
             @"micyou_host": @"",
             @"micyou_port": @8900,
             @"micyou_sample_rate": @44100,
             @"micyou_channel_count": @1
         }];
     }
-    
+
     // Select theme based on user preference (default: MicYou = 1)
     NSInteger theme = [defaults integerForKey:@"micyou_theme"];
     UIViewController *rootVC;
-    
+
     if (theme == 1) {
         // MicYou style theme
         rootVC = [[MicYouViewController alloc] init];
@@ -39,17 +44,53 @@
         // Traditional style theme
         rootVC = [[MainViewController alloc] init];
     }
-    
+
     return rootVC;
+}
+
+- (BOOL)shouldShowLaunchAnimation {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    return [defaults boolForKey:@"micyou_launch_animation"];
+}
+
+- (BOOL)isDarkModeActive {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger darkModeValue = [defaults integerForKey:@"micyou_dark_mode"];
+    BOOL useOLED = [defaults boolForKey:@"micyou_oled_black"];
+
+    if (@available(iOS 13.0, *)) {
+        if (darkModeValue == 0) {
+            // Auto: follow system
+            return [UITraitCollection currentTraitCollection].userInterfaceStyle == UIUserInterfaceStyleDark;
+        } else if (darkModeValue == 1) {
+            // On
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (void)showMainInterface {
+    UIViewController *mainVC = [self createMainViewController];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:mainVC];
+    self.window.rootViewController = nav;
 }
 
 - (void)setupWindow {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
-    
-    UIViewController *rootVC = [self createRootViewController];
-    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:rootVC];
-    self.window.rootViewController = navigationController;
+
+    if ([self shouldShowLaunchAnimation]) {
+        // Show launch animation first
+        BOOL isDark = [self isDarkModeActive];
+        LaunchAnimationViewController *launchVC = [[LaunchAnimationViewController alloc] initWithDarkMode:isDark];
+        launchVC.delegate = self;
+        self.window.rootViewController = launchVC;
+    } else {
+        // Skip animation, show main interface directly
+        [self showMainInterface];
+    }
+
     [self.window makeKeyAndVisible];
 }
 
@@ -57,21 +98,35 @@
     if (![scene isKindOfClass:[UIWindowScene class]]) {
         return;
     }
-    
+
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
     self.window.backgroundColor = [UIColor whiteColor];
-    
-    UIViewController *rootVC = [self createRootViewController];
-    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:rootVC];
-    self.window.rootViewController = navigationController;
+
+    if ([self shouldShowLaunchAnimation]) {
+        // Show launch animation first
+        BOOL isDark = [self isDarkModeActive];
+        LaunchAnimationViewController *launchVC = [[LaunchAnimationViewController alloc] initWithDarkMode:isDark];
+        launchVC.delegate = self;
+        self.window.rootViewController = launchVC;
+    } else {
+        // Skip animation, show main interface directly
+        [self showMainInterface];
+    }
+
     [self.window makeKeyAndVisible];
-    
+
     // Listen for theme changes to swap root view controller
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(settingsDidChange:)
                                                  name:@"MicYouSettingsDidChange"
                                                object:nil];
+}
+
+#pragma mark - LaunchAnimationDelegate
+
+- (void)launchAnimationDidFinish:(LaunchAnimationViewController *)controller {
+    [self showMainInterface];
 }
 
 - (void)sceneDidDisconnect:(UIScene *)scene API_AVAILABLE(ios(13.0)) {

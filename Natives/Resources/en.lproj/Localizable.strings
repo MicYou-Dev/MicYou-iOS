@@ -53,7 +53,8 @@
 "language_chinese" = "Chinese";
 "language_english" = "English";
 "language_traditional_chinese" = "Traditional Chinese";
-"general_screen_awake" = "Keep Screen Awake";
+"general_screen_awake" = "Screen Awake";
+"general_launch_animation" = "Launch Animation";
 "general_about" = "About";
 
 /* App info */

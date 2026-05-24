@@ -36,6 +36,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
 @property (nonatomic, strong) UISwitch *audioVisualizerSwitch;
 @property (nonatomic, strong) UISwitch *oledBlackSwitch;
 @property (nonatomic, strong) UISwitch *screenAwakeSwitch;
+@property (nonatomic, strong) UISwitch *launchAnimationSwitch;
 
 @property (nonatomic, assign) NSInteger themeValue;
 @property (nonatomic, assign) NSInteger seedColorIndex;
@@ -44,6 +45,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
 @property (nonatomic, assign) BOOL audioVisualizerValue;
 @property (nonatomic, assign) NSInteger languageValue;
 @property (nonatomic, assign) BOOL screenAwakeValue;
+@property (nonatomic, assign) BOOL launchAnimationValue;
 @property (nonatomic, assign) NSInteger sampleRateValue;
 @property (nonatomic, assign) NSInteger channelCountValue;
 
@@ -98,6 +100,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
         @"micyou_audio_visualizer": @YES,
         @"micyou_language": @0,
         @"micyou_screen_awake": @YES,
+        @"micyou_launch_animation": @YES,
         @"micyou_host": @"",
         @"micyou_port": @8900,
         @"micyou_sample_rate": @44100,
@@ -123,6 +126,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
     self.oledBlackValue = [defaults boolForKey:@"micyou_oled_black"];
     self.languageValue = [defaults integerForKey:@"micyou_language"];
     self.screenAwakeValue = [defaults boolForKey:@"micyou_screen_awake"];
+    self.launchAnimationValue = [defaults boolForKey:@"micyou_launch_animation"];
 
     // segmented controls
     if (self.sampleRateValue == 16000) {
@@ -135,6 +139,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
 
     self.channelControl.selectedSegmentIndex = (self.channelCountValue == 2) ? 1 : 0;
     self.audioVisualizerSwitch.on = self.audioVisualizerValue;
+    self.launchAnimationSwitch.on = self.launchAnimationValue;
     self.oledBlackSwitch.on = self.oledBlackValue;
     self.screenAwakeSwitch.on = self.screenAwakeValue;
 }
@@ -163,6 +168,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
     [defaults setBool:self.oledBlackValue forKey:@"micyou_oled_black"];
     [defaults setInteger:self.languageValue forKey:@"micyou_language"];
     [defaults setBool:self.screenAwakeValue forKey:@"micyou_screen_awake"];
+    [defaults setBool:self.launchAnimationValue forKey:@"micyou_launch_animation"];
 
     [self didChangeSetting:nil];
 }
@@ -207,6 +213,11 @@ static NSArray<NSString *> *seedColorKeys(void) {
     self.screenAwakeValue = sender.on;
     [[UIApplication sharedApplication] setIdleTimerDisabled:self.screenAwakeValue];
     [self didChangeSetting:@"micyou_screen_awake"];
+}
+
+- (void)launchAnimationToggled:(UISwitch *)sender {
+    self.launchAnimationValue = sender.on;
+    [self didChangeSetting:@"micyou_launch_animation"];
 }
 
 #pragma mark - Selection Helpers
@@ -416,7 +427,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
         case SettingsSectionNetwork:     return 2;
         case SettingsSectionAudio:       return 3;
         case SettingsSectionAppearance:  return 4;
-        case SettingsSectionGeneral:     return 3;
+        case SettingsSectionGeneral:     return 4;
         default: return 0;
     }
 }
@@ -618,6 +629,19 @@ static NSArray<NSString *> *seedColorKeys(void) {
         self.screenAwakeSwitch.on = self.screenAwakeValue;
         [self.screenAwakeSwitch addTarget:self action:@selector(screenAwakeToggled:) forControlEvents:UIControlEventValueChanged];
         cell.accessoryView = self.screenAwakeSwitch;
+
+        return cell;
+    } else if (row == 2) {
+        // Launch Animation toggle
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:kCellSwitch forIndexPath:[NSIndexPath indexPathForRow:row inSection:SettingsSectionGeneral]];
+        cell.textLabel.text = NSLocalizedString(@"general_launch_animation", nil);
+        cell.accessoryView = nil;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+
+        self.launchAnimationSwitch = [[UISwitch alloc] init];
+        self.launchAnimationSwitch.on = self.launchAnimationValue;
+        [self.launchAnimationSwitch addTarget:self action:@selector(launchAnimationToggled:) forControlEvents:UIControlEventValueChanged];
+        cell.accessoryView = self.launchAnimationSwitch;
 
         return cell;
     } else {

@@ -53,7 +53,8 @@
 "language_chinese" = "中文";
 "language_english" = "English";
 "language_traditional_chinese" = "繁體中文";
-"general_screen_awake" = "屏幕常亮";
+"general_screen_awake" = "螢幕常亮";
+"general_launch_animation" = "開屏動畫";
 "general_about" = "關於";
 
 /* App info */
