@@ -9,7 +9,6 @@ set(MICYOU_SOURCES
     ViewControllers/SettingsViewController.m
     ViewControllers/MicYouViewController.m
     Audio/MicYouAudioCapture.m
-    Audio/AudioBufferQueue.m
     Network/TransportClient.m
     Network/Protocol.m
     Utils/MicYouLogger.m
@@ -25,7 +24,6 @@ set(MICYOU_HEADERS
     ViewControllers/SettingsViewController.h
     ViewControllers/MicYouViewController.h
     Audio/MicYouAudioCapture.h
-    Audio/AudioBufferQueue.h
     Network/TransportClient.h
     Network/Protocol.h
     Utils/MicYouLogger.h
