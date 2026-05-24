@@ -197,13 +197,12 @@ static const CGFloat kPillHeight = 44.0;
     // Settings button (gear icon)
     self.headerSettingsButton = [UIButton buttonWithType:UIButtonTypeSystem];
     self.headerSettingsButton.translatesAutoresizingMaskIntoConstraints = NO;
-    UIImage *gearImage = [UIImage systemImageNamed:@"gear"];
-    if (!gearImage) {
-        // iOS <13 fallback
-        [self.headerSettingsButton setTitle:@"⚙" forState:UIControlStateNormal];
-        self.headerSettingsButton.titleLabel.font = [UIFont systemFontOfSize:22];
-    } else {
+    if (@available(iOS 13.0, *)) {
+        UIImage *gearImage = [UIImage systemImageNamed:@"gear"];
         [self.headerSettingsButton setImage:gearImage forState:UIControlStateNormal];
+    } else {
+        [self.headerSettingsButton setTitle:@"\u2699" forState:UIControlStateNormal];
+        self.headerSettingsButton.titleLabel.font = [UIFont systemFontOfSize:22];
     }
     self.headerSettingsButton.tintColor = [MicYouColors shared].onSurfaceVariant;
     [self.headerSettingsButton addTarget:self

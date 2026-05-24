@@ -51,7 +51,7 @@ typedef struct {
     if (self) {
         _colorScheme = MicYouColorSchemeLight;
         _useOLEDBlack = NO;
-        UIColor *defaultSeed = [self colorFromHex:0x4A672D];
+        UIColor *defaultSeed = [MicYouColors colorFromHex:0x4A672D];
         _seedColor = defaultSeed;
         [self regeneratePalette];
 
@@ -211,11 +211,10 @@ typedef struct {
     [color getRed:&r green:&g blue:&b alpha:&a];
 
     // sRGB relative luminance
-    CGFloat linearize(CGFloat c) {
-        if (c <= 0.03928) return c / 12.92;
-        return pow((c + 0.055) / 1.055, 2.4);
-    }
-    return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+    CGFloat lr = (r <= 0.03928) ? r / 12.92 : pow((r + 0.055) / 1.055, 2.4);
+    CGFloat lg = (g <= 0.03928) ? g / 12.92 : pow((g + 0.055) / 1.055, 2.4);
+    CGFloat lb = (b <= 0.03928) ? b / 12.92 : pow((b + 0.055) / 1.055, 2.4);
+    return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
 }
 
 + (BOOL)isColorDark:(UIColor *)color {
