@@ -48,6 +48,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
 @property (nonatomic, assign) BOOL launchAnimationValue;
 @property (nonatomic, assign) NSInteger sampleRateValue;
 @property (nonatomic, assign) NSInteger channelCountValue;
+@property (nonatomic, assign) NSInteger visualizerStyleValue;
 
 @end
 
@@ -104,7 +105,8 @@ static NSArray<NSString *> *seedColorKeys(void) {
         @"micyou_host": @"",
         @"micyou_port": @8900,
         @"micyou_sample_rate": @44100,
-        @"micyou_channel_count": @1
+        @"micyou_channel_count": @1,
+        @"micyou_visualizer_style": @1
     }];
 }
 
@@ -120,6 +122,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
     self.sampleRateValue = [defaults integerForKey:@"micyou_sample_rate"];
     self.channelCountValue = [defaults integerForKey:@"micyou_channel_count"];
     self.audioVisualizerValue = [defaults boolForKey:@"micyou_audio_visualizer"];
+    self.visualizerStyleValue = [defaults integerForKey:@"micyou_visualizer_style"];
     self.themeValue = [defaults integerForKey:@"micyou_theme"];
     self.seedColorIndex = [defaults integerForKey:@"micyou_seed_color_index"];
     self.darkModeValue = [defaults integerForKey:@"micyou_dark_mode"];
@@ -162,6 +165,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
     [defaults setInteger:self.sampleRateValue forKey:@"micyou_sample_rate"];
     [defaults setInteger:self.channelCountValue forKey:@"micyou_channel_count"];
     [defaults setBool:self.audioVisualizerValue forKey:@"micyou_audio_visualizer"];
+    [defaults setInteger:self.visualizerStyleValue forKey:@"micyou_visualizer_style"];
     [defaults setInteger:self.themeValue forKey:@"micyou_theme"];
     [defaults setInteger:self.seedColorIndex forKey:@"micyou_seed_color_index"];
     [defaults setInteger:self.darkModeValue forKey:@"micyou_dark_mode"];
@@ -331,6 +335,38 @@ static NSArray<NSString *> *seedColorKeys(void) {
     [self presentViewController:alert animated:YES completion:nil];
 }
 
+- (void)showVisualizerStylePicker {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"appearance_visualizer_style", nil)
+                                                                   message:nil
+                                                            preferredStyle:UIAlertControllerStyleActionSheet];
+
+    NSArray<NSString *> *styleKeys = @[
+        @"visualizer_volume_ring", @"visualizer_ripple", @"visualizer_bars",
+        @"visualizer_wave", @"visualizer_glow", @"visualizer_particles"
+    ];
+    for (NSInteger i = 0; i < (NSInteger)styleKeys.count; i++) {
+        NSString *styleName = NSLocalizedString(styleKeys[i], nil);
+        UIAlertAction *action = [UIAlertAction actionWithTitle:styleName
+                                                         style:UIAlertActionStyleDefault
+                                                       handler:^(UIAlertAction *act) {
+            self.visualizerStyleValue = i;
+            [self didChangeSetting:@"micyou_visualizer_style"];
+            [self.tableView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:3 inSection:SettingsSectionAppearance]]
+                                  withRowAnimation:UITableViewRowAnimationNone];
+        }];
+        [alert addAction:action];
+    }
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"button_cancel", nil)
+                                                           style:UIAlertActionStyleCancel handler:nil];
+    [alert addAction:cancelAction];
+
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:SettingsSectionAppearance]];
+    alert.popoverPresentationController.sourceView = cell;
+    alert.popoverPresentationController.sourceRect = cell.bounds;
+
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)showLanguagePicker {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"general_language", nil)
                                                                    message:nil
@@ -416,6 +452,18 @@ static NSArray<NSString *> *seedColorKeys(void) {
     }
 }
 
+- (NSString *)displayTextForVisualizerStyle {
+    switch (self.visualizerStyleValue) {
+        case 0: return NSLocalizedString(@"visualizer_volume_ring", nil);
+        case 1: return NSLocalizedString(@"visualizer_ripple", nil);
+        case 2: return NSLocalizedString(@"visualizer_bars", nil);
+        case 3: return NSLocalizedString(@"visualizer_wave", nil);
+        case 4: return NSLocalizedString(@"visualizer_glow", nil);
+        case 5: return NSLocalizedString(@"visualizer_particles", nil);
+        default: return NSLocalizedString(@"visualizer_ripple", nil);
+    }
+}
+
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -426,7 +474,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
     switch (section) {
         case SettingsSectionNetwork:     return 2;
         case SettingsSectionAudio:       return 3;
-        case SettingsSectionAppearance:  return 4;
+        case SettingsSectionAppearance:  return 5;
         case SettingsSectionGeneral:     return 4;
         default: return 0;
     }
@@ -590,6 +638,15 @@ static NSArray<NSString *> *seedColorKeys(void) {
         cell.accessoryView = nil;
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         return cell;
+    } else if (row == 3) {
+        // Visualizer Style selection
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:kCellSelection forIndexPath:[NSIndexPath indexPathForRow:row inSection:SettingsSectionAppearance]];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:kCellSelection];
+        cell.textLabel.text = NSLocalizedString(@"appearance_visualizer_style", nil);
+        cell.detailTextLabel.text = [self displayTextForVisualizerStyle];
+        cell.accessoryView = nil;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        return cell;
     } else {
         // OLED Pure Black toggle
         UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:kCellSwitch forIndexPath:[NSIndexPath indexPathForRow:row inSection:SettingsSectionAppearance]];
@@ -670,6 +727,7 @@ static NSArray<NSString *> *seedColorKeys(void) {
                 case 0: [self showThemePicker]; break;
                 case 1: [self showSeedColorPicker]; break;
                 case 2: [self showDarkModePicker]; break;
+                case 3: [self showVisualizerStylePicker]; break;
             }
             break;
         case SettingsSectionGeneral:

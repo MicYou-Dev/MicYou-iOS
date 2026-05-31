@@ -46,6 +46,13 @@
 "dark_mode_on" = "On";
 "dark_mode_off" = "Off";
 "appearance_oled_black" = "OLED Pure Black";
+"appearance_visualizer_style" = "Visualizer Style";
+"visualizer_volume_ring" = "Volume Ring";
+"visualizer_ripple" = "Ripple";
+"visualizer_bars" = "Bars";
+"visualizer_wave" = "Wave";
+"visualizer_glow" = "Glow";
+"visualizer_particles" = "Particles";
 
 /* General */
 "general_language" = "Language";
@@ -63,7 +70,6 @@
 
 /* Connection modes */
 "mode_wifi" = "WiFi";
-"mode_usb" = "USB";
 
 /* Live streaming */
 "live_badge" = "LIVE";

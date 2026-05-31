@@ -3,6 +3,7 @@
 #import "MicYouLogger.h"
 #import "MicYouColors.h"
 #import "SettingsViewController.h"
+#import "MicYouVisualizerView.h"
 
 // Audio level update throttle interval
 static const CFTimeInterval kAudioLevelUpdateInterval = 0.05;
@@ -42,24 +43,24 @@ static const CGFloat kPillHeight = 44.0;
 // Connection config card
 @property (nonatomic, strong) UIView *configCard;
 @property (nonatomic, strong) UIButton *wifiModeButton;
-@property (nonatomic, strong) UIButton *usbModeButton;
 @property (nonatomic, strong) UITextField *hostTextField;
 @property (nonatomic, strong) UITextField *portTextField;
-@property (nonatomic, assign) BOOL isWiFiMode;
 
 // Main control card
 @property (nonatomic, strong) UIView *controlCard;
+@property (nonatomic, strong) UIView *statusIconContainer;
 @property (nonatomic, strong) UIImageView *statusIconView;
 @property (nonatomic, strong) UILabel *statusTextLabel;
 @property (nonatomic, strong) UIView *liveBadge;
-@property (nonatomic, strong) UIView *visualizerView;
-@property (nonatomic, strong) NSMutableArray<UIView *> *visualizerBars;
+@property (nonatomic, strong) MicYouVisualizerView *visualizerView;
 @property (nonatomic, strong) UIButton *mainActionButton;
 @property (nonatomic, strong) UIView *mainActionGlowView;
+@property (nonatomic, strong) UIActivityIndicatorView *connectingSpinner;
 
 // Bottom bar
 @property (nonatomic, strong) UIView *bottomBar;
 @property (nonatomic, strong) UIButton *muteButton;
+@property (nonatomic, strong) UIButton *pluginButton;
 @property (nonatomic, strong) UIView *statusDot;
 @property (nonatomic, strong) UILabel *versionLabel;
 
@@ -80,7 +81,6 @@ static const CGFloat kPillHeight = 44.0;
     [super viewDidLoad];
 
     self.title = @"MicYou";
-    self.isWiFiMode = YES;
     self.isMuted = NO;
 
     // Apply saved color scheme before building UI
@@ -144,6 +144,14 @@ static const CGFloat kPillHeight = 44.0;
 
 - (void)settingsDidChange:(NSNotification *)notification {
     [self applySavedColorScheme];
+    
+    // Update visualizer style if changed
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger savedStyle = [defaults integerForKey:@"micyou_visualizer_style"];
+    if (self.visualizerView.style != savedStyle) {
+        self.visualizerView.style = (MicYouVisualizerStyle)savedStyle;
+    }
+    
     [UIView animateWithDuration:0.3 animations:^{
         [self applyColors];
     }];
@@ -299,23 +307,20 @@ static const CGFloat kPillHeight = 44.0;
     [self.contentView addSubview:self.configCard];
 
     // Mode selector
-    self.wifiModeButton = [self createModeButton:NSLocalizedString(@"mode_wifi", nil)];
+    self.wifiModeButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.wifiModeButton.translatesAutoresizingMaskIntoConstraints = NO;
+    if (@available(iOS 13.0, *)) {
+        UIImage *wifiImage = [UIImage systemImageNamed:@"wifi"];
+        [self.wifiModeButton setImage:wifiImage forState:UIControlStateNormal];
+    } else {
+        [self.wifiModeButton setTitle:NSLocalizedString(@"mode_wifi", nil) forState:UIControlStateNormal];
+    }
+    self.wifiModeButton.tintColor = [MicYouColors shared].onPrimary;
+    self.wifiModeButton.backgroundColor = [MicYouColors shared].primary;
+    self.wifiModeButton.layer.cornerRadius = 22;
+    self.wifiModeButton.clipsToBounds = YES;
     self.wifiModeButton.selected = YES;
-    [self.wifiModeButton addTarget:self
-                            action:@selector(modeButtonTapped:)
-                  forControlEvents:UIControlEventTouchUpInside];
-
-    self.usbModeButton = [self createModeButton:NSLocalizedString(@"mode_usb", nil)];
-    [self.usbModeButton addTarget:self
-                           action:@selector(modeButtonTapped:)
-                 forControlEvents:UIControlEventTouchUpInside];
-
-    UIStackView *modeStack = [[UIStackView alloc] initWithArrangedSubviews:@[self.wifiModeButton, self.usbModeButton]];
-    modeStack.translatesAutoresizingMaskIntoConstraints = NO;
-    modeStack.axis = UILayoutConstraintAxisHorizontal;
-    modeStack.spacing = kSmallMargin;
-    modeStack.distribution = UIStackViewDistributionFillEqually;
-    [self.configCard addSubview:modeStack];
+    [self.configCard addSubview:self.wifiModeButton];
 
     // Host text field
     self.hostTextField = [self createTextFieldWithPlaceholder:NSLocalizedString(@"network_host_label", nil)
@@ -333,12 +338,12 @@ static const CGFloat kPillHeight = 44.0;
         [self.configCard.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-kMargin],
         [self.configCard.heightAnchor constraintEqualToConstant:kConfigCardHeight],
 
-        [modeStack.topAnchor constraintEqualToAnchor:self.configCard.topAnchor constant:kMargin],
-        [modeStack.leadingAnchor constraintEqualToAnchor:self.configCard.leadingAnchor constant:kMargin],
-        [modeStack.trailingAnchor constraintEqualToAnchor:self.configCard.trailingAnchor constant:-kMargin],
-        [modeStack.heightAnchor constraintEqualToConstant:kPillHeight],
+        [self.wifiModeButton.topAnchor constraintEqualToAnchor:self.configCard.topAnchor constant:kMargin],
+        [self.wifiModeButton.leadingAnchor constraintEqualToAnchor:self.configCard.leadingAnchor constant:kMargin],
+        [self.wifiModeButton.widthAnchor constraintEqualToConstant:44],
+        [self.wifiModeButton.heightAnchor constraintEqualToConstant:44],
 
-        [self.hostTextField.topAnchor constraintEqualToAnchor:modeStack.bottomAnchor constant:14],
+        [self.hostTextField.topAnchor constraintEqualToAnchor:self.wifiModeButton.bottomAnchor constant:14],
         [self.hostTextField.leadingAnchor constraintEqualToAnchor:self.configCard.leadingAnchor constant:kMargin],
         [self.hostTextField.trailingAnchor constraintEqualToAnchor:self.configCard.trailingAnchor constant:-kMargin],
         [self.hostTextField.heightAnchor constraintEqualToConstant:kPillHeight],
@@ -358,6 +363,14 @@ static const CGFloat kPillHeight = 44.0;
     self.controlCard.layer.cornerRadius = kCardCornerRadius;
     [self.contentView addSubview:self.controlCard];
 
+    // Status icon container
+    self.statusIconContainer = [[UIView alloc] init];
+    self.statusIconContainer.translatesAutoresizingMaskIntoConstraints = NO;
+    self.statusIconContainer.backgroundColor = [MicYouColors shared].surfaceVariant;
+    self.statusIconContainer.layer.cornerRadius = 12;
+    self.statusIconContainer.clipsToBounds = YES;
+    [self.controlCard addSubview:self.statusIconContainer];
+
     // Status icon
     self.statusIconView = [[UIImageView alloc] init];
     self.statusIconView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -368,9 +381,9 @@ static const CGFloat kPillHeight = 44.0;
     }
     // Fallback: no system image on iOS <13; we set a label-based fallback below
     if (!self.statusIconView.image) {
-        self.statusIconView.image = [self textToImage:@"🎤❌" size:CGSizeMake(48, 48)];
+        self.statusIconView.image = [self textToImage:@"🎤❌" size:CGSizeMake(24, 24)];
     }
-    [self.controlCard addSubview:self.statusIconView];
+    [self.statusIconContainer addSubview:self.statusIconView];
 
     // Status text
     self.statusTextLabel = [[UILabel alloc] init];
@@ -406,13 +419,17 @@ static const CGFloat kPillHeight = 44.0;
     [self.controlCard addSubview:self.liveBadge];
 
     // Audio visualizer
-    self.visualizerView = [[UIView alloc] init];
+    self.visualizerView = [[MicYouVisualizerView alloc] init];
     self.visualizerView.translatesAutoresizingMaskIntoConstraints = NO;
     self.visualizerView.layer.cornerRadius = 14;
     self.visualizerView.layer.masksToBounds = YES;
     [self.controlCard addSubview:self.visualizerView];
 
-    [self setupVisualizerBars];
+    // Load saved visualizer style
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger savedStyle = [defaults integerForKey:@"micyou_visualizer_style"];
+    self.visualizerView.style = (MicYouVisualizerStyle)savedStyle;
+    self.visualizerView.visualizerColor = [MicYouColors shared].primary;
 
     // Main action button (FAB)
     self.mainActionButton = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -442,18 +459,25 @@ static const CGFloat kPillHeight = 44.0;
         [self.controlCard.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-kMargin],
         [self.controlCard.heightAnchor constraintEqualToConstant:kControlCardHeight],
 
-        [self.statusIconView.topAnchor constraintEqualToAnchor:self.controlCard.topAnchor constant:24],
-        [self.statusIconView.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
-        [self.statusIconView.widthAnchor constraintEqualToConstant:48],
-        [self.statusIconView.heightAnchor constraintEqualToConstant:48],
+        [self.statusIconContainer.topAnchor constraintEqualToAnchor:self.controlCard.topAnchor constant:24],
+        [self.statusIconContainer.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
+        [self.statusIconContainer.widthAnchor constraintEqualToConstant:40],
+        [self.statusIconContainer.heightAnchor constraintEqualToConstant:40],
 
-        [self.statusTextLabel.topAnchor constraintEqualToAnchor:self.statusIconView.bottomAnchor constant:10],
+        [self.statusIconView.centerXAnchor constraintEqualToAnchor:self.statusIconContainer.centerXAnchor],
+        [self.statusIconView.centerYAnchor constraintEqualToAnchor:self.statusIconContainer.centerYAnchor],
+        [self.statusIconView.widthAnchor constraintEqualToConstant:24],
+        [self.statusIconView.heightAnchor constraintEqualToConstant:24],
+
+        [self.statusTextLabel.topAnchor constraintEqualToAnchor:self.statusIconContainer.bottomAnchor constant:10],
         [self.statusTextLabel.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
 
-        [self.liveBadge.topAnchor constraintEqualToAnchor:self.statusTextLabel.bottomAnchor constant:6],
-        [self.liveBadge.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
+        [self.liveBadge.centerYAnchor constraintEqualToAnchor:self.statusTextLabel.centerYAnchor],
+        [self.liveBadge.leadingAnchor constraintEqualToAnchor:self.statusTextLabel.trailingAnchor constant:8],
+        [self.liveBadge.widthAnchor constraintEqualToConstant:44],
+        [self.liveBadge.heightAnchor constraintEqualToConstant:22],
 
-        [self.visualizerView.topAnchor constraintEqualToAnchor:self.liveBadge.bottomAnchor constant:12],
+        [self.visualizerView.topAnchor constraintEqualToAnchor:self.statusTextLabel.bottomAnchor constant:18],
         [self.visualizerView.leadingAnchor constraintEqualToAnchor:self.controlCard.leadingAnchor constant:kMargin],
         [self.visualizerView.trailingAnchor constraintEqualToAnchor:self.controlCard.trailingAnchor constant:-kMargin],
         [self.visualizerView.heightAnchor constraintEqualToConstant:36],
@@ -471,38 +495,7 @@ static const CGFloat kPillHeight = 44.0;
 }
 
 - (void)setupVisualizerBars {
-    self.visualizerBars = [NSMutableArray array];
-    NSInteger barCount = 20;
-    CGFloat barWidth = 3.0;
-
-    UIStackView *barsStack = [[UIStackView alloc] init];
-    barsStack.translatesAutoresizingMaskIntoConstraints = NO;
-    barsStack.axis = UILayoutConstraintAxisHorizontal;
-    barsStack.alignment = UIStackViewAlignmentBottom;
-    barsStack.distribution = UIStackViewDistributionEqualSpacing;
-    barsStack.spacing = 3;
-    [self.visualizerView addSubview:barsStack];
-
-    for (NSInteger i = 0; i < barCount; i++) {
-        UIView *bar = [[UIView alloc] init];
-        bar.translatesAutoresizingMaskIntoConstraints = NO;
-        bar.layer.cornerRadius = barWidth / 2.0;
-        bar.backgroundColor = [MicYouColors shared].primary;
-        [barsStack addArrangedSubview:bar];
-        [self.visualizerBars addObject:bar];
-
-        [NSLayoutConstraint activateConstraints:@[
-            [bar.widthAnchor constraintEqualToConstant:barWidth],
-            [bar.heightAnchor constraintEqualToConstant:4],
-        ]];
-    }
-
-    [NSLayoutConstraint activateConstraints:@[
-        [barsStack.centerXAnchor constraintEqualToAnchor:self.visualizerView.centerXAnchor],
-        [barsStack.centerYAnchor constraintEqualToAnchor:self.visualizerView.centerYAnchor constant:2],
-        [barsStack.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.visualizerView.leadingAnchor constant:8],
-        [barsStack.trailingAnchor constraintLessThanOrEqualToAnchor:self.visualizerView.trailingAnchor constant:-8],
-    ]];
+    // Deprecated: replaced by MicYouVisualizerView
 }
 
 #pragma mark - Bottom Bar
@@ -523,6 +516,24 @@ static const CGFloat kPillHeight = 44.0;
                         action:@selector(muteButtonTapped:)
               forControlEvents:UIControlEventTouchUpInside];
     [self.bottomBar addSubview:self.muteButton];
+
+    // Plugin button
+    self.pluginButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.pluginButton.translatesAutoresizingMaskIntoConstraints = NO;
+    if (@available(iOS 13.0, *)) {
+        UIImage *pluginImage = [UIImage systemImageNamed:@"puzzlepiece.extension"];
+        [self.pluginButton setImage:pluginImage forState:UIControlStateNormal];
+    } else {
+        [self.pluginButton setTitle:@"🔌" forState:UIControlStateNormal];
+    }
+    self.pluginButton.tintColor = [MicYouColors shared].onSurfaceVariant;
+    self.pluginButton.backgroundColor = [MicYouColors shared].surfaceVariant;
+    self.pluginButton.layer.cornerRadius = 18;
+    self.pluginButton.clipsToBounds = YES;
+    [self.pluginButton addTarget:self
+                          action:@selector(pluginButtonTapped:)
+                forControlEvents:UIControlEventTouchUpInside];
+    [self.bottomBar addSubview:self.pluginButton];
 
     // Status dot
     self.statusDot = [[UIView alloc] init];
@@ -552,6 +563,11 @@ static const CGFloat kPillHeight = 44.0;
         [self.muteButton.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
         [self.muteButton.widthAnchor constraintEqualToConstant:80],
         [self.muteButton.heightAnchor constraintEqualToConstant:36],
+
+        [self.pluginButton.leadingAnchor constraintEqualToAnchor:self.muteButton.trailingAnchor constant:kSmallMargin],
+        [self.pluginButton.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
+        [self.pluginButton.widthAnchor constraintEqualToConstant:36],
+        [self.pluginButton.heightAnchor constraintEqualToConstant:36],
 
         [self.statusDot.centerXAnchor constraintEqualToAnchor:self.bottomBar.centerXAnchor],
         [self.statusDot.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
@@ -596,19 +612,6 @@ static const CGFloat kPillHeight = 44.0;
 
 - (void)headerSettingsTapped:(UIButton *)sender {
     [self openSettings];
-}
-
-- (void)modeButtonTapped:(UIButton *)sender {
-    if (sender == self.wifiModeButton) {
-        self.isWiFiMode = YES;
-        self.wifiModeButton.selected = YES;
-        self.usbModeButton.selected = NO;
-    } else {
-        self.isWiFiMode = NO;
-        self.wifiModeButton.selected = NO;
-        self.usbModeButton.selected = YES;
-    }
-    [self updateModeButtonStyles];
 }
 
 - (void)mainActionButtonTapped:(UIButton *)sender {
@@ -656,6 +659,10 @@ static const CGFloat kPillHeight = 44.0;
     // Update status
     self.statusTextLabel.text = NSLocalizedString(@"status_connecting", nil);
     [self updateStatusIconForState:@"connecting"];
+    
+    // Status dot - connecting state
+    self.statusDot.backgroundColor = [MicYouColors shared].tertiary;
+    [self.statusDot.layer removeAllAnimations];
 
     // Animate button to connecting state
     [UIView animateWithDuration:0.3 animations:^{
@@ -663,19 +670,35 @@ static const CGFloat kPillHeight = 44.0;
         [self.mainActionButton setTitle:@"" forState:UIControlStateNormal];
     }];
 
-    // Show activity indicator
-    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    // Show rotating refresh icon on FAB
     if (@available(iOS 13.0, *)) {
-        spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        UIImage *refreshImage = [UIImage systemImageNamed:@"arrow.clockwise"];
+        [self.mainActionButton setImage:refreshImage forState:UIControlStateNormal];
+        self.mainActionButton.tintColor = [UIColor whiteColor];
+        
+        CABasicAnimation *rotate = [CABasicAnimation animationWithKeyPath:@"transform.rotation"];
+        rotate.fromValue = @(0);
+        rotate.toValue = @(2 * M_PI);
+        rotate.duration = 1.0;
+        rotate.repeatCount = HUGE_VALF;
+        [self.mainActionButton.imageView.layer addAnimation:rotate forKey:@"rotate"];
     }
-    spinner.translatesAutoresizingMaskIntoConstraints = NO;
-    spinner.tag = 999;
-    [self.mainActionButton addSubview:spinner];
-    [NSLayoutConstraint activateConstraints:@[
-        [spinner.centerXAnchor constraintEqualToAnchor:self.mainActionButton.centerXAnchor],
-        [spinner.centerYAnchor constraintEqualToAnchor:self.mainActionButton.centerYAnchor],
-    ]];
-    [spinner startAnimating];
+
+    // Show connecting spinner
+    if (!self.connectingSpinner) {
+        self.connectingSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        if (@available(iOS 13.0, *)) {
+            self.connectingSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        }
+        self.connectingSpinner.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.mainActionButton addSubview:self.connectingSpinner];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.connectingSpinner.centerXAnchor constraintEqualToAnchor:self.mainActionButton.centerXAnchor],
+            [self.connectingSpinner.centerYAnchor constraintEqualToAnchor:self.mainActionButton.centerYAnchor],
+        ]];
+    }
+    self.connectingSpinner.hidden = NO;
+    [self.connectingSpinner startAnimating];
 
     // Save settings
     [self saveCurrentSettings];
@@ -683,9 +706,9 @@ static const CGFloat kPillHeight = 44.0;
     __weak typeof(self) weakSelf = self;
     [self.transportClient connectToHost:host port:(int)port completion:^(BOOL success) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            // Remove spinner
-            UIView *spinnerView = [weakSelf.mainActionButton viewWithTag:999];
-            [spinnerView removeFromSuperview];
+            // Stop and hide spinner
+            [weakSelf.connectingSpinner stopAnimating];
+            weakSelf.connectingSpinner.hidden = YES;
 
             if (success) {
                 weakSelf.isConnected = YES;
@@ -697,9 +720,38 @@ static const CGFloat kPillHeight = 44.0;
                 weakSelf.liveBadge.hidden = NO;
                 weakSelf.ipLabel.text = [NSString stringWithFormat:NSLocalizedString(@"host_label_format", nil), host, (long)port];
 
-                // Button to disconnect state
-                weakSelf.mainActionButton.backgroundColor = [MicYouColors shared].error;
-                [weakSelf.mainActionButton setTitle:NSLocalizedString(@"button_disconnect", nil) forState:UIControlStateNormal];
+                // Remove refresh icon rotation
+                [weakSelf.mainActionButton.imageView.layer removeAnimationForKey:@"rotate"];
+                [weakSelf.mainActionButton setImage:nil forState:UIControlStateNormal];
+
+                // Button to disconnect state with size animation
+                [UIView animateWithDuration:0.3 animations:^{
+                    weakSelf.mainActionButton.backgroundColor = [MicYouColors shared].error;
+                    [weakSelf.mainActionButton setTitle:NSLocalizedString(@"button_disconnect", nil) forState:UIControlStateNormal];
+                }];
+                
+                // Animate FAB size from 80pt to 100pt
+                [weakSelf.mainActionButton.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
+                    if (constraint.firstItem == weakSelf.mainActionButton && constraint.firstAttribute == NSLayoutAttributeWidth && constraint.constant == kFabDiameter) {
+                        constraint.constant = 100.0;
+                    }
+                    if (constraint.firstItem == weakSelf.mainActionButton && constraint.firstAttribute == NSLayoutAttributeHeight && constraint.constant == kFabDiameter) {
+                        constraint.constant = 100.0;
+                    }
+                }];
+                [weakSelf.mainActionGlowView.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
+                    if (constraint.firstItem == weakSelf.mainActionGlowView && constraint.firstAttribute == NSLayoutAttributeWidth && constraint.constant == kFabDiameter + 20) {
+                        constraint.constant = 120.0;
+                    }
+                    if (constraint.firstItem == weakSelf.mainActionGlowView && constraint.firstAttribute == NSLayoutAttributeHeight && constraint.constant == kFabDiameter + 20) {
+                        constraint.constant = 120.0;
+                    }
+                }];
+                [UIView animateWithDuration:0.3 animations:^{
+                    weakSelf.mainActionButton.layer.cornerRadius = 50.0;
+                    weakSelf.mainActionGlowView.layer.cornerRadius = 60.0;
+                    [weakSelf.controlCard layoutIfNeeded];
+                }];
 
                 // Glow on
                 weakSelf.mainActionGlowView.hidden = NO;
@@ -713,12 +765,17 @@ static const CGFloat kPillHeight = 44.0;
                 [UIApplication sharedApplication].idleTimerDisabled = YES;
 
                 // Status dot
-                weakSelf.statusDot.backgroundColor = [MicYouColors shared].error;
+                weakSelf.statusDot.backgroundColor = [MicYouColors shared].primary;
                 [MicYouAnimator animatePulse:weakSelf.statusDot duration:0.8];
 
             } else {
                 weakSelf.statusTextLabel.text = NSLocalizedString(@"status_connection_failed", nil);
                 [weakSelf updateStatusIconForState:@"disconnected"];
+                
+                // Remove refresh icon rotation
+                [weakSelf.mainActionButton.imageView.layer removeAnimationForKey:@"rotate"];
+                [weakSelf.mainActionButton setImage:nil forState:UIControlStateNormal];
+                
                 [UIView animateWithDuration:0.3 animations:^{
                     weakSelf.mainActionButton.backgroundColor = [MicYouColors shared].primary;
                     [weakSelf.mainActionButton setTitle:NSLocalizedString(@"button_connect", nil) forState:UIControlStateNormal];
@@ -746,9 +803,34 @@ static const CGFloat kPillHeight = 44.0;
     [self.statusDot.layer removeAllAnimations];
     self.statusDot.backgroundColor = [MicYouColors shared].outline;
 
+    // Remove refresh icon rotation if any
+    [self.mainActionButton.imageView.layer removeAnimationForKey:@"rotate"];
+    [self.mainActionButton setImage:nil forState:UIControlStateNormal];
+    
+    // Reset FAB size to 80pt
+    [self.mainActionButton.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
+        if (constraint.firstItem == self.mainActionButton && constraint.firstAttribute == NSLayoutAttributeWidth && constraint.constant == 100.0) {
+            constraint.constant = kFabDiameter;
+        }
+        if (constraint.firstItem == self.mainActionButton && constraint.firstAttribute == NSLayoutAttributeHeight && constraint.constant == 100.0) {
+            constraint.constant = kFabDiameter;
+        }
+    }];
+    [self.mainActionGlowView.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
+        if (constraint.firstItem == self.mainActionGlowView && constraint.firstAttribute == NSLayoutAttributeWidth && constraint.constant == 120.0) {
+            constraint.constant = kFabDiameter + 20;
+        }
+        if (constraint.firstItem == self.mainActionGlowView && constraint.firstAttribute == NSLayoutAttributeHeight && constraint.constant == 120.0) {
+            constraint.constant = kFabDiameter + 20;
+        }
+    }];
+
     [UIView animateWithDuration:0.3 animations:^{
         self.mainActionButton.backgroundColor = [MicYouColors shared].primary;
         [self.mainActionButton setTitle:NSLocalizedString(@"button_connect", nil) forState:UIControlStateNormal];
+        self.mainActionButton.layer.cornerRadius = kFabDiameter / 2.0;
+        self.mainActionGlowView.layer.cornerRadius = (kFabDiameter + 20) / 2.0;
+        [self.controlCard layoutIfNeeded];
     }];
 
     [UIApplication sharedApplication].idleTimerDisabled = NO;
@@ -778,27 +860,7 @@ static const CGFloat kPillHeight = 44.0;
     self.lastLevelUpdateTime = now;
 
     CGFloat clamped = MAX(0.0f, MIN(1.0f, level));
-
-    for (NSInteger i = 0; i < self.visualizerBars.count; i++) {
-        UIView *bar = self.visualizerBars[i];
-
-        // Randomized multipliers for organic-looking visualizer
-        CGFloat randomFactor = 0.3 + ((CGFloat)arc4random_uniform(71) / 100.0); // 0.3 - 1.0
-        CGFloat barLevel = clamped * randomFactor;
-        CGFloat height = MAX(3.0, barLevel * 28.0);
-
-        CABasicAnimation *heightAnim = [CABasicAnimation animationWithKeyPath:@"bounds.size.height"];
-        heightAnim.fromValue = @(bar.layer.bounds.size.height);
-        heightAnim.toValue = @(height);
-        heightAnim.duration = 0.08;
-        heightAnim.fillMode = kCAFillModeForwards;
-        heightAnim.removedOnCompletion = NO;
-        [bar.layer addAnimation:heightAnim forKey:@"vizHeight"];
-
-        CGRect bounds = bar.layer.bounds;
-        bounds.size.height = height;
-        bar.layer.bounds = bounds;
-    }
+    [self.visualizerView updateWithLevel:clamped];
 }
 
 #pragma mark - Status Icon Management
@@ -894,11 +956,7 @@ static const CGFloat kPillHeight = 44.0;
 
     self.statusTextLabel.textColor = c.onSurface;
     self.visualizerView.backgroundColor = c.surfaceVariant;
-
-    // Visualizer bars
-    for (UIView *bar in self.visualizerBars) {
-        bar.backgroundColor = c.primary;
-    }
+    self.visualizerView.visualizerColor = c.primary;
 
     // Main action button (preserve state-dependent color)
     if (!self.isConnected && !self.isStreaming) {
@@ -996,6 +1054,10 @@ static const CGFloat kPillHeight = 44.0;
 - (void)transportClient:(TransportClient *)client didReceiveError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         self.statusTextLabel.text = [NSString stringWithFormat:NSLocalizedString(@"error_connection_failed", nil), error.localizedDescription];
+        
+        // Status dot - error state
+        [self.statusDot.layer removeAllAnimations];
+        self.statusDot.backgroundColor = [MicYouColors shared].error;
     });
 }
 
@@ -1062,17 +1124,11 @@ static const CGFloat kPillHeight = 44.0;
 
 - (void)updateModeButtonStyles {
     MicYouColors *c = [MicYouColors shared];
-
-    if (self.isWiFiMode) {
-        self.wifiModeButton.backgroundColor = c.primary;
-        [self.wifiModeButton setTitleColor:c.onPrimary forState:UIControlStateNormal];
-        self.usbModeButton.backgroundColor = c.surfaceVariant;
-        [self.usbModeButton setTitleColor:c.onSurfaceVariant forState:UIControlStateNormal];
+    self.wifiModeButton.backgroundColor = c.primary;
+    if (@available(iOS 13.0, *)) {
+        self.wifiModeButton.tintColor = c.onPrimary;
     } else {
-        self.usbModeButton.backgroundColor = c.primary;
-        [self.usbModeButton setTitleColor:c.onPrimary forState:UIControlStateNormal];
-        self.wifiModeButton.backgroundColor = c.surfaceVariant;
-        [self.wifiModeButton setTitleColor:c.onSurfaceVariant forState:UIControlStateNormal];
+        [self.wifiModeButton setTitleColor:c.onPrimary forState:UIControlStateNormal];
     }
 }
 

@@ -9,6 +9,7 @@ set(MICYOU_SOURCES
     ViewControllers/SettingsViewController.m
     ViewControllers/MicYouViewController.m
     ViewControllers/LaunchAnimationViewController.m
+    Views/MicYouVisualizerView.m
     Audio/MicYouAudioCapture.m
     Network/TransportClient.m
     Network/Protocol.m
@@ -26,6 +27,7 @@ set(MICYOU_HEADERS
     ViewControllers/SettingsViewController.h
     ViewControllers/MicYouViewController.h
     ViewControllers/LaunchAnimationViewController.h
+    Views/MicYouVisualizerView.h
     Audio/MicYouAudioCapture.h
     Network/TransportClient.h
     Network/Protocol.h
@@ -105,6 +107,7 @@ target_include_directories(MicYou PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
     ${CMAKE_CURRENT_SOURCE_DIR}/Animation
     ${CMAKE_CURRENT_SOURCE_DIR}/Theme
+    ${CMAKE_CURRENT_SOURCE_DIR}/Views
 )
 
 set_property(TARGET MicYou PROPERTY

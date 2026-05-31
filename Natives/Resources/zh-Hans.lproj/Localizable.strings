@@ -46,6 +46,13 @@
 "dark_mode_on" = "开启";
 "dark_mode_off" = "关闭";
 "appearance_oled_black" = "OLED 纯黑";
+"appearance_visualizer_style" = "可视化样式";
+"visualizer_volume_ring" = "音量环";
+"visualizer_ripple" = "涟漪";
+"visualizer_bars" = "条形";
+"visualizer_wave" = "波浪";
+"visualizer_glow" = "发光";
+"visualizer_particles" = "粒子";
 
 /* General */
 "general_language" = "语言";
@@ -63,7 +70,6 @@
 
 /* Connection modes */
 "mode_wifi" = "WiFi";
-"mode_usb" = "USB";
 
 /* Live streaming */
 "live_badge" = "LIVE";
