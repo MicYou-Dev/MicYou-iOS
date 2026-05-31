@@ -60,7 +60,6 @@ static const CGFloat kPillHeight = 44.0;
 // Bottom bar
 @property (nonatomic, strong) UIView *bottomBar;
 @property (nonatomic, strong) UIButton *muteButton;
-@property (nonatomic, strong) UIButton *pluginButton;
 @property (nonatomic, strong) UIView *statusDot;
 @property (nonatomic, strong) UILabel *versionLabel;
 
@@ -315,7 +314,7 @@ static const CGFloat kPillHeight = 44.0;
     } else {
         [self.wifiModeButton setTitle:NSLocalizedString(@"mode_wifi", nil) forState:UIControlStateNormal];
     }
-    self.wifiModeButton.tintColor = [MicYouColors shared].onPrimary;
+    self.wifiModeButton.tintColor = [UIColor whiteColor];
     self.wifiModeButton.backgroundColor = [MicYouColors shared].primary;
     self.wifiModeButton.layer.cornerRadius = 22;
     self.wifiModeButton.clipsToBounds = YES;
@@ -418,19 +417,6 @@ static const CGFloat kPillHeight = 44.0;
     ]];
     [self.controlCard addSubview:self.liveBadge];
 
-    // Audio visualizer
-    self.visualizerView = [[MicYouVisualizerView alloc] init];
-    self.visualizerView.translatesAutoresizingMaskIntoConstraints = NO;
-    self.visualizerView.layer.cornerRadius = 14;
-    self.visualizerView.layer.masksToBounds = YES;
-    [self.controlCard addSubview:self.visualizerView];
-
-    // Load saved visualizer style
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSInteger savedStyle = [defaults integerForKey:@"micyou_visualizer_style"];
-    self.visualizerView.style = (MicYouVisualizerStyle)savedStyle;
-    self.visualizerView.visualizerColor = [MicYouColors shared].primary;
-
     // Main action button (FAB)
     self.mainActionButton = [UIButton buttonWithType:UIButtonTypeSystem];
     self.mainActionButton.translatesAutoresizingMaskIntoConstraints = NO;
@@ -452,6 +438,18 @@ static const CGFloat kPillHeight = 44.0;
     self.mainActionGlowView.userInteractionEnabled = NO;
     self.mainActionGlowView.hidden = YES;
     [self.controlCard insertSubview:self.mainActionGlowView belowSubview:self.mainActionButton];
+
+    // Audio visualizer - behind FAB, centered in control card
+    self.visualizerView = [[MicYouVisualizerView alloc] init];
+    self.visualizerView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.visualizerView.backgroundColor = [UIColor clearColor];
+    [self.controlCard insertSubview:self.visualizerView belowSubview:self.mainActionGlowView];
+
+    // Load saved visualizer style
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger savedStyle = [defaults integerForKey:@"micyou_visualizer_style"];
+    self.visualizerView.style = (MicYouVisualizerStyle)savedStyle;
+    self.visualizerView.visualizerColor = [MicYouColors shared].primary;
 
     [NSLayoutConstraint activateConstraints:@[
         [self.controlCard.topAnchor constraintEqualToAnchor:self.configCard.bottomAnchor constant:kMargin],
@@ -477,11 +475,6 @@ static const CGFloat kPillHeight = 44.0;
         [self.liveBadge.widthAnchor constraintEqualToConstant:44],
         [self.liveBadge.heightAnchor constraintEqualToConstant:22],
 
-        [self.visualizerView.topAnchor constraintEqualToAnchor:self.statusTextLabel.bottomAnchor constant:18],
-        [self.visualizerView.leadingAnchor constraintEqualToAnchor:self.controlCard.leadingAnchor constant:kMargin],
-        [self.visualizerView.trailingAnchor constraintEqualToAnchor:self.controlCard.trailingAnchor constant:-kMargin],
-        [self.visualizerView.heightAnchor constraintEqualToConstant:36],
-
         [self.mainActionButton.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
         [self.mainActionButton.bottomAnchor constraintEqualToAnchor:self.controlCard.bottomAnchor constant:-16],
         [self.mainActionButton.widthAnchor constraintEqualToConstant:kFabDiameter],
@@ -491,6 +484,12 @@ static const CGFloat kPillHeight = 44.0;
         [self.mainActionGlowView.centerYAnchor constraintEqualToAnchor:self.mainActionButton.centerYAnchor],
         [self.mainActionGlowView.widthAnchor constraintEqualToConstant:kFabDiameter + 20],
         [self.mainActionGlowView.heightAnchor constraintEqualToConstant:kFabDiameter + 20],
+
+        // Visualizer centered behind FAB, large square area
+        [self.visualizerView.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
+        [self.visualizerView.centerYAnchor constraintEqualToAnchor:self.mainActionButton.centerYAnchor],
+        [self.visualizerView.widthAnchor constraintEqualToConstant:200],
+        [self.visualizerView.heightAnchor constraintEqualToConstant:200],
     ]];
 }
 
@@ -516,24 +515,6 @@ static const CGFloat kPillHeight = 44.0;
                         action:@selector(muteButtonTapped:)
               forControlEvents:UIControlEventTouchUpInside];
     [self.bottomBar addSubview:self.muteButton];
-
-    // Plugin button
-    self.pluginButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.pluginButton.translatesAutoresizingMaskIntoConstraints = NO;
-    if (@available(iOS 13.0, *)) {
-        UIImage *pluginImage = [UIImage systemImageNamed:@"puzzlepiece.extension"];
-        [self.pluginButton setImage:pluginImage forState:UIControlStateNormal];
-    } else {
-        [self.pluginButton setTitle:@"🔌" forState:UIControlStateNormal];
-    }
-    self.pluginButton.tintColor = [MicYouColors shared].onSurfaceVariant;
-    self.pluginButton.backgroundColor = [MicYouColors shared].surfaceVariant;
-    self.pluginButton.layer.cornerRadius = 18;
-    self.pluginButton.clipsToBounds = YES;
-    [self.pluginButton addTarget:self
-                          action:@selector(pluginButtonTapped:)
-                forControlEvents:UIControlEventTouchUpInside];
-    [self.bottomBar addSubview:self.pluginButton];
 
     // Status dot
     self.statusDot = [[UIView alloc] init];
@@ -563,11 +544,6 @@ static const CGFloat kPillHeight = 44.0;
         [self.muteButton.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
         [self.muteButton.widthAnchor constraintEqualToConstant:80],
         [self.muteButton.heightAnchor constraintEqualToConstant:36],
-
-        [self.pluginButton.leadingAnchor constraintEqualToAnchor:self.muteButton.trailingAnchor constant:kSmallMargin],
-        [self.pluginButton.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
-        [self.pluginButton.widthAnchor constraintEqualToConstant:36],
-        [self.pluginButton.heightAnchor constraintEqualToConstant:36],
 
         [self.statusDot.centerXAnchor constraintEqualToAnchor:self.bottomBar.centerXAnchor],
         [self.statusDot.centerYAnchor constraintEqualToAnchor:self.bottomBar.centerYAnchor],
@@ -955,7 +931,7 @@ static const CGFloat kPillHeight = 44.0;
     self.controlCard.layer.shadowRadius = 12;
 
     self.statusTextLabel.textColor = c.onSurface;
-    self.visualizerView.backgroundColor = c.surfaceVariant;
+    self.visualizerView.backgroundColor = [UIColor clearColor];
     self.visualizerView.visualizerColor = c.primary;
 
     // Main action button (preserve state-dependent color)
@@ -1126,9 +1102,9 @@ static const CGFloat kPillHeight = 44.0;
     MicYouColors *c = [MicYouColors shared];
     self.wifiModeButton.backgroundColor = c.primary;
     if (@available(iOS 13.0, *)) {
-        self.wifiModeButton.tintColor = c.onPrimary;
+        self.wifiModeButton.tintColor = [UIColor whiteColor];
     } else {
-        [self.wifiModeButton setTitleColor:c.onPrimary forState:UIControlStateNormal];
+        [self.wifiModeButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     }
 }
 
