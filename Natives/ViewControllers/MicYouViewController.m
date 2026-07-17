@@ -5,8 +5,67 @@
 #import "SettingsViewController.h"
 #import "MicYouVisualizerView.h"
 
-// Forward declaration for internal settings transition class (defined at bottom of file)
+#pragma mark - Settings Transition
+
 @interface MicYouSettingsTransition : NSObject <UIViewControllerTransitioningDelegate, UIViewControllerAnimatedTransitioning>
+@property (nonatomic, assign) BOOL presenting; // YES=present, NO=dismiss
+@end
+
+@implementation MicYouSettingsTransition
+
+#pragma mark - UIViewControllerTransitioningDelegate
+
+- (id<UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented
+                                                                   presentingController:(UIViewController *)presenting
+                                                                       sourceController:(UIViewController *)source {
+    self.presenting = YES;
+    return self;
+}
+
+- (id<UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed {
+    self.presenting = NO;
+    return self;
+}
+
+#pragma mark - UIViewControllerAnimatedTransitioning
+
+- (NSTimeInterval)transitionDuration:(id<UIViewControllerContextTransitioning>)transitionContext {
+    return self.presenting ? 0.36 : 0.30;
+}
+
+- (void)animateTransition:(id<UIViewControllerContextTransitioning>)transitionContext {
+    UIViewController *toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
+    UIViewController *fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
+    UIView *containerView = transitionContext.containerView;
+    CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
+
+    if (self.presenting) {
+        toVC.view.frame = CGRectMake(screenWidth, 0, screenWidth, toVC.view.bounds.size.height);
+        toVC.view.alpha = 0.0;
+        [containerView addSubview:toVC.view];
+
+        [UIView animateWithDuration:0.36
+                              delay:0
+                            options:UIViewAnimationOptionCurveEaseOut
+                         animations:^{
+            toVC.view.frame = CGRectMake(0, 0, screenWidth, toVC.view.bounds.size.height);
+            toVC.view.alpha = 1.0;
+        } completion:^(BOOL finished) {
+            [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
+        }];
+    } else {
+        [UIView animateWithDuration:0.30
+                              delay:0
+                            options:UIViewAnimationOptionCurveEaseInOut
+                         animations:^{
+            fromVC.view.frame = CGRectMake(screenWidth, 0, screenWidth, fromVC.view.bounds.size.height);
+            fromVC.view.alpha = 0.0;
+        } completion:^(BOOL finished) {
+            [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
+        }];
+    }
+}
+
 @end
 
 // Audio level update throttle interval (PRESERVED)
@@ -1237,74 +1296,6 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     [self.audioCapture stopCapture];
     [self.transportClient disconnect];
     [UIApplication sharedApplication].idleTimerDisabled = NO;
-}
-
-@end
-
-#pragma mark - Settings Transition
-
-@interface MicYouSettingsTransition : NSObject <UIViewControllerTransitioningDelegate, UIViewControllerAnimatedTransitioning>
-@property (nonatomic, assign) BOOL presenting; // YES=present, NO=dismiss
-@end
-
-@implementation MicYouSettingsTransition
-
-#pragma mark - UIViewControllerTransitioningDelegate
-
-- (id<UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented
-                                                                   presentingController:(UIViewController *)presenting
-                                                                       sourceController:(UIViewController *)source {
-    self.presenting = YES;
-    return self;
-}
-
-- (id<UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed {
-    self.presenting = NO;
-    return self;
-}
-
-#pragma mark - UIViewControllerAnimatedTransitioning
-
-- (NSTimeInterval)transitionDuration:(id<UIViewControllerContextTransitioning>)transitionContext {
-    // 360ms present, 300ms dismiss
-    return self.presenting ? 0.36 : 0.30;
-}
-
-- (void)animateTransition:(id<UIViewControllerContextTransitioning>)transitionContext {
-    UIViewController *toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
-    UIViewController *fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
-    UIView *containerView = transitionContext.containerView;
-    CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
-
-    if (self.presenting) {
-        // Present: 从右滑入 (screenWidth -> 0) + fadeIn
-        // 使用 UIViewAnimationOptionCurveEaseOut 近似 easeOutExpo
-        toVC.view.frame = CGRectMake(screenWidth, 0, screenWidth, toVC.view.bounds.size.height);
-        toVC.view.alpha = 0.0;
-        [containerView addSubview:toVC.view];
-
-        [UIView animateWithDuration:0.36
-                              delay:0
-                            options:UIViewAnimationOptionCurveEaseOut
-                         animations:^{
-            toVC.view.frame = CGRectMake(0, 0, screenWidth, toVC.view.bounds.size.height);
-            toVC.view.alpha = 1.0;
-        } completion:^(BOOL finished) {
-            [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
-        }];
-    } else {
-        // Dismiss: 向右滑出 (0 -> screenWidth) + fadeOut
-        // 使用 UIViewAnimationOptionCurveEaseInOut 近似 easeInOutExpo
-        [UIView animateWithDuration:0.30
-                              delay:0
-                            options:UIViewAnimationOptionCurveEaseInOut
-                         animations:^{
-            fromVC.view.frame = CGRectMake(screenWidth, 0, screenWidth, fromVC.view.bounds.size.height);
-            fromVC.view.alpha = 0.0;
-        } completion:^(BOOL finished) {
-            [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
-        }];
-    }
 }
 
 @end
