@@ -20,13 +20,15 @@ static const CGFloat kChipCheckmarkFontSize   = 14.0;
 
 @implementation MicYouFilterChip
 
+@dynamic selected;
+
 #pragma mark - Init
 
 - (instancetype)initWithTitle:(NSString *)title selected:(BOOL)selected {
     self = [super initWithFrame:CGRectZero];
     if (self) {
         _title = [title copy];
-        _selected = selected;
+        [super setSelected:selected];
         _pressed = NO;
         [self commonInit];
     }
@@ -73,14 +75,14 @@ static const CGFloat kChipCheckmarkFontSize   = 14.0;
 }
 
 - (void)setSelected:(BOOL)selected {
-    if (_selected == selected) return;
-    _selected = selected;
+    if (self.isSelected == selected) return;
+    [super setSelected:selected];
     [self invalidateIntrinsicContentSize];
     [self applyVisualState:NO];
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    _selected = selected;
+    [super setSelected:selected];
     [self invalidateIntrinsicContentSize];
     [self applyVisualState:animated];
     if (self.onTap) {

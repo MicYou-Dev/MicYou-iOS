@@ -8,9 +8,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Title text shown in the chip
 @property (nonatomic, copy) NSString *title;
 
-/// Selection state
-@property (nonatomic, assign, getter=isSelected) BOOL selected;
-
 /// Tap callback (fired on touch up inside)
 @property (nonatomic, copy, nullable) void (^onTap)(BOOL selected);
 
