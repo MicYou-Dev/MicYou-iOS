@@ -67,7 +67,7 @@ help:
 	echo '    make help         Displays this message'
 	echo '    make all          Builds the entire app'
 	echo '    make native       Builds the native app'
-	echo '    make kmp          Builds the KMP shared framework'
+	echo '    make kmp          Builds the MicYouProtocol shared framework'
 	echo '    make assets       Compiles Assets.xcassets'
 	echo '    make payload      Makes Payload/MicYou.app'
 	echo '    make package      Builds ipa of MicYou'
@@ -96,15 +96,15 @@ native:
 
 kmp:
 	echo '[MicYou v$(VERSION)] kmp - start'
-	if [ -f $(SOURCEDIR)/KMP/gradlew ]; then \
-		cd $(SOURCEDIR)/KMP && ./gradlew :linkDebugFrameworkIosArm64 || ./gradlew :linkReleaseFrameworkIosArm64; \
+	if [ -f $(SOURCEDIR)/Protocol/gradlew ]; then \
+		cd $(SOURCEDIR)/Protocol && ./gradlew :linkDebugFrameworkIosArm64 || ./gradlew :linkReleaseFrameworkIosArm64; \
 	elif command -v gradle >/dev/null 2>&1; then \
-		cd $(SOURCEDIR)/KMP && gradle :linkDebugFrameworkIosArm64 || gradle :linkReleaseFrameworkIosArm64; \
+		cd $(SOURCEDIR)/Protocol && gradle :linkDebugFrameworkIosArm64 || gradle :linkReleaseFrameworkIosArm64; \
 	else \
 		echo 'Warning: Gradle not found, skipping KMP build'; \
 	fi
 	mkdir -p $(WORKINGDIR)/MicYou.app/Frameworks
-	cp -R $(SOURCEDIR)/KMP/build/bin/iosArm64/*Framework/MicYouProtocol.framework $(WORKINGDIR)/MicYou.app/Frameworks/ || true
+	cp -R $(SOURCEDIR)/Protocol/build/bin/iosArm64/*Framework/MicYouProtocol.framework $(WORKINGDIR)/MicYou.app/Frameworks/ || true
 	echo '[MicYou v$(VERSION)] kmp - end'
 
 assets:
@@ -149,7 +149,7 @@ clean:
 	echo '[MicYou v$(VERSION)] clean - start'
 	rm -rf $(WORKINGDIR)
 	rm -rf $(OUTPUTDIR)
-	rm -rf $(SOURCEDIR)/KMP/build
+	rm -rf $(SOURCEDIR)/Protocol/build
 	echo '[MicYou v$(VERSION)] clean - end'
 
 .PHONY: all clean help native kmp assets payload package dsym

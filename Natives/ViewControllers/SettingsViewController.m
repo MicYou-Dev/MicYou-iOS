@@ -1275,7 +1275,12 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 
     // 5. 版本 (自定义 view with 检查更新 button)
     NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"1.0.0";
-    NSString *versionText = [NSString stringWithFormat:@"v%@ (Framework v2.0.0-1)", appVersion];
+    NSString *frameworkVersion = @"unknown";
+    NSBundle *frameworkBundle = [NSBundle bundleWithIdentifier:@"com.micyou.ios.MicYouProtocol"];
+    if (frameworkBundle) {
+        frameworkVersion = [frameworkBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: frameworkVersion;
+    }
+    NSString *versionText = [NSString stringWithFormat:@"v%@ (Framework v%@)", appVersion, frameworkVersion];
     UIView *versionItem = [self buildVersionItemWithVersionText:versionText
                                                         isFirst:NO
                                                          isLast:NO
