@@ -31,6 +31,15 @@ typedef struct {
 @property (nonatomic, readwrite) UIColor *outline;
 @property (nonatomic, readwrite) UIColor *outlineVariant;
 
+// M3 intermediate surface & container tokens (secondaryContainer already declared above)
+@property (nonatomic, readwrite) UIColor *surfaceContainer;
+@property (nonatomic, readwrite) UIColor *surfaceContainerLow;
+@property (nonatomic, readwrite) UIColor *surfaceContainerHigh;
+@property (nonatomic, readwrite) UIColor *surfaceContainerHighest;
+@property (nonatomic, readwrite) UIColor *errorContainer;
+@property (nonatomic, readwrite) UIColor *onErrorContainer;
+@property (nonatomic, readwrite) UIColor *onSecondaryContainer;
+
 @end
 
 @implementation MicYouColors
@@ -267,6 +276,12 @@ typedef struct {
             _onSurfaceVariant = [MicYouColors colorFromHex:0x49454F];
             _outline = [MicYouColors colorFromHex:0x79747E];
             _outlineVariant = [MicYouColors colorFromHex:0xCAC4D0];
+
+            // M3 surface container tokens (match design spec colors_and_type.css, seed #4A672D)
+            _surfaceContainerLow = [MicYouColors colorFromHex:0xF2F5EA];
+            _surfaceContainer = [MicYouColors colorFromHex:0xECF0E4];
+            _surfaceContainerHigh = [MicYouColors colorFromHex:0xE6EADF];
+            _surfaceContainerHighest = [MicYouColors colorFromHex:0xE1E4D9];
             break;
         }
         case MicYouColorSchemeDark: {
@@ -280,6 +295,17 @@ typedef struct {
             _onSurfaceVariant = [MicYouColors colorFromHex:0xCAC4D0];
             _outline = [MicYouColors colorFromHex:0x938F99];
             _outlineVariant = [MicYouColors colorFromHex:0x49454F];
+
+            // M3 surface container tokens (HSL, neutral tone matching existing surface tokens,
+            // lightness ramped between surface #121212 and surfaceBright #2D2D2D)
+            MicYouHSL darkSurfaceContainerLowHSL = {0, 0, 0.095};
+            MicYouHSL darkSurfaceContainerHSL = {0, 0, 0.118};
+            MicYouHSL darkSurfaceContainerHighHSL = {0, 0, 0.140};
+            MicYouHSL darkSurfaceContainerHighestHSL = {0, 0, 0.162};
+            _surfaceContainerLow = [MicYouColors colorFromHSL:darkSurfaceContainerLowHSL];
+            _surfaceContainer = [MicYouColors colorFromHSL:darkSurfaceContainerHSL];
+            _surfaceContainerHigh = [MicYouColors colorFromHSL:darkSurfaceContainerHighHSL];
+            _surfaceContainerHighest = [MicYouColors colorFromHSL:darkSurfaceContainerHighestHSL];
             break;
         }
         case MicYouColorSchemeOLED: {
@@ -293,6 +319,17 @@ typedef struct {
             _onSurfaceVariant = [MicYouColors colorFromHex:0xCAC4D0];
             _outline = [MicYouColors colorFromHex:0x938F99];
             _outlineVariant = [MicYouColors colorFromHex:0x49454F];
+
+            // M3 surface container tokens (HSL, deeper than Dark for OLED pure-black base,
+            // lightness ramped between surface #000000 and surfaceBright #121212)
+            MicYouHSL oledSurfaceContainerLowHSL = {0, 0, 0.020};
+            MicYouHSL oledSurfaceContainerHSL = {0, 0, 0.035};
+            MicYouHSL oledSurfaceContainerHighHSL = {0, 0, 0.050};
+            MicYouHSL oledSurfaceContainerHighestHSL = {0, 0, 0.065};
+            _surfaceContainerLow = [MicYouColors colorFromHSL:oledSurfaceContainerLowHSL];
+            _surfaceContainer = [MicYouColors colorFromHSL:oledSurfaceContainerHSL];
+            _surfaceContainerHigh = [MicYouColors colorFromHSL:oledSurfaceContainerHighHSL];
+            _surfaceContainerHighest = [MicYouColors colorFromHSL:oledSurfaceContainerHighestHSL];
             break;
         }
     }
@@ -329,13 +366,20 @@ typedef struct {
 
     MicYouHSL secContainerHSL = secHSL;
     if (_colorScheme == MicYouColorSchemeLight) {
-        secContainerHSL.l = MIN(1.0, secContainerHSL.l * 1.5 + 0.15);
-        secContainerHSL.s = secContainerHSL.s * 0.3;
+        // Light: match design spec colors_and_type.css (seed #4A672D)
+        _secondaryContainer = [MicYouColors colorFromHex:0xDAE7CA];
+        _onSecondaryContainer = [MicYouColors colorFromHex:0x141E0D];
     } else {
+        // Dark/OLED: HSL TonalSpot (darker container, light on-color)
         secContainerHSL.l = MAX(0.05, secContainerHSL.l * 0.4);
         secContainerHSL.s = MIN(1.0, secContainerHSL.s * 0.8);
+        _secondaryContainer = [MicYouColors colorFromHSL:secContainerHSL];
+
+        MicYouHSL onSecContainerHSL = secHSL;
+        onSecContainerHSL.l = 0.85;
+        onSecContainerHSL.s = MIN(1.0, secHSL.s * 0.5);
+        _onSecondaryContainer = [MicYouColors colorFromHSL:onSecContainerHSL];
     }
-    _secondaryContainer = [MicYouColors colorFromHSL:secContainerHSL];
 
     // --- Tertiary (hue shifted by 60°) ---
     MicYouHSL terHSL = seedHSL;
@@ -348,6 +392,24 @@ typedef struct {
     // --- Error ---
     _error = errorBase;
     _onError = onErrorBase;
+
+    // M3 error container tokens
+    if (_colorScheme == MicYouColorSchemeLight) {
+        // Light: match design spec colors_and_type.css
+        _errorContainer = [MicYouColors colorFromHex:0xFFDAD6];
+        _onErrorContainer = [MicYouColors colorFromHex:0x410002];
+    } else {
+        // Dark/OLED: HSL TonalSpot (darker container, light on-color)
+        MicYouHSL errorContainerHSL = [MicYouColors hslFromColor:errorBase];
+        errorContainerHSL.l = MAX(0.05, errorContainerHSL.l * 0.4);
+        errorContainerHSL.s = MIN(1.0, errorContainerHSL.s * 0.8);
+        _errorContainer = [MicYouColors colorFromHSL:errorContainerHSL];
+
+        MicYouHSL onErrorContainerHSL = [MicYouColors hslFromColor:errorBase];
+        onErrorContainerHSL.l = 0.85;
+        onErrorContainerHSL.s = MIN(1.0, onErrorContainerHSL.s * 0.5);
+        _onErrorContainer = [MicYouColors colorFromHSL:onErrorContainerHSL];
+    }
 }
 
 @end

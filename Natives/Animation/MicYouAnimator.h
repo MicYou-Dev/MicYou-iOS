@@ -32,6 +32,28 @@ NS_ASSUME_NONNULL_BEGIN
 /// Pulse animation (continuous scale oscillation)
 + (void)animatePulse:(UIView *)view duration:(NSTimeInterval)duration;
 
+/// Staggered fade up entrance: alpha 0->1 (400ms) + translateY +30pt->0 (500ms)
+/// @param views Array of UIView to animate
+/// @param delays Array of NSNumber (NSTimeInterval) delays, must match views count
++ (void)animateStaggeredFadeUp:(NSArray<UIView *> *)views
+                        delays:(NSArray<NSNumber *> *)delays;
+
+/// Color transition on layer keyPath
++ (void)animateColorTransition:(UIView *)view
+                       toColor:(UIColor *)color
+                        keyPath:(NSString *)keyPath
+                       duration:(NSTimeInterval)duration;
+
+/// Press scale: scale down to `scale` then spring back (dampingRatio ≈ 0.75)
++ (void)animatePressScale:(UIView *)view
+                    scale:(CGFloat)scale;
+
+/// Glow pulse: infinite autoreverses alpha animation
++ (void)animateGlowPulse:(UIView *)view
+               fromAlpha:(CGFloat)fromAlpha
+                 toAlpha:(CGFloat)toAlpha
+                duration:(NSTimeInterval)duration;
+
 @end
 
 NS_ASSUME_NONNULL_END

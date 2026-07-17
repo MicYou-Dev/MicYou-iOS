@@ -170,4 +170,116 @@
     [view.layer addAnimation:scaleAnimation forKey:@"pulse"];
 }
 
+#pragma mark - Staggered Fade Up
+
++ (void)animateStaggeredFadeUp:(NSArray<UIView *> *)views
+                        delays:(NSArray<NSNumber *> *)delays {
+    NSUInteger count = MIN(views.count, delays.count);
+
+    for (NSUInteger i = 0; i < count; i++) {
+        UIView *view = views[i];
+        NSTimeInterval delay = [delays[i] doubleValue];
+
+        view.alpha = 0.0;
+        view.transform = CGAffineTransformMakeTranslation(0, 30);
+
+        // Alpha animation: 400ms easeOut
+        [UIView animateWithDuration:0.4
+                              delay:delay
+                            options:UIViewAnimationOptionCurveEaseOut
+                         animations:^{
+                             view.alpha = 1.0;
+                         }
+                         completion:nil];
+
+        // Translation animation: 500ms spring (matches Android spring damping 0.6)
+        UISpringTimingParameters *springParams = [[UISpringTimingParameters alloc]
+            initWithDampingRatio:0.6
+                initialVelocity:CGVectorMake(0, 0)];
+
+        UIViewPropertyAnimator *animator = [[UIViewPropertyAnimator alloc]
+            initWithDuration:0.5
+            timingParameters:springParams];
+
+        [animator addAnimations:^{
+            view.transform = CGAffineTransformIdentity;
+        }];
+
+        if (delay > 0) {
+            [animator startAnimationAfterDelay:delay];
+        } else {
+            [animator startAnimation];
+        }
+    }
+}
+
+#pragma mark - Color Transition
+
++ (void)animateColorTransition:(UIView *)view
+                       toColor:(UIColor *)color
+                        keyPath:(NSString *)keyPath
+                       duration:(NSTimeInterval)duration {
+    id currentValue = [view.layer valueForKeyPath:keyPath];
+
+    CABasicAnimation *colorAnimation = [CABasicAnimation animationWithKeyPath:keyPath];
+    colorAnimation.fromValue = currentValue ?: (id)[UIColor clearColor].CGColor;
+    colorAnimation.toValue = (id)color.CGColor;
+    colorAnimation.duration = duration;
+    colorAnimation.fillMode = kCAFillModeForwards;
+    colorAnimation.removedOnCompletion = NO;
+    colorAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+
+    [view.layer addAnimation:colorAnimation forKey:@"colorTransition"];
+
+    // Set the final value on the layer so state is correct after animation
+    [view.layer setValue:(id)color.CGColor forKeyPath:keyPath];
+}
+
+#pragma mark - Press Scale
+
++ (void)animatePressScale:(UIView *)view
+                    scale:(CGFloat)scale {
+    // Step 1: Scale down quickly with easeOut (~0.1s)
+    [UIView animateWithDuration:0.1
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseOut
+                     animations:^{
+                         view.transform = CGAffineTransformMakeScale(scale, scale);
+                     }
+                     completion:^(BOOL finished) {
+                         // Step 2: Spring back to 1.0 (dampingRatio 0.75 ≈ Android DampingRatioHighBouncy)
+                         UISpringTimingParameters *springParams = [[UISpringTimingParameters alloc]
+                             initWithDampingRatio:0.75
+                                 initialVelocity:CGVectorMake(0, 0)];
+
+                         UIViewPropertyAnimator *animator = [[UIViewPropertyAnimator alloc]
+                             initWithDuration:0.5
+                             timingParameters:springParams];
+
+                         [animator addAnimations:^{
+                             view.transform = CGAffineTransformIdentity;
+                         }];
+
+                         [animator startAnimation];
+                     }];
+}
+
+#pragma mark - Glow Pulse
+
++ (void)animateGlowPulse:(UIView *)view
+               fromAlpha:(CGFloat)fromAlpha
+                 toAlpha:(CGFloat)toAlpha
+                duration:(NSTimeInterval)duration {
+    CABasicAnimation *glowAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    glowAnimation.fromValue = @(fromAlpha);
+    glowAnimation.toValue = @(toAlpha);
+    glowAnimation.duration = duration;
+    glowAnimation.autoreverses = YES;
+    glowAnimation.repeatCount = HUGE_VALF;
+    glowAnimation.removedOnCompletion = NO;
+    glowAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+
+    [view.layer addAnimation:glowAnimation forKey:@"glowPulse"];
+}
+
 @end

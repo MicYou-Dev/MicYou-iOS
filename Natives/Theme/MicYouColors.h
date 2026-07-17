@@ -43,6 +43,15 @@ typedef NS_ENUM(NSInteger, MicYouColorScheme) {
 @property (nonatomic, readonly) UIColor *outline;
 @property (nonatomic, readonly) UIColor *outlineVariant;
 
+// M3 intermediate surface & container tokens
+@property (nonatomic, readonly) UIColor *surfaceContainer;
+@property (nonatomic, readonly) UIColor *surfaceContainerLow;
+@property (nonatomic, readonly) UIColor *surfaceContainerHigh;
+@property (nonatomic, readonly) UIColor *surfaceContainerHighest;
+@property (nonatomic, readonly) UIColor *errorContainer;
+@property (nonatomic, readonly) UIColor *onErrorContainer;
+@property (nonatomic, readonly) UIColor *onSecondaryContainer;
+
 - (void)setSeedColor:(UIColor *)seedColor; // regenerates palette
 - (void)setColorScheme:(MicYouColorScheme)colorScheme;
 

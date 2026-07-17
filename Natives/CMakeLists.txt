@@ -10,6 +10,8 @@ set(MICYOU_SOURCES
     ViewControllers/MicYouViewController.m
     ViewControllers/LaunchAnimationViewController.m
     Views/MicYouVisualizerView.m
+    Views/MicYouFilterChip.m
+    Views/MicYouSettingsItem.m
     Audio/MicYouAudioCapture.m
     Network/TransportClient.m
     Network/Protocol.m
@@ -28,6 +30,8 @@ set(MICYOU_HEADERS
     ViewControllers/MicYouViewController.h
     ViewControllers/LaunchAnimationViewController.h
     Views/MicYouVisualizerView.h
+    Views/MicYouFilterChip.h
+    Views/MicYouSettingsItem.h
     Audio/MicYouAudioCapture.h
     Network/TransportClient.h
     Network/Protocol.h

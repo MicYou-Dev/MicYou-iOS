@@ -71,6 +71,10 @@
 /* Connection modes */
 "mode_wifi" = "WiFi";
 
+/* Available servers section */
+"available_servers_label" = "可用服务器";
+"manual_server_label" = "手动配置";
+
 /* Live streaming */
 "live_badge" = "LIVE";
 
@@ -108,3 +112,50 @@
 
 /* Plugin */
 "plugin_not_connected" = "插件未连接";
+
+/* Settings page (Material 3 Expressive) */
+"button_back" = "返回";
+"settings_section_about" = "关于";
+
+"general_streaming_notification" = "串流通知";
+"general_keep_screen_on" = "保持屏幕常亮";
+"general_keep_screen_on_subtitle" = "使用应用时防止屏幕自动熄灭";
+"general_auto_check_update" = "自动检查更新";
+"general_auto_check_update_subtitle" = "启动应用时自动检查新版本";
+"general_mirror_download" = "镜像下载";
+"general_mirror_download_subtitle" = "使用Mirror酱镜像下载更新，速度更快";
+
+"dark_mode_dark" = "暗色";
+"dark_mode_light" = "亮色";
+"appearance_dynamic_color" = "动态取色";
+"appearance_dynamic_color_subtitle" = "根据壁纸自动生成主题色";
+"appearance_oled_black_subtitle" = "在暗色模式下使用纯黑背景以节省电量";
+"appearance_palette_style" = "色彩风格";
+"appearance_palette_style_subtitle" = "调整色彩饱和度和鲜艳程度";
+"appearance_expressive_shapes" = "表达性形状";
+"appearance_expressive_shapes_subtitle" = "使用更大的圆角 (Material 3 Expressive)";
+"appearance_background" = "背景";
+"appearance_select_image" = "选择图片";
+
+"palette_tonal_spot" = "Tonal Spot";
+"palette_vibrant" = "Vibrant";
+"palette_expressive" = "Expressive";
+"palette_content" = "Content";
+"palette_fidelity" = "Fidelity";
+"palette_monochrome" = "Monochrome";
+"palette_custom" = "自定义";
+
+"about_developer" = "开发者";
+"about_developer_subtitle" = "iOS端: herbrine8403\n其他: LanRhyme、ChinsaaWei、ChouChiu";
+"about_github_repo" = "GitHub 仓库";
+"about_contributors" = "贡献者";
+"about_contributors_subtitle" = "感谢每一位为本项目做出贡献的人";
+"about_sponsors" = "赞助者";
+"about_sponsors_subtitle" = "查看爱发电赞助者";
+"about_version" = "版本";
+"about_check_update" = "检查更新";
+"about_open_source_licenses" = "开源许可";
+"about_open_source_licenses_subtitle" = "查看使用的开源库";
+"about_export_logs" = "导出日志";
+"about_export_logs_subtitle" = "导出应用日志以供调试";
+"about_footer_text" = "MicYou iOS 是 MicYou 的官方 iOS 客户端，将 iPhone 变为 PC 无线麦克风。基于 Material 3 Expressive 设计语言打造。";

@@ -71,6 +71,10 @@
 /* Connection modes */
 "mode_wifi" = "WiFi";
 
+/* Available servers section */
+"available_servers_label" = "Available Servers";
+"manual_server_label" = "Manual Configuration";
+
 /* Live streaming */
 "live_badge" = "LIVE";
 
@@ -108,3 +112,50 @@
 
 /* Plugin */
 "plugin_not_connected" = "Plugin not connected";
+
+/* Settings page (Material 3 Expressive) */
+"button_back" = "Back";
+"settings_section_about" = "About";
+
+"general_streaming_notification" = "Streaming Notifications";
+"general_keep_screen_on" = "Keep Screen Awake";
+"general_keep_screen_on_subtitle" = "Prevent screen from turning off while using the app";
+"general_auto_check_update" = "Auto Check for Updates";
+"general_auto_check_update_subtitle" = "Check for new versions when the app launches";
+"general_mirror_download" = "Mirror Download";
+"general_mirror_download_subtitle" = "Use Mirror-chan mirror for faster downloads";
+
+"dark_mode_dark" = "Dark";
+"dark_mode_light" = "Light";
+"appearance_dynamic_color" = "Dynamic Color";
+"appearance_dynamic_color_subtitle" = "Generate theme color from wallpaper";
+"appearance_oled_black_subtitle" = "Use pure black background in dark mode to save battery";
+"appearance_palette_style" = "Palette Style";
+"appearance_palette_style_subtitle" = "Adjust color saturation and vibrancy";
+"appearance_expressive_shapes" = "Expressive Shapes";
+"appearance_expressive_shapes_subtitle" = "Use larger corner radii (Material 3 Expressive)";
+"appearance_background" = "Background";
+"appearance_select_image" = "Select Image";
+
+"palette_tonal_spot" = "Tonal Spot";
+"palette_vibrant" = "Vibrant";
+"palette_expressive" = "Expressive";
+"palette_content" = "Content";
+"palette_fidelity" = "Fidelity";
+"palette_monochrome" = "Monochrome";
+"palette_custom" = "Custom";
+
+"about_developer" = "Developer";
+"about_developer_subtitle" = "iOS: herbrine8403\nOthers: LanRhyme, ChinsaaWei, ChouChiu";
+"about_github_repo" = "GitHub Repository";
+"about_contributors" = "Contributors";
+"about_contributors_subtitle" = "Thanks to everyone who contributed to this project";
+"about_sponsors" = "Sponsors";
+"about_sponsors_subtitle" = "View sponsors on Afdian";
+"about_version" = "Version";
+"about_check_update" = "Check for Updates";
+"about_open_source_licenses" = "Open Source Licenses";
+"about_open_source_licenses_subtitle" = "View open source libraries used";
+"about_export_logs" = "Export Logs";
+"about_export_logs_subtitle" = "Export application logs for debugging";
+"about_footer_text" = "MicYou iOS is the official iOS client of MicYou, turning your iPhone into a wireless PC microphone. Built with Material 3 Expressive design language.";
