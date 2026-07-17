@@ -234,8 +234,8 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     [path addLineToPoint:CGPointMake(18, 24)];
     [[UIColor blackColor] setStroke];
     path.lineWidth = 2.2;
-    path.lineCapStyle = NSLineCapStyleRound;
-    path.lineJoinStyle = NSLineJoinStyleRound;
+    path.lineCapStyle = kCGLineCapRound;
+    path.lineJoinStyle = kCGLineJoinRound;
     [path stroke];
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
@@ -715,15 +715,18 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         if (onChange != nil) {
             objc_setAssociatedObject(chip, kChipCallbackKey, [onChange copy], OBJC_ASSOCIATION_COPY_NONATOMIC);
             objc_setAssociatedObject(chip, kChipIndexKey, @(i), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+            __weak MicYouFilterChip *weakChip = chip;
             chip.onTap = ^(BOOL selected) {
+                MicYouFilterChip *strongChip = weakChip;
+                if (strongChip == nil) return;
                 if (!selected) {
                     // 不允许取消选中：再次标记为选中
-                    [chip setSelected:YES animated:NO];
+                    [strongChip setSelected:YES animated:NO];
                     return;
                 }
                 // 互斥：取消其他 chip 的选中状态
                 for (MicYouFilterChip *c in self.registeredChips) {
-                    if (c != chip && c.selected) {
+                    if (c != strongChip && c.selected) {
                         [c setSelected:NO animated:YES];
                     }
                 }
@@ -759,13 +762,16 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         [self.registeredChips addObject:chip];
 
         if (onChange != nil) {
+            __weak MicYouFilterChip *weakChip = chip;
             chip.onTap = ^(BOOL selected) {
+                MicYouFilterChip *strongChip = weakChip;
+                if (strongChip == nil) return;
                 if (!selected) {
-                    [chip setSelected:YES animated:NO];
+                    [strongChip setSelected:YES animated:NO];
                     return;
                 }
                 for (MicYouFilterChip *c in self.registeredChips) {
-                    if (c != chip && c.selected) {
+                    if (c != strongChip && c.selected) {
                         [c setSelected:NO animated:YES];
                     }
                 }
@@ -1360,11 +1366,8 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 
 - (void)openURL:(NSURL *)url {
     if (url == nil) return;
-    if (@available(iOS 10.0, *)) {
-        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
-    } else {
-        [[UIApplication sharedApplication] openURL:url];
-    }
+    // Deployment target is iOS 11+, so the iOS 10+ API is always available.
+    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 
 #pragma mark - Color Refresh
