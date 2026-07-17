@@ -5,6 +5,10 @@
 #import "SettingsViewController.h"
 #import "MicYouVisualizerView.h"
 
+// Forward declaration for internal settings transition class (defined at bottom of file)
+@interface MicYouSettingsTransition : NSObject <UIViewControllerTransitioningDelegate, UIViewControllerAnimatedTransitioning>
+@end
+
 // Audio level update throttle interval (PRESERVED)
 static const CFTimeInterval kAudioLevelUpdateInterval = 0.05;
 
