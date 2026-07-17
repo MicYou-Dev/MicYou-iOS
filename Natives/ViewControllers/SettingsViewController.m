@@ -1280,7 +1280,7 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     if (frameworkBundle) {
         frameworkVersion = [frameworkBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: frameworkVersion;
     }
-    NSString *versionText = [NSString stringWithFormat:@"v%@ (Framework v%@)", appVersion, frameworkVersion];
+    NSString *versionText = [NSString stringWithFormat:@"v%@ (Protocol v%@)", appVersion, frameworkVersion];
     UIView *versionItem = [self buildVersionItemWithVersionText:versionText
                                                         isFirst:NO
                                                          isLast:NO
