@@ -403,7 +403,7 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 - (void)rebuildDeviceList {
     // Remove existing rows
     for (UIView *v in [self.deviceListStack.arrangedSubviews copy]) {
-        [self.deviceListStack removeArrangementView:v];
+        [self.deviceListStack removeArrangedSubview:v];
         [v removeFromSuperview];
     }
 
@@ -540,7 +540,11 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     self.connectingAnimationView.hidden = YES;
     [self.controlCard addSubview:self.connectingAnimationView];
 
-    self.connectingSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];
+    if (@available(iOS 13.0, *)) {
+        self.connectingSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];
+    } else {
+        self.connectingSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    }
     self.connectingSpinner.translatesAutoresizingMaskIntoConstraints = NO;
     self.connectingSpinner.color = [MicYouColors shared].tertiary;
     [self.connectingAnimationView addSubview:self.connectingSpinner];
