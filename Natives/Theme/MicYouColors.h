@@ -55,6 +55,11 @@ typedef NS_ENUM(NSInteger, MicYouColorScheme) {
 - (void)setSeedColor:(UIColor *)seedColor; // regenerates palette
 - (void)setColorScheme:(MicYouColorScheme)colorScheme;
 
+/// sRGB relative luminance of a color (0.0 - 1.0). Used for picking on-color contrast.
++ (CGFloat)luminanceOfColor:(UIColor *)color;
+/// Returns YES if the color is dark (luminance < 0.5).
++ (BOOL)isColorDark:(UIColor *)color;
+
 @end
 
 NS_ASSUME_NONNULL_END

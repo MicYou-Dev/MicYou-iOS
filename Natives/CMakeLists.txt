@@ -17,6 +17,10 @@ set(MICYOU_SOURCES
     Network/Protocol.m
     Utils/MicYouLogger.m
     Utils/MicYouLanguageManager.m
+    Utils/MicYouNotificationManager.m
+    Utils/MicYouServiceDiscovery.m
+    Utils/MicYouUpdateChecker.m
+    Utils/MicYouLogExporter.m
     Animation/MicYouAnimator.m
     Animation/MicYouEasing.m
     Theme/MicYouColors.m
@@ -37,6 +41,10 @@ set(MICYOU_HEADERS
     Network/Protocol.h
     Utils/MicYouLogger.h
     Utils/MicYouLanguageManager.h
+    Utils/MicYouNotificationManager.h
+    Utils/MicYouServiceDiscovery.h
+    Utils/MicYouUpdateChecker.h
+    Utils/MicYouLogExporter.h
     Animation/MicYouAnimator.h
     Animation/MicYouEasing.h
     Theme/MicYouColors.h
@@ -83,6 +91,7 @@ target_link_libraries(MicYou PRIVATE
     "-framework AudioToolbox"
     "-framework CoreAudio"
     "-framework CFNetwork"
+    "-framework UserNotifications"
 )
 
 set_target_properties(MicYou PROPERTIES

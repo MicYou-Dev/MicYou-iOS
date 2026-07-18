@@ -269,7 +269,7 @@ typedef struct {
             _background = [MicYouColors colorFromHex:0xFFFFFF];
             _surface = [MicYouColors colorFromHex:0xFFFFFF];
             _surfaceDim = [MicYouColors colorFromHex:0xF7F2FA];
-            _surfaceBright = [MicYouColors colorFromHex:0xFFFFFF];
+            _surfaceBright = [MicYouColors colorFromHex:0xF8FAF0];
             _surfaceVariant = [MicYouColors colorFromHex:0xE7E0EC];
             _onBackground = [MicYouColors colorFromHex:0x1C1B1F];
             _onSurface = [MicYouColors colorFromHex:0x1C1B1F];
@@ -288,7 +288,7 @@ typedef struct {
             _background = [MicYouColors colorFromHex:0x121212];
             _surface = [MicYouColors colorFromHex:0x121212];
             _surfaceDim = [MicYouColors colorFromHex:0x0E0E0E];
-            _surfaceBright = [MicYouColors colorFromHex:0x2D2D2D];
+            _surfaceBright = [MicYouColors colorFromHex:0x1C1E17];
             _surfaceVariant = [MicYouColors colorFromHex:0x2D2D2D];
             _onBackground = [MicYouColors colorFromHex:0xE6E1E5];
             _onSurface = [MicYouColors colorFromHex:0xE6E1E5];
@@ -297,7 +297,7 @@ typedef struct {
             _outlineVariant = [MicYouColors colorFromHex:0x49454F];
 
             // M3 surface container tokens (HSL, neutral tone matching existing surface tokens,
-            // lightness ramped between surface #121212 and surfaceBright #2D2D2D)
+            // lightness ramped between surface #121212 and surfaceBright #1C1E17)
             MicYouHSL darkSurfaceContainerLowHSL = {0, 0, 0.095};
             MicYouHSL darkSurfaceContainerHSL = {0, 0, 0.118};
             MicYouHSL darkSurfaceContainerHighHSL = {0, 0, 0.140};
@@ -312,7 +312,7 @@ typedef struct {
             _background = [MicYouColors colorFromHex:0x000000];
             _surface = [MicYouColors colorFromHex:0x000000];
             _surfaceDim = [MicYouColors colorFromHex:0x000000];
-            _surfaceBright = [MicYouColors colorFromHex:0x121212];
+            _surfaceBright = [MicYouColors colorFromHex:0x1A1A1A];
             _surfaceVariant = [MicYouColors colorFromHex:0x1A1A1A];
             _onBackground = [MicYouColors colorFromHex:0xE6E1E5];
             _onSurface = [MicYouColors colorFromHex:0xE6E1E5];

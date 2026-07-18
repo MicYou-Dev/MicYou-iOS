@@ -3,6 +3,9 @@
 #import "MicYouLanguageManager.h"
 #import "MicYouFilterChip.h"
 #import "MicYouSettingsItem.h"
+#import "MicYouUpdateChecker.h"
+#import "MicYouLogExporter.h"
+#import "MicYouNotificationManager.h"
 #import <objc/runtime.h>
 
 #pragma mark - Layout Constants
@@ -40,7 +43,7 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 
 #pragma mark - Private Interface
 
-@interface SettingsViewController ()
+@interface SettingsViewController () <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 // Containers
 @property (nonatomic, strong) UIView *navBarContainer;
@@ -55,7 +58,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 @property (nonatomic, assign) NSInteger darkModeValue;
 @property (nonatomic, assign) BOOL oledBlackValue;
 @property (nonatomic, assign) NSInteger seedColorIndex;
-@property (nonatomic, assign) BOOL useDynamicColorValue;
 @property (nonatomic, assign) BOOL useExpressiveShapesValue;
 @property (nonatomic, assign) NSInteger visualizerStyleValue;
 @property (nonatomic, assign) NSInteger paletteStyleValue;
@@ -63,7 +65,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 @property (nonatomic, assign) NSInteger channelCountValue;
 @property (nonatomic, assign) BOOL streamingNotificationValue;
 @property (nonatomic, assign) BOOL autoCheckUpdateValue;
-@property (nonatomic, assign) BOOL useMirrorDownloadValue;
 @property (nonatomic, assign) BOOL keepScreenOnValue;
 
 // Tracked views for color refresh
@@ -72,6 +73,13 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 @property (nonatomic, strong) NSMutableArray<void (^)(void)> *registeredColorRefreshBlocks;
 @property (nonatomic, strong) NSMutableArray<UIView *> *seedCircleViews;
 @property (nonatomic, strong) NSMutableArray<UIView *> *seedRingViews;
+
+// Background image picker
+@property (nonatomic, strong) UIImagePickerController *imagePicker;
+
+// Weak reference to the streaming notification switch so we can revert it
+// when the user denies notification authorization.
+@property (nonatomic, weak) UISwitch *streamingNotificationSwitch;
 
 @end
 
@@ -293,7 +301,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         @"micyou_dark_mode": @0,
         @"micyou_oled_black": @NO,
         @"micyou_seed_color_index": @0,
-        @"micyou_use_dynamic_color": @YES,
         @"micyou_use_expressive_shapes": @YES,
         @"micyou_visualizer_style": @0,
         @"micyou_palette_style": @0,
@@ -301,7 +308,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         @"micyou_channel_count": @2,
         @"micyou_enable_streaming_notification": @YES,
         @"micyou_auto_check_update": @YES,
-        @"micyou_use_mirror_download": @NO,
         @"micyou_keep_screen_on": @NO
     }];
 }
@@ -312,7 +318,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     self.darkModeValue               = [defaults integerForKey:@"micyou_dark_mode"];
     self.oledBlackValue              = [defaults boolForKey:@"micyou_oled_black"];
     self.seedColorIndex              = [defaults integerForKey:@"micyou_seed_color_index"];
-    self.useDynamicColorValue        = [defaults boolForKey:@"micyou_use_dynamic_color"];
     self.useExpressiveShapesValue    = [defaults boolForKey:@"micyou_use_expressive_shapes"];
     self.visualizerStyleValue        = [defaults integerForKey:@"micyou_visualizer_style"];
     self.paletteStyleValue           = [defaults integerForKey:@"micyou_palette_style"];
@@ -320,7 +325,6 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     self.channelCountValue           = [defaults integerForKey:@"micyou_channel_count"];
     self.streamingNotificationValue  = [defaults boolForKey:@"micyou_enable_streaming_notification"];
     self.autoCheckUpdateValue        = [defaults boolForKey:@"micyou_auto_check_update"];
-    self.useMirrorDownloadValue      = [defaults boolForKey:@"micyou_use_mirror_download"];
     self.keepScreenOnValue           = [defaults boolForKey:@"micyou_keep_screen_on"];
 }
 
@@ -436,9 +440,16 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     stack.alignment = UIStackViewAlignmentFill;
     stack.distribution = UIStackViewDistributionFill;
     stack.translatesAutoresizingMaskIntoConstraints = NO;
+    // Card background: surfaceContainer shows through the 2pt gaps between items
+    // and through the rounded corners of the first/last items, creating the
+    // Material 3 Expressive "scrim" effect behind the surfaceBright items.
+    stack.backgroundColor = [MicYouColors shared].surfaceContainer;
     for (UIView *v in items) {
         [stack addArrangedSubview:v];
     }
+    [self registerColorRefreshBlock:^{
+        stack.backgroundColor = [MicYouColors shared].surfaceContainer;
+    }];
     return stack;
 }
 
@@ -717,14 +728,12 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
             objc_setAssociatedObject(chip, kChipIndexKey, @(i), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             __weak MicYouFilterChip *weakChip = chip;
             chip.onTap = ^(BOOL selected) {
+                // selected is always YES here: MicYouFilterChip only fires
+                // onTap for newly-selected chips (single-select behavior).
                 MicYouFilterChip *strongChip = weakChip;
                 if (strongChip == nil) return;
-                if (!selected) {
-                    // 不允许取消选中：再次标记为选中
-                    [strongChip setSelected:YES animated:NO];
-                    return;
-                }
                 // 互斥：取消其他 chip 的选中状态
+                // (setSelected:animated: does NOT fire onTap, so no recursion)
                 for (MicYouFilterChip *c in self.registeredChips) {
                     if (c != strongChip && c.selected) {
                         [c setSelected:NO animated:YES];
@@ -764,12 +773,9 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         if (onChange != nil) {
             __weak MicYouFilterChip *weakChip = chip;
             chip.onTap = ^(BOOL selected) {
+                // selected is always YES here: single-select, no deselect path.
                 MicYouFilterChip *strongChip = weakChip;
                 if (strongChip == nil) return;
-                if (!selected) {
-                    [strongChip setSelected:YES animated:NO];
-                    return;
-                }
                 for (MicYouFilterChip *c in self.registeredChips) {
                     if (c != strongChip && c.selected) {
                         [c setSelected:NO animated:YES];
@@ -816,26 +822,31 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
             circleBtn.backgroundColor = presets[idx];
             circleBtn.layer.masksToBounds = YES;
             circleBtn.layer.cornerRadius = kSeedColorCircleSize / 2.0;
-            circleBtn.layer.borderWidth = 0;
+            // Selected state: primary-colored border ring (matches Android ColorOption).
+            circleBtn.layer.borderWidth = (idx == selectedIndex) ? kSeedColorRingWidth : 0;
+            circleBtn.layer.borderColor = [MicYouColors shared].primary.CGColor;
             [circleBtn addTarget:self action:@selector(seedCircleTapped:) forControlEvents:UIControlEventTouchUpInside];
 
-            // 选中环
-            UIView *ring = [[UIView alloc] init];
-            ring.translatesAutoresizingMaskIntoConstraints = NO;
-            ring.backgroundColor = [UIColor clearColor];
-            ring.layer.masksToBounds = YES;
-            ring.layer.cornerRadius = (kSeedColorCircleSize + 8) / 2.0;
-            ring.layer.borderWidth = kSeedColorRingWidth;
-            ring.layer.borderColor = [MicYouColors shared].primary.CGColor;
-            ring.userInteractionEnabled = NO;
-            ring.hidden = (idx != selectedIndex);
-            [circleBtn addSubview:ring];
+            // Checkmark label centered on the circle (matches Android Icons.Default.Check).
+            // Tint is white for dark seed colors, black for light seed colors
+            // (luminance-based, mirroring Android's color.luminance() > 0.5 logic).
+            UILabel *checkmark = [[UILabel alloc] init];
+            checkmark.translatesAutoresizingMaskIntoConstraints = NO;
+            checkmark.text = @"\u2713"; // CHECK MARK
+            checkmark.font = [UIFont systemFontOfSize:20 weight:UIFontWeightBold];
+            checkmark.textAlignment = NSTextAlignmentCenter;
+            checkmark.backgroundColor = [UIColor clearColor];
+            checkmark.userInteractionEnabled = NO;
+            BOOL isLightSeed = [MicYouColors luminanceOfColor:presets[idx]] > 0.5;
+            checkmark.textColor = isLightSeed ? [UIColor blackColor] : [UIColor whiteColor];
+            checkmark.hidden = (idx != selectedIndex);
+            [circleBtn addSubview:checkmark];
 
             [NSLayoutConstraint activateConstraints:@[
-                [ring.topAnchor constraintEqualToAnchor:circleBtn.topAnchor constant:-4],
-                [ring.bottomAnchor constraintEqualToAnchor:circleBtn.bottomAnchor constant:4],
-                [ring.leadingAnchor constraintEqualToAnchor:circleBtn.leadingAnchor constant:-4],
-                [ring.trailingAnchor constraintEqualToAnchor:circleBtn.trailingAnchor constant:4],
+                [checkmark.centerXAnchor constraintEqualToAnchor:circleBtn.centerXAnchor],
+                [checkmark.centerYAnchor constraintEqualToAnchor:circleBtn.centerYAnchor],
+                [checkmark.widthAnchor constraintEqualToAnchor:circleBtn.widthAnchor],
+                [checkmark.heightAnchor constraintEqualToAnchor:circleBtn.heightAnchor],
             ]];
 
             objc_setAssociatedObject(circleBtn, kSeedCircleIndexKey, @(idx), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -857,15 +868,26 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
             ]];
 
             [self.seedCircleViews addObject:circleBtn];
-            [self.seedRingViews addObject:ring];
+            // Reuse seedRingViews array to hold checkmark labels so refreshColors can retint them.
+            [self.seedRingViews addObject:checkmark];
             [rowStack addArrangedSubview:aspectHolder];
         }
         [outerStack addArrangedSubview:rowStack];
     }
 
     [self registerColorRefreshBlock:^{
-        for (UIView *ring in self.seedRingViews) {
-            ring.layer.borderColor = [MicYouColors shared].primary.CGColor;
+        // Re-apply primary border to currently selected circle (border is on the button itself).
+        for (NSInteger i = 0; i < (NSInteger)self.seedCircleViews.count; i++) {
+            UIButton *btn = self.seedCircleViews[i];
+            UILabel *mark = (i < (NSInteger)self.seedRingViews.count) ? (UILabel *)self.seedRingViews[i] : nil;
+            BOOL selected = !mark.hidden;
+            btn.layer.borderWidth = selected ? kSeedColorRingWidth : 0;
+            btn.layer.borderColor = [MicYouColors shared].primary.CGColor;
+            if (mark != nil && selected) {
+                UIColor *seed = presets[i];
+                BOOL isLightSeed = [MicYouColors luminanceOfColor:seed] > 0.5;
+                mark.textColor = isLightSeed ? [UIColor blackColor] : [UIColor whiteColor];
+            }
         }
     }];
 
@@ -877,9 +899,13 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     NSInteger idx = idxNum.integerValue;
     void (^callback)(NSInteger) = objc_getAssociatedObject(sender, kSeedCircleCallbackKey);
 
-    // 隐藏所有 ring，显示当前选中的
-    for (NSInteger i = 0; i < (NSInteger)self.seedRingViews.count; i++) {
-        self.seedRingViews[i].hidden = (i != idx);
+    // Toggle selection state: hide all checkmarks/borders, show only the tapped one.
+    for (NSInteger i = 0; i < (NSInteger)self.seedCircleViews.count; i++) {
+        UIButton *btn = self.seedCircleViews[i];
+        UILabel *mark = (i < (NSInteger)self.seedRingViews.count) ? (UILabel *)self.seedRingViews[i] : nil;
+        BOOL selected = (i == idx);
+        mark.hidden = !selected;
+        btn.layer.borderWidth = selected ? kSeedColorRingWidth : 0;
     }
 
     if (callback != nil) callback(idx);
@@ -961,7 +987,19 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
                                                                 onChange:^(BOOL on) {
         self.streamingNotificationValue = on;
         [self persistBool:on forKey:@"micyou_enable_streaming_notification"];
+        if (on) {
+            // 开启时请求通知权限；若被拒绝则拨回开关并提示
+            [[MicYouNotificationManager shared] requestAuthorizationWithCompletion:^(BOOL granted) {
+                if (!granted) {
+                    self.streamingNotificationSwitch.on = NO;
+                    self.streamingNotificationValue = NO;
+                    [self persistBool:NO forKey:@"micyou_enable_streaming_notification"];
+                    [self showNotificationDeniedAlert];
+                }
+            }];
+        }
     }];
+    self.streamingNotificationSwitch = streamingItem.toggleSwitch;
     [items addObject:streamingItem];
 
     // 3. 保持屏幕常亮 Switch
@@ -982,24 +1020,12 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
                                                                 subtitle:NSLocalizedString(@"general_auto_check_update_subtitle", nil)
                                                                      isOn:self.autoCheckUpdateValue
                                                                   isFirst:NO
-                                                                   isLast:NO
+                                                                   isLast:YES
                                                                  onChange:^(BOOL on) {
         self.autoCheckUpdateValue = on;
         [self persistBool:on forKey:@"micyou_auto_check_update"];
     }];
     [items addObject:autoUpdateItem];
-
-    // 5. 镜像下载 Switch
-    MicYouSettingsItem *mirrorItem = [self buildSwitchItemWithTitle:NSLocalizedString(@"general_mirror_download", nil)
-                                                           subtitle:NSLocalizedString(@"general_mirror_download_subtitle", nil)
-                                                                isOn:self.useMirrorDownloadValue
-                                                             isFirst:NO
-                                                              isLast:YES
-                                                            onChange:^(BOOL on) {
-        self.useMirrorDownloadValue = on;
-        [self persistBool:on forKey:@"micyou_use_mirror_download"];
-    }];
-    [items addObject:mirrorItem];
 
     UIStackView *group = [self buildContinuousGroupWithItems:items];
 
@@ -1057,32 +1083,17 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
                                              subtitle:nil];
     [stack addArrangedSubview:darkModeBox];
 
-    // 2. 开启动态取色 + OLED 优化 (连续 Switch 组)
-    NSMutableArray<UIView *> *schemeItems = [NSMutableArray array];
-
-    MicYouSettingsItem *dynamicColorItem = [self buildSwitchItemWithTitle:NSLocalizedString(@"appearance_dynamic_color", nil)
-                                                                  subtitle:NSLocalizedString(@"appearance_dynamic_color_subtitle", nil)
-                                                                       isOn:self.useDynamicColorValue
-                                                                    isFirst:YES
-                                                                     isLast:NO
-                                                                   onChange:^(BOOL on) {
-        self.useDynamicColorValue = on;
-        [self persistBool:on forKey:@"micyou_use_dynamic_color"];
-    }];
-    [schemeItems addObject:dynamicColorItem];
-
+    // 2. OLED 优化 (独立 Switch 项, 全 28pt 圆角)
     MicYouSettingsItem *oledItem = [self buildSwitchItemWithTitle:NSLocalizedString(@"appearance_oled_black", nil)
                                                           subtitle:NSLocalizedString(@"appearance_oled_black_subtitle", nil)
                                                                isOn:self.oledBlackValue
-                                                            isFirst:NO
+                                                            isFirst:YES
                                                              isLast:YES
                                                            onChange:^(BOOL on) {
         self.oledBlackValue = on;
         [self persistBool:on forKey:@"micyou_oled_black"];
     }];
-    [schemeItems addObject:oledItem];
-
-    [stack addArrangedSubview:[self buildContinuousGroupWithItems:schemeItems]];
+    [stack addArrangedSubview:[self buildContinuousGroupWithItems:@[oledItem]]];
 
     // 3. 主题颜色 BoxItem: 9 色 3x3 选择器
     UIView *seedGrid = [self buildSeedColorGridWithSelectedIndex:self.seedColorIndex
@@ -1156,8 +1167,12 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     // 7. 背景 BoxItem: "选择图片" primary 按钮
     UIButton *bgButton = [self buildPrimaryButtonWithTitle:NSLocalizedString(@"appearance_select_image", nil)
                                                     action:^{
-        // 背景图片选择暂未实现 - 留作占位
+        [self pickBackgroundImage];
     }];
+    // 长按"选择图片"按钮提供"清除背景"选项
+    UILongPressGestureRecognizer *bgLongPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundButtonLongPressed:)];
+    bgLongPress.minimumPressDuration = 0.5;
+    [bgButton addGestureRecognizer:bgLongPress];
     // 居左对齐
     UIView *bgButtonContainer = [[UIView alloc] init];
     bgButtonContainer.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1238,7 +1253,9 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     MicYouSettingsItem *devItem = [self buildListItemWithIcon:@"person.fill"
                                                         title:NSLocalizedString(@"about_developer", nil)
                                                      subtitle:NSLocalizedString(@"about_developer_subtitle", nil)
-                                                       action:nil
+                                                       action:^{
+        [self showDeveloperInfo];
+    }
                                                       isFirst:YES
                                                        isLast:NO];
     [items addObject:devItem];
@@ -1259,50 +1276,56 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     MicYouSettingsItem *contribItem = [self buildListItemWithIcon:@"person.2.fill"
                                                            title:NSLocalizedString(@"about_contributors", nil)
                                                         subtitle:NSLocalizedString(@"about_contributors_subtitle", nil)
-                                                          action:nil
+                                                          action:^{
+        NSURL *url = [NSURL URLWithString:@"https://github.com/MicYou-Dev/MicYou-iOS/graphs/contributors"];
+        [self openURL:url];
+    }
                                                          isFirst:NO
                                                           isLast:NO];
     [items addObject:contribItem];
 
-    // 4. 赞助者
-    MicYouSettingsItem *sponsorItem = [self buildListItemWithIcon:@"heart.fill"
-                                                           title:NSLocalizedString(@"about_sponsors", nil)
-                                                        subtitle:NSLocalizedString(@"about_sponsors_subtitle", nil)
-                                                          action:nil
-                                                         isFirst:NO
-                                                          isLast:NO];
-    [items addObject:sponsorItem];
-
-    // 5. 版本 (自定义 view with 检查更新 button)
+    // 4. 版本 (自定义 view with 检查更新 button)
     NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"1.0.0";
     NSString *frameworkVersion = @"unknown";
-    NSBundle *frameworkBundle = [NSBundle bundleWithIdentifier:@"com.micyou.ios.MicYouProtocol"];
+    // 优先通过路径查找嵌入的 MicYouProtocol.framework（bundleWithIdentifier: 对静态
+    // framework 不可靠，会返回 nil 导致版本显示为 unknown）。
+    NSString *fwPath = [[[NSBundle mainBundle].bundlePath
+                          stringByAppendingPathComponent:@"Frameworks"]
+                          stringByAppendingPathComponent:@"MicYouProtocol.framework"];
+    NSBundle *frameworkBundle = [NSBundle bundleWithPath:fwPath];
     if (frameworkBundle) {
-        frameworkVersion = [frameworkBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: frameworkVersion;
+        NSString *v = [frameworkBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+        if (v.length) {
+            frameworkVersion = v;
+        }
     }
     NSString *versionText = [NSString stringWithFormat:@"v%@ (Protocol v%@)", appVersion, frameworkVersion];
     UIView *versionItem = [self buildVersionItemWithVersionText:versionText
                                                         isFirst:NO
                                                          isLast:NO
                                                      onCheckUpdate:^{
-        // 检查更新 - 暂为占位
+        [self performUpdateCheck];
     }];
     [items addObject:versionItem];
 
-    // 6. 开源许可
+    // 5. 开源许可
     MicYouSettingsItem *licenseItem = [self buildListItemWithIcon:@"doc.text.fill"
                                                             title:NSLocalizedString(@"about_open_source_licenses", nil)
                                                          subtitle:NSLocalizedString(@"about_open_source_licenses_subtitle", nil)
-                                                           action:nil
+                                                           action:^{
+        [self showOpenSourceLicenses];
+    }
                                                           isFirst:NO
                                                            isLast:NO];
     [items addObject:licenseItem];
 
-    // 7. 导出日志
+    // 6. 导出日志
     MicYouSettingsItem *logItem = [self buildListItemWithIcon:@"doc.on.clipboard.fill"
                                                         title:NSLocalizedString(@"about_export_logs", nil)
                                                      subtitle:NSLocalizedString(@"about_export_logs_subtitle", nil)
-                                                       action:nil
+                                                       action:^{
+        [[MicYouLogExporter shared] exportLogFromViewController:self];
+    }
                                                       isFirst:NO
                                                        isLast:YES];
     [items addObject:logItem];
@@ -1339,29 +1362,45 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 - (UIView *)buildAboutFooterCard {
     UIView *card = [[UIView alloc] init];
     card.translatesAutoresizingMaskIntoConstraints = NO;
+    // secondaryContainer @ 70% opacity -> rgba(218,231,202,0.7) in Light mode
     card.backgroundColor = [[MicYouColors shared].secondaryContainer colorWithAlphaComponent:0.7];
-    card.layer.cornerRadius = kCardCornerRadius;
+    card.layer.cornerRadius = kCardCornerRadius;  // 28pt
     card.layer.masksToBounds = YES;
 
-    UILabel *label = [[UILabel alloc] init];
-    label.translatesAutoresizingMaskIntoConstraints = NO;
-    label.numberOfLines = 0;
-    label.text = NSLocalizedString(@"about_footer_text", nil);
-    label.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
-    label.textColor = [MicYouColors shared].onSecondaryContainer;
-    label.adjustsFontForContentSizeCategory = YES;
-    [card addSubview:label];
+    // Title label: "关于 MicYou iOS", titleMedium (~16pt Medium), color #141E0D
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    titleLabel.text = NSLocalizedString(@"about_footer_title", nil);
+    titleLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightMedium];
+    titleLabel.textColor = [MicYouColors shared].onSecondaryContainer;
+    titleLabel.adjustsFontForContentSizeCategory = YES;
+    [card addSubview:titleLabel];
+
+    // Body label: bodyMedium (~14pt Regular), color #141E0D
+    UILabel *bodyLabel = [[UILabel alloc] init];
+    bodyLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    bodyLabel.numberOfLines = 0;
+    bodyLabel.text = NSLocalizedString(@"about_footer_text", nil);
+    bodyLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightRegular];
+    bodyLabel.textColor = [MicYouColors shared].onSecondaryContainer;
+    bodyLabel.adjustsFontForContentSizeCategory = YES;
+    [card addSubview:bodyLabel];
 
     [NSLayoutConstraint activateConstraints:@[
-        [label.topAnchor constraintEqualToAnchor:card.topAnchor constant:kBoxPadding],
-        [label.leadingAnchor constraintEqualToAnchor:card.leadingAnchor constant:kBoxPadding],
-        [label.trailingAnchor constraintEqualToAnchor:card.trailingAnchor constant:-kBoxPadding],
-        [label.bottomAnchor constraintEqualToAnchor:card.bottomAnchor constant:-kBoxPadding],
+        [titleLabel.topAnchor constraintEqualToAnchor:card.topAnchor constant:16.0],
+        [titleLabel.leadingAnchor constraintEqualToAnchor:card.leadingAnchor constant:16.0],
+        [titleLabel.trailingAnchor constraintEqualToAnchor:card.trailingAnchor constant:-16.0],
+
+        [bodyLabel.topAnchor constraintEqualToAnchor:titleLabel.bottomAnchor constant:8.0],
+        [bodyLabel.leadingAnchor constraintEqualToAnchor:card.leadingAnchor constant:16.0],
+        [bodyLabel.trailingAnchor constraintEqualToAnchor:card.trailingAnchor constant:-16.0],
+        [bodyLabel.bottomAnchor constraintEqualToAnchor:card.bottomAnchor constant:-16.0],
     ]];
 
     [self registerColorRefreshBlock:^{
         card.backgroundColor = [[MicYouColors shared].secondaryContainer colorWithAlphaComponent:0.7];
-        label.textColor = [MicYouColors shared].onSecondaryContainer;
+        titleLabel.textColor = [MicYouColors shared].onSecondaryContainer;
+        bodyLabel.textColor = [MicYouColors shared].onSecondaryContainer;
     }];
 
     return card;
@@ -1421,6 +1460,169 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self refreshColors];
     });
+}
+
+#pragma mark - Background Image Picker
+
+- (void)pickBackgroundImage {
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    picker.allowsEditing = NO;
+    picker.delegate = self;
+    self.imagePicker = picker;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker
+ didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id> *)info {
+    UIImage *selectedImage = info[UIImagePickerControllerOriginalImage];
+    [picker dismissViewControllerAnimated:YES completion:^{
+        if (selectedImage == nil) return;
+        [self saveBackgroundImage:selectedImage];
+    }];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)saveBackgroundImage:(UIImage *)image {
+    NSString *documentsDir = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                                   NSUserDomainMask,
+                                                                   YES) firstObject];
+    if (documentsDir == nil) return;
+    NSString *filePath = [documentsDir stringByAppendingPathComponent:@"background.png"];
+    NSData *pngData = UIImagePNGRepresentation(image);
+    if (pngData == nil) return;
+    NSError *error = nil;
+    [pngData writeToFile:filePath options:NSDataWritingAtomic error:&error];
+    if (error != nil) return;
+
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:filePath forKey:@"micyou_background_image_path"];
+    [defaults synchronize];
+    [self notifyChangeForKey:@"micyou_background_image_path"];
+}
+
+- (void)backgroundButtonLongPressed:(UILongPressGestureRecognizer *)gesture {
+    if (gesture.state != UIGestureRecognizerStateBegan) return;
+    [self showClearBackgroundAlertFromView:gesture.view];
+}
+
+- (void)showClearBackgroundAlertFromView:(UIView *)sourceView {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                   message:nil
+                                                            preferredStyle:UIAlertControllerStyleActionSheet];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"appearance_clear_background", nil)
+                                              style:UIAlertActionStyleDestructive
+                                            handler:^(UIAlertAction *act) {
+        [self clearBackgroundImage];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_cancel", nil)
+                                              style:UIAlertActionStyleCancel
+                                            handler:nil]];
+    if (sourceView != nil) {
+        alert.popoverPresentationController.sourceView = sourceView;
+        alert.popoverPresentationController.sourceRect = sourceView.bounds;
+    }
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)clearBackgroundImage {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *filePath = [defaults stringForKey:@"micyou_background_image_path"];
+    if (filePath != nil) {
+        [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+    }
+    [defaults removeObjectForKey:@"micyou_background_image_path"];
+    [defaults synchronize];
+    [self notifyChangeForKey:@"micyou_background_image_path"];
+}
+
+#pragma mark - Update Check
+
+- (void)performUpdateCheck {
+    // 简单地直接发起异步检查；completion 已在主线程回调
+    [[MicYouUpdateChecker shared] checkForUpdateWithCompletion:^(MicYouUpdateStatus status,
+                                                                  NSString *latestVersion,
+                                                                  NSURL *releaseURL) {
+        switch (status) {
+            case MicYouUpdateStatusUpdateAvailable: {
+                NSString *message = [NSString stringWithFormat:
+                                     NSLocalizedString(@"update_new_version_format", nil),
+                                     latestVersion ?: @""];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                               message:message
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"update_view", nil)
+                                                          style:UIAlertActionStyleDefault
+                                                        handler:^(UIAlertAction *act) {
+                    if (releaseURL != nil) {
+                        [self openURL:releaseURL];
+                    }
+                }]];
+                [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_cancel", nil)
+                                                          style:UIAlertActionStyleCancel
+                                                        handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+                break;
+            }
+            case MicYouUpdateStatusUpToDate: {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                               message:NSLocalizedString(@"update_up_to_date", nil)
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                                          style:UIAlertActionStyleDefault
+                                                        handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+                break;
+            }
+            case MicYouUpdateStatusError: {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                               message:NSLocalizedString(@"update_check_failed", nil)
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                                          style:UIAlertActionStyleDefault
+                                                        handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+                break;
+            }
+        }
+    }];
+}
+
+#pragma mark - About Item Actions
+
+- (void)showDeveloperInfo {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"about_developer_info_title", nil)
+                                                                   message:NSLocalizedString(@"about_developer_info_message", nil)
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                              style:UIAlertActionStyleDefault
+                                            handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)showOpenSourceLicenses {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"about_open_source_licenses", nil)
+                                                                   message:NSLocalizedString(@"about_open_source_licenses_message", nil)
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                              style:UIAlertActionStyleDefault
+                                            handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+#pragma mark - Notification Permission
+
+- (void)showNotificationDeniedAlert {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                   message:NSLocalizedString(@"notification_permission_denied", nil)
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                              style:UIAlertActionStyleDefault
+                                            handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 @end

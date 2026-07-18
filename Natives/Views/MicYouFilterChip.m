@@ -85,9 +85,10 @@ static const CGFloat kChipCheckmarkFontSize   = 14.0;
     [super setSelected:selected];
     [self invalidateIntrinsicContentSize];
     [self applyVisualState:animated];
-    if (self.onTap) {
-        self.onTap(selected);
-    }
+    // Note: onTap is intentionally NOT fired here. Programmatic selection changes
+    // (e.g. deselecting other chips in a single-select group) must not trigger
+    // onTap, otherwise the re-select logic in the callback causes infinite
+    // recursion. onTap is fired only from -touchesEnded: (user-initiated).
 }
 
 #pragma mark - Visual State
@@ -217,8 +218,15 @@ static const CGFloat kChipCheckmarkFontSize   = 14.0;
                      completion:nil];
 
     if (isInside) {
-        // Toggle selection; setSelected:animated: also fires onTap.
-        [self setSelected:!self.isSelected animated:YES];
+        // Single-select behavior: tapping an already-selected chip is a no-op.
+        // Tapping an unselected chip selects it and fires onTap for mutual
+        // exclusion handling by the owning controller.
+        if (!self.isSelected) {
+            [self setSelected:YES animated:YES];
+            if (self.onTap) {
+                self.onTap(YES);
+            }
+        }
     }
 }
 

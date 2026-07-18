@@ -2,7 +2,8 @@
 #import "MicYouColors.h"
 #import <QuartzCore/QuartzCore.h>
 
-static const CGFloat kCornerRadius = 28.0f;
+static const CGFloat kCornerRadius = 28.0f;       // outer corner radius
+static const CGFloat kInnerCornerRadius = 10.0f;  // inner corner radius (middle items & adjacent corners)
 static const CGFloat kPaddingHorizontal = 20.0f;
 static const CGFloat kPaddingVertical = 18.0f;
 static const CGFloat kTitleFontSize = 16.0f;       // bodyLarge
@@ -205,24 +206,86 @@ static const CGFloat kDisabledOpacity = 0.6f;
 
 #pragma mark - Corner radius (Expressive continuous card)
 
+/// Build a Bezier path with independent radius per corner.
+/// Matches Android Material 3 Expressive continuous card shape:
+///   first item: 28 28 10 10 (topLeft topRight bottomLeft bottomRight)
+///   middle item: 10 10 10 10
+///   last item: 10 10 28 28
+///   standalone item: 28 28 28 28
+- (UIBezierPath *)roundedPathWithBounds:(CGRect)bounds
+                               topLeftR:(CGFloat)topLeftR
+                              topRightR:(CGFloat)topRightR
+                            bottomLeftR:(CGFloat)bottomLeftR
+                           bottomRightR:(CGFloat)bottomRightR {
+    CGFloat w = bounds.size.width;
+    CGFloat h = bounds.size.height;
+    // Clamp radii so they never exceed half the bounds.
+    CGFloat maxR = MIN(w, h) / 2.0;
+    topLeftR     = MIN(topLeftR, maxR);
+    topRightR    = MIN(topRightR, maxR);
+    bottomLeftR  = MIN(bottomLeftR, maxR);
+    bottomRightR = MIN(bottomRightR, maxR);
+
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    // Start at top-left, just after the corner arc.
+    [path moveToPoint:CGPointMake(topLeftR, 0.0)];
+    // Top edge to top-right corner start.
+    [path addLineToPoint:CGPointMake(w - topRightR, 0.0)];
+    // Top-right corner arc.
+    if (topRightR > 0) {
+        [path addArcWithCenter:CGPointMake(w - topRightR, topRightR)
+                        radius:topRightR
+                    startAngle:-M_PI_2
+                      endAngle:0.0
+                     clockwise:YES];
+    }
+    // Right edge to bottom-right corner start.
+    [path addLineToPoint:CGPointMake(w, h - bottomRightR)];
+    // Bottom-right corner arc.
+    if (bottomRightR > 0) {
+        [path addArcWithCenter:CGPointMake(w - bottomRightR, h - bottomRightR)
+                        radius:bottomRightR
+                    startAngle:0.0
+                      endAngle:M_PI_2
+                     clockwise:YES];
+    }
+    // Bottom edge to bottom-left corner start.
+    [path addLineToPoint:CGPointMake(bottomLeftR, h)];
+    // Bottom-left corner arc.
+    if (bottomLeftR > 0) {
+        [path addArcWithCenter:CGPointMake(bottomLeftR, h - bottomLeftR)
+                        radius:bottomLeftR
+                    startAngle:M_PI_2
+                      endAngle:M_PI
+                     clockwise:YES];
+    }
+    // Left edge to top-left corner start.
+    [path addLineToPoint:CGPointMake(0.0, topLeftR)];
+    // Top-left corner arc.
+    if (topLeftR > 0) {
+        [path addArcWithCenter:CGPointMake(topLeftR, topLeftR)
+                        radius:topLeftR
+                    startAngle:M_PI
+                      endAngle:3.0 * M_PI_2
+                     clockwise:YES];
+    }
+    [path closePath];
+    return path;
+}
+
 - (void)refreshCorners {
-    UIRectCorner corners = 0;
-    if (self.isFirst) {
-        corners |= (UIRectCornerTopLeft | UIRectCornerTopRight);
-    }
-    if (self.isLast) {
-        corners |= (UIRectCornerBottomLeft | UIRectCornerBottomRight);
-    }
+    // Outer corners (top of first item, bottom of last item, all corners of standalone) use 28pt.
+    // Inner corners (bottom of first item, top of last item, all corners of middle item) use 10pt.
+    CGFloat topLeftR     = self.isFirst ? kCornerRadius : kInnerCornerRadius;
+    CGFloat topRightR    = self.isFirst ? kCornerRadius : kInnerCornerRadius;
+    CGFloat bottomLeftR  = self.isLast  ? kCornerRadius : kInnerCornerRadius;
+    CGFloat bottomRightR = self.isLast  ? kCornerRadius : kInnerCornerRadius;
 
-    if (corners == 0) {
-        self.layer.mask = nil;
-        self.cornerMaskLayer = nil;
-        return;
-    }
-
-    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds
-                                               byRoundingCorners:corners
-                                                     cornerRadii:CGSizeMake(kCornerRadius, kCornerRadius)];
+    UIBezierPath *path = [self roundedPathWithBounds:self.bounds
+                                           topLeftR:topLeftR
+                                          topRightR:topRightR
+                                        bottomLeftR:bottomLeftR
+                                       bottomRightR:bottomRightR];
 
     CAShapeLayer *maskLayer = self.cornerMaskLayer;
     if (!maskLayer) {

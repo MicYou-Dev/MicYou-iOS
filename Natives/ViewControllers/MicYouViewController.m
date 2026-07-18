@@ -4,6 +4,11 @@
 #import "MicYouColors.h"
 #import "SettingsViewController.h"
 #import "MicYouVisualizerView.h"
+#import "MicYouNotificationManager.h"
+#import "MicYouServiceDiscovery.h"
+#import "MicYouUpdateChecker.h"
+#import <arpa/inet.h>
+#import <sys/socket.h>
 
 #pragma mark - Settings Transition
 
@@ -81,7 +86,7 @@ static const CGFloat kFabDiameterStreaming = 100.0;
 static const CGFloat kVisualizerSize = 240.0;
 static const CGFloat kConnectingAnimationSize = 200.0;
 
-@interface MicYouViewController () <UITextFieldDelegate>
+@interface MicYouViewController () <UITextFieldDelegate, MicYouServiceDiscoveryDelegate>
 
 // === Core services (PRESERVED — DO NOT MODIFY) ===
 @property (nonatomic, strong) MicYouAudioCapture *audioCapture;
@@ -140,6 +145,17 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 // Settings custom transition (NEW)
 @property (nonatomic, strong) MicYouSettingsTransition *settingsTransition;
 
+// === Service discovery (NEW) ===
+@property (nonatomic, strong) NSMutableArray<NSNetService *> *discoveredServices;
+@property (nonatomic, assign) BOOL isScanningDiscovery;
+
+// === Background image (NEW) ===
+@property (nonatomic, strong) UIImageView *backgroundImageView;
+@property (nonatomic, strong) UIView *backgroundOverlayView;
+
+// === Update check (NEW) ===
+@property (nonatomic, assign) BOOL hasCheckedForUpdate;
+
 @end
 
 @implementation MicYouViewController
@@ -152,6 +168,7 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     self.title = @"MicYou";
     self.isMuted = NO;
     self.streamState = MicYouStreamStateIdle;
+    self.discoveredServices = [[NSMutableArray alloc] init];
 
     // Apply saved color scheme before building UI
     [self applySavedColorScheme];
@@ -168,6 +185,12 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     [self applyColors];
     [self loadSavedSettings];
     [self updateStreamState:MicYouStreamStateIdle];
+
+    // Wire service discovery
+    [MicYouServiceDiscovery shared].delegate = self;
+
+    // Load background image (if configured)
+    [self refreshBackgroundImage];
 
     // Listen for settings changes
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -186,6 +209,15 @@ static const CGFloat kConnectingAnimationSize = 200.0;
                                                   self.controlCard,
                                                   self.bottomBarCard]
                                         delays:@[@0.05, @0.15, @0.25, @0.35]];
+
+        // Request notification authorization when streaming notifications are enabled
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults boolForKey:@"micyou_enable_streaming_notification"]) {
+            [[MicYouNotificationManager shared] requestAuthorizationWithCompletion:^(BOOL granted) {}];
+        }
+
+        // Auto-check for updates on first appear
+        [self autoCheckUpdateIfNeeded];
     }
 }
 
@@ -407,10 +439,26 @@ static const CGFloat kConnectingAnimationSize = 200.0;
         [v removeFromSuperview];
     }
 
-    // No discovery service in scope — show a single always-selected "manual" row
-    UIView *row = [self createDeviceRowWithName:NSLocalizedString(@"manual_server_label", nil)
-                                        selected:YES];
-    [self.deviceListStack addArrangedSubview:row];
+    // Add a row for each discovered service (tag = index + 1, used by deviceRowTapped:)
+    NSArray<NSNetService *> *services = [self.discoveredServices copy];
+    for (NSUInteger i = 0; i < services.count; i++) {
+        NSNetService *service = services[i];
+        NSString *host = [self hostStringFromService:service];
+        NSString *displayName = service.name.length > 0 ? service.name : (host.length > 0 ? host : @"");
+        NSString *rowTitle = displayName;
+        if (host.length > 0) {
+            rowTitle = [NSString stringWithFormat:@"%@  ·  %@:%ld", displayName, host, (long)service.port];
+        }
+        UIView *row = [self createDeviceRowWithName:rowTitle selected:NO];
+        row.tag = (NSInteger)i + 1;
+        [self.deviceListStack addArrangedSubview:row];
+    }
+
+    // Always show the "manual" row at the bottom (tag = 0)
+    UIView *manualRow = [self createDeviceRowWithName:NSLocalizedString(@"manual_server_label", nil)
+                                              selected:YES];
+    manualRow.tag = 0;
+    [self.deviceListStack addArrangedSubview:manualRow];
 }
 
 - (UIView *)createDeviceRowWithName:(NSString *)name selected:(BOOL)selected {
@@ -460,20 +508,54 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 }
 
 - (void)deviceRowTapped:(UITapGestureRecognizer *)gesture {
-    // Currently only one selectable row exists; selection is a no-op.
+    UIView *row = gesture.view;
+    NSInteger tag = row.tag;
+
+    // tag == 0 -> manual row, no-op (user types into the text fields)
+    if (tag <= 0) {
+        return;
+    }
+
+    NSUInteger index = (NSUInteger)tag - 1;
+    if (index >= self.discoveredServices.count) {
+        return;
+    }
+
+    NSNetService *service = self.discoveredServices[index];
+    NSString *host = [self hostStringFromService:service];
+    if (host.length > 0) {
+        self.hostTextField.text = host;
+    }
+    self.portTextField.text = [NSString stringWithFormat:@"%ld", (long)service.port];
+
+    [self saveCurrentSettings];
+    [self rebuildDeviceList];
 }
 
 - (void)refreshButtonTapped:(UIButton *)sender {
     [MicYouAnimator animatePressScale:sender scale:0.85];
 
-    // Rotate the refresh icon for 1s (no actual discovery service in scope)
+    // Trigger service discovery scan
+    if (self.isScanningDiscovery) {
+        return;
+    }
+
+    self.isScanningDiscovery = YES;
+    [self.discoveredServices removeAllObjects];
+    [self rebuildDeviceList];
+
+    MicYouServiceDiscovery *discovery = [MicYouServiceDiscovery shared];
+    discovery.delegate = self;
+    [discovery startScanning];
+
+    // Start refresh button rotation animation
     if (@available(iOS 13.0, *)) {
         CABasicAnimation *rotate = [CABasicAnimation animationWithKeyPath:@"transform.rotation"];
         rotate.fromValue = @(0);
         rotate.toValue = @(2 * M_PI);
         rotate.duration = 1.0;
-        rotate.repeatCount = 1.0;
-        [sender.imageView.layer addAnimation:rotate forKey:@"rotate"];
+        rotate.repeatCount = HUGE_VALF;
+        [sender.imageView.layer addAnimation:rotate forKey:@"micyou_refresh_rotate"];
     }
 }
 
@@ -657,9 +739,13 @@ static const CGFloat kConnectingAnimationSize = 200.0;
         self.glowWidthConstraint,
         self.glowHeightConstraint,
 
-        // FAB centered, bottom=16
+        // FAB horizontally + vertically centered in controlCard.
+        // Visualizer (240x240) and Glow are centered on FAB.centerY, so they
+        // stay centered too. controlCard is given enough vertical room by the
+        // flexible top/bottom anchors (connection.bottom+10 -> bottomBar.top-10)
+        // so the 240pt visualizer does not breach the card bounds.
         [self.mainActionButton.centerXAnchor constraintEqualToAnchor:self.controlCard.centerXAnchor],
-        [self.mainActionButton.bottomAnchor constraintEqualToAnchor:self.controlCard.bottomAnchor constant:-16.0],
+        [self.mainActionButton.centerYAnchor constraintEqualToAnchor:self.controlCard.centerYAnchor],
         self.fabWidthConstraint,
         self.fabHeightConstraint,
     ]];
@@ -1004,6 +1090,12 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 - (void)settingsDidChange:(NSNotification *)notification {
     [self applySavedColorScheme];
 
+    // Refresh background image when its path changes
+    NSString *changedKey = notification.userInfo[@"key"];
+    if ([changedKey isEqualToString:@"micyou_background_image_path"]) {
+        [self refreshBackgroundImage];
+    }
+
     // Update visualizer style if changed
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSInteger savedStyle = [defaults integerForKey:@"micyou_visualizer_style"];
@@ -1193,6 +1285,9 @@ static const CGFloat kConnectingAnimationSize = 200.0;
         }
 
         [UIApplication sharedApplication].idleTimerDisabled = YES;
+
+        // Streaming notification
+        [self sendStreamingNotificationConnectedWithHost:host port:port];
     });
 }
 
@@ -1206,6 +1301,9 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 
         [UIApplication sharedApplication].idleTimerDisabled = NO;
         [self updateAudioLevel:0.0];
+
+        // Streaming notification
+        [self sendStreamingNotificationDisconnected];
     });
 }
 
@@ -1218,6 +1316,31 @@ static const CGFloat kConnectingAnimationSize = 200.0;
         self.errorMessageLabel.text = [NSString stringWithFormat:NSLocalizedString(@"error_connection_failed", nil),
                                        error.localizedDescription];
         [self updateStreamState:MicYouStreamStateError];
+    });
+}
+
+#pragma mark - MicYouServiceDiscoveryDelegate
+
+- (void)serviceDiscovery:(MicYouServiceDiscovery *)discovery didFindService:(NSNetService *)service {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (![self.discoveredServices containsObject:service]) {
+            [self.discoveredServices addObject:service];
+        }
+        [self rebuildDeviceList];
+    });
+}
+
+- (void)serviceDiscovery:(MicYouServiceDiscovery *)discovery didLoseService:(NSNetService *)service {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.discoveredServices removeObject:service];
+        [self rebuildDeviceList];
+    });
+}
+
+- (void)serviceDiscoveryDidStopScanning:(MicYouServiceDiscovery *)discovery {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.isScanningDiscovery = NO;
+        [self.refreshButton.imageView.layer removeAnimationForKey:@"micyou_refresh_rotate"];
     });
 }
 
@@ -1293,6 +1416,207 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     return image;
 }
 
+#pragma mark - Service Discovery Helpers
+
+- (NSString *)hostStringFromService:(NSNetService *)service {
+    if (!service) {
+        return @"";
+    }
+
+    // Prefer IPv4 address from resolved addresses (matches Android hostAddress behavior)
+    NSArray<NSData *> *addresses = service.addresses;
+    if (addresses.count > 0) {
+        for (NSData *data in addresses) {
+            const struct sockaddr *sock = (const struct sockaddr *)data.bytes;
+            if (sock && sock->sa_family == AF_INET) {
+                const struct sockaddr_in *sockIn = (const struct sockaddr_in *)sock;
+                char ipBuf[INET_ADDRSTRLEN];
+                if (inet_ntop(AF_INET, &sockIn->sin_addr, ipBuf, sizeof(ipBuf))) {
+                    return [NSString stringWithUTF8String:ipBuf];
+                }
+            }
+        }
+        // IPv6 fallback
+        for (NSData *data in addresses) {
+            const struct sockaddr *sock = (const struct sockaddr *)data.bytes;
+            if (sock && sock->sa_family == AF_INET6) {
+                const struct sockaddr_in6 *sockIn6 = (const struct sockaddr_in6 *)sock;
+                char ipBuf[INET6_ADDRSTRLEN];
+                if (inet_ntop(AF_INET6, &sockIn6->sin6_addr, ipBuf, sizeof(ipBuf))) {
+                    return [NSString stringWithUTF8String:ipBuf];
+                }
+            }
+        }
+    }
+
+    // Fall back to hostName (typically a .local mDNS hostname), trim trailing dot
+    NSString *host = service.hostName;
+    if (host.length > 0) {
+        if ([host hasSuffix:@"."]) {
+            host = [host substringToIndex:host.length - 1];
+        }
+        return host;
+    }
+
+    return @"";
+}
+
+#pragma mark - Streaming Notifications
+
+- (void)sendStreamingNotificationConnectedWithHost:(NSString *)host port:(int)port {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (![defaults boolForKey:@"micyou_enable_streaming_notification"]) {
+        return;
+    }
+
+    NSString *title = NSLocalizedStringWithDefaultValue(@"notification_connected_title",
+                                                        nil, [NSBundle mainBundle],
+                                                        @"已连接", @"Connected notification title");
+    NSString *bodyFormat = NSLocalizedStringWithDefaultValue(@"notification_connected_body",
+                                                             nil, [NSBundle mainBundle],
+                                                             @"麦克风已就绪", @"Connected notification body");
+    NSString *body = bodyFormat;
+    if (host.length > 0) {
+        body = [NSString stringWithFormat:@"%@  %@:%d", bodyFormat, host, port];
+    }
+
+    [[MicYouNotificationManager shared] sendNotificationWithTitle:title
+                                                             body:body
+                                                       identifier:@"micyou_connected"];
+}
+
+- (void)sendStreamingNotificationDisconnected {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (![defaults boolForKey:@"micyou_enable_streaming_notification"]) {
+        return;
+    }
+
+    NSString *title = NSLocalizedStringWithDefaultValue(@"notification_disconnected_title",
+                                                        nil, [NSBundle mainBundle],
+                                                        @"已断开", @"Disconnected notification title");
+    NSString *body = NSLocalizedStringWithDefaultValue(@"notification_disconnected_body",
+                                                       nil, [NSBundle mainBundle],
+                                                       @"麦克风已断开", @"Disconnected notification body");
+
+    [[MicYouNotificationManager shared] sendNotificationWithTitle:title
+                                                             body:body
+                                                       identifier:@"micyou_disconnected"];
+}
+
+#pragma mark - Background Image
+
+- (void)refreshBackgroundImage {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *path = [defaults stringForKey:@"micyou_background_image_path"];
+
+    if (path.length == 0) {
+        self.backgroundImageView.hidden = YES;
+        self.backgroundOverlayView.hidden = YES;
+        return;
+    }
+
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        self.backgroundImageView.hidden = YES;
+        self.backgroundOverlayView.hidden = YES;
+        return;
+    }
+
+    UIImage *image = [UIImage imageWithContentsOfFile:path];
+    if (!image) {
+        self.backgroundImageView.hidden = YES;
+        self.backgroundOverlayView.hidden = YES;
+        return;
+    }
+
+    // Lazily create background image view and overlay on first use
+    if (!self.backgroundImageView) {
+        self.backgroundImageView = [[UIImageView alloc] init];
+        self.backgroundImageView.translatesAutoresizingMaskIntoConstraints = NO;
+        self.backgroundImageView.contentMode = UIViewContentModeScaleAspectFill;
+        self.backgroundImageView.clipsToBounds = YES;
+        [self.view insertSubview:self.backgroundImageView atIndex:0];
+
+        self.backgroundOverlayView = [[UIView alloc] init];
+        self.backgroundOverlayView.translatesAutoresizingMaskIntoConstraints = NO;
+        self.backgroundOverlayView.backgroundColor = [UIColor blackColor];
+        self.backgroundOverlayView.alpha = 0.3;
+        [self.view insertSubview:self.backgroundOverlayView aboveSubview:self.backgroundImageView];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [self.backgroundImageView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+            [self.backgroundImageView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [self.backgroundImageView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+            [self.backgroundImageView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+
+            [self.backgroundOverlayView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+            [self.backgroundOverlayView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+            [self.backgroundOverlayView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+            [self.backgroundOverlayView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+        ]];
+    }
+
+    self.backgroundImageView.image = image;
+    self.backgroundImageView.hidden = NO;
+    self.backgroundOverlayView.hidden = NO;
+}
+
+#pragma mark - Update Check
+
+- (void)autoCheckUpdateIfNeeded {
+    if (self.hasCheckedForUpdate) {
+        return;
+    }
+    self.hasCheckedForUpdate = YES;
+
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (![defaults boolForKey:@"micyou_auto_check_update"]) {
+        return;
+    }
+
+    __weak typeof(self) weakSelf = self;
+    [[MicYouUpdateChecker shared] checkForUpdateWithCompletion:^(MicYouUpdateStatus status,
+                                                                  NSString *latestVersion,
+                                                                  NSURL *releaseURL) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) {
+            return;
+        }
+
+        // Silent for up-to-date / error states — auto-check must not disturb the user
+        if (status != MicYouUpdateStatusUpdateAvailable) {
+            return;
+        }
+
+        NSString *title = NSLocalizedStringWithDefaultValue(@"update_available_title",
+                                                            nil, [NSBundle mainBundle],
+                                                            @"发现新版本", @"Update available alert title");
+        NSString *messageFormat = NSLocalizedStringWithDefaultValue(@"update_available_message",
+                                                                    nil, [NSBundle mainBundle],
+                                                                    @"最新版本：%@", @"Update available alert message");
+        NSString *message = [NSString stringWithFormat:messageFormat, latestVersion ?: @""];
+        NSString *viewTitle = NSLocalizedStringWithDefaultValue(@"update_view_button",
+                                                               nil, [NSBundle mainBundle],
+                                                               @"查看", @"Update view button");
+        NSString *laterTitle = NSLocalizedStringWithDefaultValue(@"update_later_button",
+                                                                nil, [NSBundle mainBundle],
+                                                                @"稍后", @"Update later button");
+
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
+                                                                       message:message
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:laterTitle style:UIAlertActionStyleCancel handler:nil]];
+        __weak typeof(strongSelf) weakSelf2 = strongSelf;
+        [alert addAction:[UIAlertAction actionWithTitle:viewTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            __strong typeof(weakSelf2) strongSelf2 = weakSelf2;
+            if (strongSelf2 && releaseURL) {
+                [[UIApplication sharedApplication] openURL:releaseURL options:@{} completionHandler:nil];
+            }
+        }]];
+
+        [strongSelf presentViewController:alert animated:YES completion:nil];
+    }];
+}
+
 #pragma mark - Dealloc
 
 - (void)dealloc {
@@ -1300,6 +1624,11 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     [self.audioCapture stopCapture];
     [self.transportClient disconnect];
     [UIApplication sharedApplication].idleTimerDisabled = NO;
+    // Clean up service discovery
+    if ([MicYouServiceDiscovery shared].delegate == self) {
+        [MicYouServiceDiscovery shared].delegate = nil;
+    }
+    [[MicYouServiceDiscovery shared] stopScanning];
 }
 
 @end

@@ -49,6 +49,8 @@
     <string>11.0</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>MicYou 需要访问麦克风以将音频传输到您的电脑。</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>MicYou 需要访问相册以选择自定义背景图片。</string>
     <key>NSLocalNetworkUsageDescription</key>
     <string>MicYou 需要在本地网络中发现并连接您的电脑。</string>
     <key>UIBackgroundModes</key>

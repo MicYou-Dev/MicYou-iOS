@@ -122,13 +122,9 @@
 "general_keep_screen_on_subtitle" = "使用應用時防止螢幕自動熄滅";
 "general_auto_check_update" = "自動檢查更新";
 "general_auto_check_update_subtitle" = "啟動應用時自動檢查新版本";
-"general_mirror_download" = "鏡像下載";
-"general_mirror_download_subtitle" = "使用Mirror醬鏡像下載更新，速度更快";
 
 "dark_mode_dark" = "暗色";
 "dark_mode_light" = "亮色";
-"appearance_dynamic_color" = "動態取色";
-"appearance_dynamic_color_subtitle" = "根據桌布自動生成主題色";
 "appearance_oled_black_subtitle" = "在暗色模式下使用純黑背景以節省電量";
 "appearance_palette_style" = "色彩風格";
 "appearance_palette_style_subtitle" = "調整色彩飽和度和鮮豔程度";
@@ -146,16 +142,34 @@
 "palette_custom" = "自訂";
 
 "about_developer" = "開發者";
-"about_developer_subtitle" = "iOS端: herbrine8403\n其他: LanRhyme、ChinsaaWei、ChouChiu";
+"about_developer_subtitle" = "iOS端: herbrine8403\n主項目: LanRhyme、ChinsaaWei、ChouChiu";
 "about_github_repo" = "GitHub 倉庫";
 "about_contributors" = "貢獻者";
 "about_contributors_subtitle" = "感謝每一位為本項目做出貢獻的人";
-"about_sponsors" = "贊助者";
-"about_sponsors_subtitle" = "查看愛發電贊助者";
 "about_version" = "版本";
 "about_check_update" = "檢查更新";
 "about_open_source_licenses" = "開源許可";
 "about_open_source_licenses_subtitle" = "查看使用的開源庫";
 "about_export_logs" = "匯出日誌";
 "about_export_logs_subtitle" = "匯出應用日誌以供除錯";
-"about_footer_text" = "MicYou iOS 是 MicYou 的官方 iOS 客戶端，將 iPhone 變為 PC 無線麥克風。基於 Material 3 Expressive 設計語言打造。";
+"about_footer_title" = "關於 MicYou iOS";
+"about_footer_text" = "MicYou iOS 是 MicYou 的官方 iOS 客戶端，由 herbrine8403 開發，可以將您的 iOS 裝置變成電腦的高品質麥克風。";
+
+/* Background image */
+"appearance_clear_background" = "清除背景";
+
+/* Update check */
+"update_new_version_format" = "發現新版本 v%@，是否查看？";
+"update_up_to_date" = "已是最新版本";
+"update_check_failed" = "檢查更新失敗，請稍後重試";
+"update_view" = "查看";
+
+/* Developer info */
+"about_developer_info_title" = "關於開發者";
+"about_developer_info_message" = "MicYou iOS 由 herbrine8403 開發\n感謝使用本項目！";
+
+/* Open source licenses */
+"about_open_source_licenses_message" = "MicYou iOS 使用了以下開源庫和系統框架：\n\n• AVFoundation (Apple)\n• UIKit (Apple)\n• Foundation (Apple)\n• AudioToolbox (Apple)\n• Network (Apple)\n• MicYouProtocol (KMP 共享協議)\n\n感謝開源社群的貢獻。";
+
+/* Notification permission */
+"notification_permission_denied" = "通知權限被拒絕，請在系統設定中開啟";

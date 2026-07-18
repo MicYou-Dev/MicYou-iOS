@@ -122,13 +122,9 @@
 "general_keep_screen_on_subtitle" = "Prevent screen from turning off while using the app";
 "general_auto_check_update" = "Auto Check for Updates";
 "general_auto_check_update_subtitle" = "Check for new versions when the app launches";
-"general_mirror_download" = "Mirror Download";
-"general_mirror_download_subtitle" = "Use Mirror-chan mirror for faster downloads";
 
 "dark_mode_dark" = "Dark";
 "dark_mode_light" = "Light";
-"appearance_dynamic_color" = "Dynamic Color";
-"appearance_dynamic_color_subtitle" = "Generate theme color from wallpaper";
 "appearance_oled_black_subtitle" = "Use pure black background in dark mode to save battery";
 "appearance_palette_style" = "Palette Style";
 "appearance_palette_style_subtitle" = "Adjust color saturation and vibrancy";
@@ -146,16 +142,34 @@
 "palette_custom" = "Custom";
 
 "about_developer" = "Developer";
-"about_developer_subtitle" = "iOS: herbrine8403\nOthers: LanRhyme, ChinsaaWei, ChouChiu";
+"about_developer_subtitle" = "iOS: herbrine8403\nMain Project: LanRhyme, ChinsaaWei, ChouChiu";
 "about_github_repo" = "GitHub Repository";
 "about_contributors" = "Contributors";
 "about_contributors_subtitle" = "Thanks to everyone who contributed to this project";
-"about_sponsors" = "Sponsors";
-"about_sponsors_subtitle" = "View sponsors on Afdian";
 "about_version" = "Version";
 "about_check_update" = "Check for Updates";
 "about_open_source_licenses" = "Open Source Licenses";
 "about_open_source_licenses_subtitle" = "View open source libraries used";
 "about_export_logs" = "Export Logs";
 "about_export_logs_subtitle" = "Export application logs for debugging";
-"about_footer_text" = "MicYou iOS is the official iOS client of MicYou, turning your iPhone into a wireless PC microphone. Built with Material 3 Expressive design language.";
+"about_footer_title" = "About MicYou iOS";
+"about_footer_text" = "MicYou iOS is the official iOS client of MicYou, developed by herbrine8403. It turns your iOS device into a high-quality microphone for your computer.";
+
+/* Background image */
+"appearance_clear_background" = "Clear Background";
+
+/* Update check */
+"update_new_version_format" = "New version v%@ available. View now?";
+"update_up_to_date" = "You're up to date!";
+"update_check_failed" = "Failed to check for updates. Please try again later.";
+"update_view" = "View";
+
+/* Developer info */
+"about_developer_info_title" = "About Developer";
+"about_developer_info_message" = "MicYou iOS is developed by herbrine8403\nThank you for using this project!";
+
+/* Open source licenses */
+"about_open_source_licenses_message" = "MicYou iOS uses the following open source libraries and system frameworks:\n\n• AVFoundation (Apple)\n• UIKit (Apple)\n• Foundation (Apple)\n• AudioToolbox (Apple)\n• Network (Apple)\n• MicYouProtocol (KMP shared protocol)\n\nThanks to the open source community.";
+
+/* Notification permission */
+"notification_permission_denied" = "Notification permission denied. Please enable it in Settings.";
