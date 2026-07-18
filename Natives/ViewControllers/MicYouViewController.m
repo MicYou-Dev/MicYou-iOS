@@ -466,15 +466,18 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 
     UIView *row = [[UIView alloc] init];
     row.translatesAutoresizingMaskIntoConstraints = NO;
-    row.backgroundColor = selected ? c.primaryContainer : c.surfaceContainerHigh;
-    row.layer.cornerRadius = 8.0;
+    // 设计图 (main.html L262): 所有服务器行均使用 primaryContainer 背景，
+    // 配合 onPrimaryContainer 文字色与 primary 图标色。无论是否选中。
+    row.backgroundColor = c.primaryContainer;
+    row.layer.cornerRadius = 12.0;
     row.layer.masksToBounds = YES;
     row.userInteractionEnabled = YES;
 
     UIImageView *iconView = [[UIImageView alloc] init];
     iconView.translatesAutoresizingMaskIntoConstraints = NO;
     iconView.contentMode = UIViewContentModeScaleAspectFit;
-    iconView.tintColor = selected ? c.onPrimaryContainer : c.onSurfaceVariant;
+    // 设计图 L263: 图标用 primary 色
+    iconView.tintColor = c.primary;
     if (@available(iOS 13.0, *)) {
         iconView.image = [UIImage systemImageNamed:selected ? @"checkmark.circle.fill" : @"dns"];
     }
@@ -483,8 +486,8 @@ static const CGFloat kConnectingAnimationSize = 200.0;
     UILabel *nameLabel = [[UILabel alloc] init];
     nameLabel.translatesAutoresizingMaskIntoConstraints = NO;
     nameLabel.text = name;
-    nameLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
-    nameLabel.textColor = selected ? c.onPrimaryContainer : c.onSurfaceVariant;
+    nameLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
+    nameLabel.textColor = c.onPrimaryContainer;
     [row addSubview:nameLabel];
 
     [NSLayoutConstraint activateConstraints:@[
@@ -518,15 +521,28 @@ static const CGFloat kConnectingAnimationSize = 200.0;
 
     NSUInteger index = (NSUInteger)tag - 1;
     if (index >= self.discoveredServices.count) {
+        [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"deviceRowTapped: index %lu out of range (count=%lu)",
+            (unsigned long)index, (unsigned long)self.discoveredServices.count]];
         return;
     }
 
     NSNetService *service = self.discoveredServices[index];
     NSString *host = [self hostStringFromService:service];
+
+    // host 为空时尝试用 service.name 作为 fallback（mDNS 解析可能延迟）
+    if (host.length == 0 && service.name.length > 0) {
+        host = service.name;
+    }
+
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:@"deviceRowTapped: service=%@ host=%@ port=%ld addresses=%lu",
+        service.name, host, (long)service.port, (unsigned long)service.addresses.count]];
+
     if (host.length > 0) {
         self.hostTextField.text = host;
     }
-    self.portTextField.text = [NSString stringWithFormat:@"%ld", (long)service.port];
+    if (service.port > 0) {
+        self.portTextField.text = [NSString stringWithFormat:@"%ld", (long)service.port];
+    }
 
     [self saveCurrentSettings];
     [self rebuildDeviceList];

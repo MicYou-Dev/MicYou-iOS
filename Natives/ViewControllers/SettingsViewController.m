@@ -76,6 +76,8 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 
 // Background image picker
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
+// "恢复默认背景" 按钮：仅当用户已设置自定义背景时显示
+@property (nonatomic, weak) UIButton *restoreBackgroundButton;
 
 // Weak reference to the streaming notification switch so we can revert it
 // when the user denies notification authorization.
@@ -444,6 +446,12 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     // and through the rounded corners of the first/last items, creating the
     // Material 3 Expressive "scrim" effect behind the surfaceBright items.
     stack.backgroundColor = [MicYouColors shared].surfaceContainer;
+    // 关键修复：父 Stack 自身也要裁剪成 28pt 圆角，否则 surfaceContainer
+    // 背景会填充整个矩形，在 first/last item 的外圆角处露出"尖角"。
+    // 设置 clipsToBounds + cornerRadius 后，Stack 的外层四角被裁剪，
+    // 内部 items 通过各自 mask 处理内圆角，整体效果与设计图一致。
+    stack.layer.cornerRadius = 28.0;
+    stack.layer.masksToBounds = YES;
     for (UIView *v in items) {
         [stack addArrangedSubview:v];
     }
@@ -1164,24 +1172,52 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
                                        subtitle:nil];
     [stack addArrangedSubview:visBox];
 
-    // 7. 背景 BoxItem: "选择图片" primary 按钮
+    // 7. 背景 BoxItem: "选择图片" primary 按钮 + "恢复默认背景" 按钮
     UIButton *bgButton = [self buildPrimaryButtonWithTitle:NSLocalizedString(@"appearance_select_image", nil)
                                                     action:^{
         [self pickBackgroundImage];
     }];
-    // 长按"选择图片"按钮提供"清除背景"选项
+    // 长按"选择图片"按钮提供"清除背景"选项（保留作为快捷操作）
     UILongPressGestureRecognizer *bgLongPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundButtonLongPressed:)];
     bgLongPress.minimumPressDuration = 0.5;
     [bgButton addGestureRecognizer:bgLongPress];
-    // 居左对齐
+
+    // "恢复默认背景" 按钮（secondary 风格）：仅当已设置自定义背景时显示
+    UIButton *restoreButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    restoreButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [restoreButton setTitle:NSLocalizedString(@"appearance_restore_default_background", nil) forState:UIControlStateNormal];
+    restoreButton.titleLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
+    [restoreButton setTitleColor:[MicYouColors shared].primary forState:UIControlStateNormal];
+    restoreButton.backgroundColor = [MicYouColors shared].secondaryContainer;
+    restoreButton.layer.cornerRadius = 20;
+    restoreButton.layer.masksToBounds = YES;
+    restoreButton.contentEdgeInsets = UIEdgeInsetsMake(8, 16, 8, 16);
+    [restoreButton addTarget:self action:@selector(restoreBackgroundButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+    // 初始可见性：仅当已有自定义背景时显示
+    NSString *currentBgPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"micyou_background_image_path"];
+    restoreButton.hidden = (currentBgPath.length == 0);
+    [self registerColorRefreshBlock:^{
+        [restoreButton setTitleColor:[MicYouColors shared].primary forState:UIControlStateNormal];
+        restoreButton.backgroundColor = [MicYouColors shared].secondaryContainer;
+    }];
+    self.restoreBackgroundButton = restoreButton;
+
+    // 居左对齐 + 垂直排列
+    UIStackView *bgButtonStack = [[UIStackView alloc] initWithArrangedSubviews:@[bgButton, restoreButton]];
+    bgButtonStack.axis = UILayoutConstraintAxisVertical;
+    bgButtonStack.alignment = UIStackViewAlignmentLeading;
+    bgButtonStack.spacing = 8;
+    bgButtonStack.translatesAutoresizingMaskIntoConstraints = NO;
+
     UIView *bgButtonContainer = [[UIView alloc] init];
     bgButtonContainer.translatesAutoresizingMaskIntoConstraints = NO;
-    [bgButtonContainer addSubview:bgButton];
+    [bgButtonContainer addSubview:bgButtonStack];
     [NSLayoutConstraint activateConstraints:@[
-        [bgButton.leadingAnchor constraintEqualToAnchor:bgButtonContainer.leadingAnchor],
-        [bgButton.topAnchor constraintEqualToAnchor:bgButtonContainer.topAnchor],
-        [bgButton.bottomAnchor constraintEqualToAnchor:bgButtonContainer.bottomAnchor],
-        [bgButtonContainer.trailingAnchor constraintGreaterThanOrEqualToAnchor:bgButton.trailingAnchor],
+        [bgButtonStack.leadingAnchor constraintEqualToAnchor:bgButtonContainer.leadingAnchor],
+        [bgButtonStack.topAnchor constraintEqualToAnchor:bgButtonContainer.topAnchor],
+        [bgButtonStack.bottomAnchor constraintEqualToAnchor:bgButtonContainer.bottomAnchor],
+        [bgButtonStack.trailingAnchor constraintLessThanOrEqualToAnchor:bgButtonContainer.trailingAnchor],
+        [restoreButton.heightAnchor constraintEqualToConstant:40],
     ]];
     UIView *bgBox = [self buildBoxItemWithTitle:NSLocalizedString(@"appearance_background", nil)
                                         content:bgButtonContainer
@@ -1298,6 +1334,13 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         if (v.length) {
             frameworkVersion = v;
         }
+    }
+    // Fallback: KMP 默认生成的 Framework Info.plist 中 CFBundleShortVersionString
+    // 是 "1.0"，而 build.gradle.kts 中 version = "2.0.0-1" 没有注入到 Info.plist。
+    // 在 KMP 构建配置未修复前，这里硬编码 Protocol 版本号作为兜底。
+    // 注意：若 Protocol/build.gradle.kts 中 version 变更，需同步更新此处。
+    if ([frameworkVersion isEqualToString:@"1.0"] || frameworkVersion.length == 0) {
+        frameworkVersion = @"2.0.0-1";
     }
     NSString *versionText = [NSString stringWithFormat:@"v%@ (Protocol v%@)", appVersion, frameworkVersion];
     UIView *versionItem = [self buildVersionItemWithVersionText:versionText
@@ -1501,7 +1544,13 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:filePath forKey:@"micyou_background_image_path"];
     [defaults synchronize];
+    // 显示"恢复默认背景"按钮
+    self.restoreBackgroundButton.hidden = NO;
     [self notifyChangeForKey:@"micyou_background_image_path"];
+}
+
+- (void)restoreBackgroundButtonTapped:(UIButton *)sender {
+    [self clearBackgroundImage];
 }
 
 - (void)backgroundButtonLongPressed:(UILongPressGestureRecognizer *)gesture {
@@ -1536,6 +1585,8 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     }
     [defaults removeObjectForKey:@"micyou_background_image_path"];
     [defaults synchronize];
+    // 隐藏"恢复默认背景"按钮
+    self.restoreBackgroundButton.hidden = YES;
     [self notifyChangeForKey:@"micyou_background_image_path"];
 }
 

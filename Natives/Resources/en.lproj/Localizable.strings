@@ -157,6 +157,7 @@
 
 /* Background image */
 "appearance_clear_background" = "Clear Background";
+"appearance_restore_default_background" = "Restore Default Background";
 
 /* Update check */
 "update_new_version_format" = "New version v%@ available. View now?";

@@ -157,6 +157,7 @@
 
 /* Background image */
 "appearance_clear_background" = "清除背景";
+"appearance_restore_default_background" = "恢復預設背景";
 
 /* Update check */
 "update_new_version_format" = "發現新版本 v%@，是否查看？";
