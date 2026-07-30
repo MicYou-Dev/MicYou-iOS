@@ -1,0 +1,7 @@
+# RNNoise static library (auto-fetched by Makefile)
+Natives/AudioLibs/.download/
+Natives/AudioLibs/rnnoise/
+
+# Build artifacts (if not already present)
+Natives/build/
+artifacts/

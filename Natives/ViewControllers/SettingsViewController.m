@@ -67,6 +67,14 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 @property (nonatomic, assign) BOOL autoCheckUpdateValue;
 @property (nonatomic, assign) BOOL keepScreenOnValue;
 
+// Noise suppression
+@property (nonatomic, assign) BOOL noiseSuppressionEnabledValue;
+@property (nonatomic, assign) NSInteger noiseSuppressionTypeValue; // 0=Off, 1=RNNoise, 2=System
+@property (nonatomic, assign) float noiseSuppressionIntensityValue; // 0..100
+// Weak refs to subitems so we can enable/disable them when the master toggle changes.
+@property (nonatomic, weak) UIScrollView *noiseTypeChipScroll;
+@property (nonatomic, weak) UIView *noiseIntensityContainer;
+
 // Tracked views for color refresh
 @property (nonatomic, strong) NSMutableArray<MicYouSettingsItem *> *registeredItems;
 @property (nonatomic, strong) NSMutableArray<MicYouFilterChip *> *registeredChips;
@@ -310,7 +318,10 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         @"micyou_channel_count": @2,
         @"micyou_enable_streaming_notification": @YES,
         @"micyou_auto_check_update": @YES,
-        @"micyou_keep_screen_on": @NO
+        @"micyou_keep_screen_on": @NO,
+        @"micyou_noise_suppression_enabled": @NO,
+        @"micyou_noise_suppression_type": @0,
+        @"micyou_noise_suppression_intensity": @70.0
     }];
 }
 
@@ -328,6 +339,10 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
     self.streamingNotificationValue  = [defaults boolForKey:@"micyou_enable_streaming_notification"];
     self.autoCheckUpdateValue        = [defaults boolForKey:@"micyou_auto_check_update"];
     self.keepScreenOnValue           = [defaults boolForKey:@"micyou_keep_screen_on"];
+    self.noiseSuppressionEnabledValue = [defaults boolForKey:@"micyou_noise_suppression_enabled"];
+    self.noiseSuppressionTypeValue    = [defaults integerForKey:@"micyou_noise_suppression_type"];
+    float storedIntensity = [defaults floatForKey:@"micyou_noise_suppression_intensity"];
+    self.noiseSuppressionIntensityValue = (storedIntensity > 0.0f) ? storedIntensity : 70.0f;
 }
 
 #pragma mark - Persistence
@@ -342,6 +357,13 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 - (void)persistInteger:(NSInteger)value forKey:(NSString *)key {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setInteger:value forKey:key];
+    [defaults synchronize];
+    [self notifyChangeForKey:key];
+}
+
+- (void)persistFloat:(float)value forKey:(NSString *)key {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setFloat:value forKey:key];
     [defaults synchronize];
     [self notifyChangeForKey:key];
 }
@@ -1230,9 +1252,29 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
 #pragma mark - Audio Section
 
 - (UIView *)buildAudioSection {
-    NSMutableArray<UIView *> *items = [NSMutableArray array];
+    UIView *section = [[UIView alloc] init];
+    section.translatesAutoresizingMaskIntoConstraints = NO;
 
-    // 1. 采样率 Dropdown
+    UIStackView *stack = [[UIStackView alloc] init];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.spacing = 16;
+    stack.alignment = UIStackViewAlignmentFill;
+    stack.distribution = UIStackViewDistributionFill;
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [section addSubview:stack];
+
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.topAnchor constraintEqualToAnchor:section.topAnchor],
+        [stack.leadingAnchor constraintEqualToAnchor:section.leadingAnchor],
+        [stack.trailingAnchor constraintEqualToAnchor:section.trailingAnchor],
+        [stack.bottomAnchor constraintEqualToAnchor:section.bottomAnchor],
+    ]];
+
+    [stack addArrangedSubview:[self buildSectionTitle:NSLocalizedString(@"settings_section_audio", nil)]];
+
+    // 1. 采样率 + 通道数 continuous group
+    NSMutableArray<UIView *> *audioItems = [NSMutableArray array];
+
     NSArray<NSString *> *rateOptions = @[
         @"44100 Hz",
         @"48000 Hz",
@@ -1252,9 +1294,8 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         self.sampleRateValue = rates[index];
         [self persistInteger:rates[index] forKey:@"micyou_sample_rate"];
     }];
-    [items addObject:rateItem];
+    [audioItems addObject:rateItem];
 
-    // 2. 通道数 Dropdown
     NSArray<NSString *> *channelOptions = @[
         NSLocalizedString(@"audio_mono", nil),
         NSLocalizedString(@"audio_stereo", nil)
@@ -1271,13 +1312,161 @@ static const void *kSeedCircleCallbackKey = &kSeedCircleCallbackKey;
         self.channelCountValue = count;
         [self persistInteger:count forKey:@"micyou_channel_count"];
     }];
-    [items addObject:channelItem];
+    [audioItems addObject:channelItem];
+    [stack addArrangedSubview:[self buildContinuousGroupWithItems:audioItems]];
 
-    UIStackView *group = [self buildContinuousGroupWithItems:items];
+    // 2. 降噪开关 (独立卡片)
+    MicYouSettingsItem *noiseToggleItem = [self buildSwitchItemWithTitle:NSLocalizedString(@"noise_suppression", nil)
+                                                                  subtitle:NSLocalizedString(@"noise_suppression_subtitle", nil)
+                                                                       isOn:self.noiseSuppressionEnabledValue
+                                                                    isFirst:YES
+                                                                     isLast:YES
+                                                                   onChange:^(BOOL on) {
+        self.noiseSuppressionEnabledValue = on;
+        [self persistBool:on forKey:@"micyou_noise_suppression_enabled"];
+        [self updateNoiseSuppressionSubitemsEnabled];
+    }];
+    [stack addArrangedSubview:[self buildContinuousGroupWithItems:@[noiseToggleItem]]];
 
-    return [self buildSectionContainerWithTitle:NSLocalizedString(@"settings_section_audio", nil)
-                                    contentView:group
-                             titleBottomSpacing:kSectionTitleBottomSpacing];
+    // 3. 降噪类型 chip 选择 (Box)
+    NSArray<NSString *> *noiseTypeOptions = @[
+        NSLocalizedString(@"noise_suppression_off", nil),
+        NSLocalizedString(@"noise_suppression_rnnoise", nil),
+        NSLocalizedString(@"noise_suppression_system", nil)
+    ];
+    UIScrollView *noiseTypeScroll = [self buildHorizontalChipScrollWithTitles:noiseTypeOptions
+                                                                  selectedIndex:self.noiseSuppressionTypeValue
+                                                                        onChange:^(NSInteger index) {
+        self.noiseSuppressionTypeValue = index;
+        [self persistInteger:index forKey:@"micyou_noise_suppression_type"];
+        [self updateNoiseSuppressionSubitemsEnabled];
+        if (index == 2) {
+            // iOS 系统级 - 显示旧版本兼容性提示
+            if (![self isSystemNoiseFullySupported]) {
+                [self showNoiseSuppressionLegacyWarning];
+            }
+        }
+    }];
+    UIView *noiseTypeBox = [self buildBoxItemWithTitle:NSLocalizedString(@"noise_suppression_type", nil)
+                                                content:noiseTypeScroll
+                                               subtitle:nil];
+    // Set accessibility identifier for debugging; not used for logic.
+    noiseTypeBox.accessibilityIdentifier = @"noise_suppression_type_box";
+    [stack addArrangedSubview:noiseTypeBox];
+    self.noiseTypeChipScroll = noiseTypeScroll;
+
+    // 4. 降噪强度 slider (Box)
+    UIView *intensityBox = [self buildNoiseIntensityBox];
+    [stack addArrangedSubview:intensityBox];
+    self.noiseIntensityContainer = intensityBox;
+
+    // Apply initial enabled state based on toggle + type.
+    [self updateNoiseSuppressionSubitemsEnabled];
+
+    return section;
+}
+
+/// Build the noise intensity slider box.
+- (UIView *)buildNoiseIntensityBox {
+    UISlider *slider = [[UISlider alloc] init];
+    slider.translatesAutoresizingMaskIntoConstraints = NO;
+    slider.minimumValue = 0.0f;
+    slider.maximumValue = 100.0f;
+    slider.value = self.noiseSuppressionIntensityValue;
+    slider.tintColor = [MicYouColors shared].primary;
+    [self registerColorRefreshBlock:^{
+        slider.tintColor = [MicYouColors shared].primary;
+    }];
+
+    UILabel *valueLabel = [[UILabel alloc] init];
+    valueLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    valueLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
+    valueLabel.textColor = [MicYouColors shared].onSurfaceVariant;
+    valueLabel.textAlignment = NSTextAlignmentRight;
+    valueLabel.text = [NSString stringWithFormat:@"%.0f%%", slider.value];
+    [self registerColorRefreshBlock:^{
+        valueLabel.textColor = [MicYouColors shared].onSurfaceVariant;
+    }];
+
+    [slider addTarget:self action:@selector(noiseIntensitySliderChanged:) forControlEvents:UIControlEventValueChanged];
+    objc_setAssociatedObject(slider, "intensityValueLabel", valueLabel, OBJC_ASSOCIATION_ASSIGN);
+
+    UIStackView *row = [[UIStackView alloc] init];
+    row.axis = UILayoutConstraintAxisHorizontal;
+    row.alignment = UIStackViewAlignmentFill;
+    row.spacing = 12;
+    row.translatesAutoresizingMaskIntoConstraints = NO;
+    [row addArrangedSubview:slider];
+    [row addArrangedSubview:valueLabel];
+
+    NSLayoutConstraint *labelWidth = [valueLabel.widthAnchor constraintEqualToConstant:48];
+    labelWidth.priority = UILayoutPriorityRequired;
+    NSLayoutConstraint *sliderHeight = [slider.heightAnchor constraintEqualToConstant:31];
+    sliderHeight.priority = UILayoutPriorityRequired;
+    [NSLayoutConstraint activateConstraints:@[labelWidth, sliderHeight]];
+
+    return [self buildBoxItemWithTitle:NSLocalizedString(@"noise_suppression_intensity", nil)
+                                content:row
+                               subtitle:NSLocalizedString(@"noise_suppression_intensity_subtitle", nil)];
+}
+
+- (void)noiseIntensitySliderChanged:(UISlider *)slider {
+    UILabel *label = objc_getAssociatedObject(slider, "intensityValueLabel");
+    if (label) {
+        label.text = [NSString stringWithFormat:@"%.0f%%", slider.value];
+    }
+    // Round to integer to avoid float drift across loads.
+    float value = roundf(slider.value);
+    self.noiseSuppressionIntensityValue = value;
+    [self persistFloat:value forKey:@"micyou_noise_suppression_intensity"];
+}
+
+/// Whether the current iOS version fully supports system-level noise suppression.
+/// iOS 13+ supports setCategory:mode:options: in a single call; iOS 11/12 falls
+/// back to setCategory:withOptions: + setMode: (still works but is the legacy path).
+- (BOOL)isSystemNoiseFullySupported {
+    if (@available(iOS 13.0, *)) {
+        return YES;
+    }
+    return NO;
+}
+
+- (void)showNoiseSuppressionLegacyWarning {
+    UIAlertController *alert = [UIAlertController
+        alertControllerWithTitle:NSLocalizedString(@"noise_suppression_system_legacy_warning", nil)
+                         message:nil
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"button_done", nil)
+                                              style:UIAlertActionStyleDefault
+                                            handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+/// Enable/disable the chip selector and slider based on the master toggle state
+/// and currently selected type. When the toggle is off, both subitems are disabled.
+/// When the type is not RNNoise, the intensity slider is disabled (system-level
+/// does not support intensity adjustment).
+- (void)updateNoiseSuppressionSubitemsEnabled {
+    BOOL masterOn = self.noiseSuppressionEnabledValue;
+    BOOL typeIsRNNoise = (self.noiseSuppressionTypeValue == 1);
+
+    // Chip selector enabled iff master on.
+    self.noiseTypeChipScroll.userInteractionEnabled = masterOn;
+    self.noiseTypeChipScroll.alpha = masterOn ? 1.0f : 0.5f;
+    // Walk the chip scroll's stack to dim each chip.
+    for (UIView *sub in self.noiseTypeChipScroll.subviews) {
+        if ([sub isKindOfClass:[UIStackView class]]) {
+            for (UIView *chip in sub.subviews) {
+                chip.userInteractionEnabled = masterOn;
+                chip.alpha = masterOn ? 1.0f : 0.5f;
+            }
+        }
+    }
+
+    // Intensity slider enabled iff master on AND type is RNNoise.
+    BOOL sliderOn = masterOn && typeIsRNNoise;
+    self.noiseIntensityContainer.userInteractionEnabled = sliderOn;
+    self.noiseIntensityContainer.alpha = sliderOn ? 1.0f : 0.5f;
 }
 
 #pragma mark - About Section

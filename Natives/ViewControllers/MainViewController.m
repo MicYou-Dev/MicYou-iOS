@@ -201,9 +201,21 @@
 - (void)setupAudioAndNetwork {
     self.audioCapture = [[MicYouAudioCapture alloc] init];
     self.audioCapture.delegate = self;
+    [self applyNoiseSuppressionSettingsToCapture];
 
     self.transportClient = [[TransportClient alloc] init];
     self.transportClient.delegate = self;
+}
+
+/// Read noise suppression preferences from NSUserDefaults and apply them to
+/// the audio capture. Settings are applied at startCapture time, so changes
+/// take effect on the next connection.
+- (void)applyNoiseSuppressionSettingsToCapture {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    self.audioCapture.noiseSuppressionEnabled  = [defaults boolForKey:@"micyou_noise_suppression_enabled"];
+    self.audioCapture.noiseSuppressionType     = (MicYouNoiseSuppressionType)[defaults integerForKey:@"micyou_noise_suppression_type"];
+    float storedIntensity = [defaults floatForKey:@"micyou_noise_suppression_intensity"];
+    self.audioCapture.noiseSuppressionIntensity = (storedIntensity > 0.0f) ? storedIntensity : 70.0f;
 }
 
 #pragma mark - Theme / Dark Mode Support

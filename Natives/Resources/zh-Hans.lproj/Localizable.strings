@@ -30,6 +30,18 @@
 "audio_stereo" = "立体声";
 "audio_visualizer" = "音频可视化";
 
+/* Noise suppression */
+"noise_suppression" = "降噪";
+"noise_suppression_subtitle" = "减少环境噪声与回声";
+"noise_suppression_type" = "降噪类型";
+"noise_suppression_off" = "关闭";
+"noise_suppression_rnnoise" = "RNNoise";
+"noise_suppression_system" = "iOS 系统级";
+"noise_suppression_intensity" = "降噪强度";
+"noise_suppression_intensity_subtitle" = "仅在 RNNoise 模式下生效";
+"noise_suppression_apply_next_connection" = "下次连接生效";
+"noise_suppression_system_legacy_warning" = "iOS 13 以下系统级降噪效果受限";
+
 /* Settings sections */
 "settings_section_network" = "网络";
 "settings_section_audio" = "音频";

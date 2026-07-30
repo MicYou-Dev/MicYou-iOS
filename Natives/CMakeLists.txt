@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(MicYou)
 
+# RNNoise third-party static library (arm64 iOS device slice)
+# Auto-fetched by Makefile `prepare-rnnoise` target into Natives/AudioLibs/rnnoise/
+set(MICYOU_RNNOISE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/AudioLibs/rnnoise")
+set(MICYOU_RNNOISE_LIB "${MICYOU_RNNOISE_ROOT}/lib/librnnoise.a")
+set(MICYOU_RNNOISE_INCLUDE "${MICYOU_RNNOISE_ROOT}/include")
+
 set(MICYOU_SOURCES
     main.m
     AppDelegate.m
@@ -13,6 +19,8 @@ set(MICYOU_SOURCES
     Views/MicYouFilterChip.m
     Views/MicYouSettingsItem.m
     Audio/MicYouAudioCapture.m
+    Audio/MicYouRNNoiseProcessor.m
+    Audio/MicYouSystemNoiseProcessor.m
     Network/TransportClient.m
     Network/Protocol.m
     Utils/MicYouLogger.m
@@ -37,6 +45,8 @@ set(MICYOU_HEADERS
     Views/MicYouFilterChip.h
     Views/MicYouSettingsItem.h
     Audio/MicYouAudioCapture.h
+    Audio/MicYouRNNoiseProcessor.h
+    Audio/MicYouSystemNoiseProcessor.h
     Network/TransportClient.h
     Network/Protocol.h
     Utils/MicYouLogger.h
@@ -92,6 +102,8 @@ target_link_libraries(MicYou PRIVATE
     "-framework CoreAudio"
     "-framework CFNetwork"
     "-framework UserNotifications"
+    ${MICYOU_RNNOISE_LIB}
+    "-framework Accelerate"
 )
 
 set_target_properties(MicYou PROPERTIES
@@ -121,6 +133,7 @@ target_include_directories(MicYou PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Animation
     ${CMAKE_CURRENT_SOURCE_DIR}/Theme
     ${CMAKE_CURRENT_SOURCE_DIR}/Views
+    ${MICYOU_RNNOISE_INCLUDE}
 )
 
 set_property(TARGET MicYou PROPERTY

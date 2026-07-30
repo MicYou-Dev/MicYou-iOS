@@ -30,6 +30,18 @@
 "audio_stereo" = "Stereo";
 "audio_visualizer" = "Audio Visualizer";
 
+/* Noise suppression */
+"noise_suppression" = "Noise Suppression";
+"noise_suppression_subtitle" = "Reduce background noise and echo";
+"noise_suppression_type" = "Type";
+"noise_suppression_off" = "Off";
+"noise_suppression_rnnoise" = "RNNoise";
+"noise_suppression_system" = "iOS System";
+"noise_suppression_intensity" = "Intensity";
+"noise_suppression_intensity_subtitle" = "Only effective in RNNoise mode";
+"noise_suppression_apply_next_connection" = "Takes effect on next connection";
+"noise_suppression_system_legacy_warning" = "System-level noise suppression is limited on iOS versions below 13";
+
 /* Settings sections */
 "settings_section_network" = "Network";
 "settings_section_audio" = "Audio";
