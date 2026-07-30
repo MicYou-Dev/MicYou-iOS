@@ -15,11 +15,11 @@
     if (@available(iOS 13.0, *)) {
         // iOS 13+: one-shot category + mode + options
         BOOL ok = [session setCategory:AVAudioSessionCategoryPlayAndRecord
-                                  mode:AVAudioSessionModeVoiceCommunication
+                                  mode:AVAudioSessionModeVoiceChat
                                options:AVAudioSessionCategoryOptionDefaultToSpeaker
                                  error:error];
         if (!ok) {
-            NSLog(@"[MicYou] Failed to set VoiceCommunication category (iOS 13+): %@", error ? *error : nil);
+            NSLog(@"[MicYou] Failed to set VoiceChat category (iOS 13+): %@", error ? *error : nil);
             return NO;
         }
         return YES;
@@ -32,9 +32,9 @@
             NSLog(@"[MicYou] Failed to set category (iOS 11/12): %@", error ? *error : nil);
             return NO;
         }
-        ok = [session setMode:AVAudioSessionModeVoiceCommunication error:error];
+        ok = [session setMode:AVAudioSessionModeVoiceChat error:error];
         if (!ok) {
-            NSLog(@"[MicYou] Failed to set VoiceCommunication mode (iOS 11/12): %@", error ? *error : nil);
+            NSLog(@"[MicYou] Failed to set VoiceChat mode (iOS 11/12): %@", error ? *error : nil);
             return NO;
         }
         return YES;
@@ -42,7 +42,7 @@
 }
 
 - (BOOL)isSupportedOnCurrentSystem {
-    // VoiceCommunication mode is available on iOS 11+.
+    // AVAudioSessionModeVoiceChat is available on iOS 5.0+.
     return YES;
 }
 
