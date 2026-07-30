@@ -75,7 +75,6 @@ help:
 	echo '    make clean        Cleans build directories'
 
 native:
-	$(MAKE) prepare-rnnoise
 	echo '[MicYou v$(VERSION)] native - start'
 	mkdir -p $(WORKINGDIR)
 	cd $(WORKINGDIR) && cmake \
@@ -94,28 +93,6 @@ native:
 		..
 	cmake --build $(WORKINGDIR) --config $(CMAKE_BUILD_TYPE) -j$(JOBS)
 	echo '[MicYou v$(VERSION)] native - end'
-
-prepare-rnnoise:
-	echo '[MicYou v$(VERSION)] prepare-rnnoise - start'
-	if [ -f '$(SOURCEDIR)/Natives/AudioLibs/rnnoise/lib/librnnoise.a' ] && [ -f '$(SOURCEDIR)/Natives/AudioLibs/rnnoise/include/rnnoise.h' ]; then \
-		echo 'RNNoise already prepared, skipping download'; \
-	else \
-		mkdir -p '$(SOURCEDIR)/Natives/AudioLibs/.download'; \
-		curl -L -o '$(SOURCEDIR)/Natives/AudioLibs/.download/rnnoise-ios.tar.gz' 'https://github.com/katruud/rnnoise-binaries/releases/download/1.0/rnnoise-ios.tar.gz'; \
-		mkdir -p '$(SOURCEDIR)/Natives/AudioLibs/rnnoise'; \
-		tar -xzf '$(SOURCEDIR)/Natives/AudioLibs/.download/rnnoise-ios.tar.gz' -C '$(SOURCEDIR)/Natives/AudioLibs/rnnoise'; \
-		if [ ! -f '$(SOURCEDIR)/Natives/AudioLibs/rnnoise/lib/librnnoise.a' ]; then \
-			echo 'Error: librnnoise.a not found after extraction'; exit 1; \
-		fi; \
-		lib_size=$$(wc -c < '$(SOURCEDIR)/Natives/AudioLibs/rnnoise/lib/librnnoise.a' | tr -d '[:space:]'); \
-		if [ "$$lib_size" -lt 51200 ]; then \
-			echo "Error: librnnoise.a size $$lib_size bytes is smaller than 50KB"; exit 1; \
-		fi; \
-		if [ ! -f '$(SOURCEDIR)/Natives/AudioLibs/rnnoise/include/rnnoise.h' ]; then \
-			echo 'Error: rnnoise.h not found after extraction'; exit 1; \
-		fi; \
-	fi
-	echo '[MicYou v$(VERSION)] prepare-rnnoise - end'
 
 kmp:
 	echo '[MicYou v$(VERSION)] kmp - start'
