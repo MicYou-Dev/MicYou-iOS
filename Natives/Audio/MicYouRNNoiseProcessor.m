@@ -49,7 +49,7 @@ static const NSUInteger kRNNoiseFrameSize = 480;
         // Create an independent DenoiseState per channel to avoid RNN state
         // cross-contamination between channels.
         for (NSUInteger ch = 0; ch < _channels; ch++) {
-            _denoiseStates[ch] = rnnoise_create();
+            _denoiseStates[ch] = rnnoise_create(NULL);
             if (!_denoiseStates[ch]) {
                 NSLog(@"[MicYou] RNNoiseProcessor: rnnoise_create failed for channel %lu",
                       (unsigned long)ch);
@@ -292,7 +292,7 @@ static const NSUInteger kRNNoiseFrameSize = 480;
     for (NSUInteger ch = 0; ch < _channels; ch++) {
         if (_denoiseStates[ch]) {
             rnnoise_destroy(_denoiseStates[ch]);
-            _denoiseStates[ch] = rnnoise_create();
+            _denoiseStates[ch] = rnnoise_create(NULL);
             if (!_denoiseStates[ch]) {
                 NSLog(@"[MicYou] RNNoiseProcessor: rnnoise_create failed during reset for channel %lu",
                       (unsigned long)ch);
