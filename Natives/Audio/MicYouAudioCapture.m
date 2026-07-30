@@ -43,6 +43,10 @@
 
     // System-level noise suppression: switch the shared session to
     // VoiceCommunication mode so iOS performs AEC + NS at the system layer.
+    NSLog(@"[MicYou] startCapture: noiseSuppression enabled=%d type=%ld intensity=%.1f",
+          (int)self.noiseSuppressionEnabled,
+          (long)self.noiseSuppressionType,
+          (double)self.noiseSuppressionIntensity);
     if (self.noiseSuppressionEnabled
         && self.noiseSuppressionType == MicYouNoiseSuppressionTypeSystem) {
         if (self.systemProcessor == nil) {

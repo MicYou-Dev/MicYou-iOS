@@ -12,6 +12,10 @@
         return NO;
     }
 
+    // Log pre-apply state so we can verify the session actually changed.
+    NSLog(@"[MicYou] SystemNoise: before apply category=%@ mode=%@",
+          session.category, session.mode);
+
     if (@available(iOS 13.0, *)) {
         // iOS 13+: one-shot category + mode + options
         BOOL ok = [session setCategory:AVAudioSessionCategoryPlayAndRecord
@@ -19,9 +23,11 @@
                                options:AVAudioSessionCategoryOptionDefaultToSpeaker
                                  error:error];
         if (!ok) {
-            NSLog(@"[MicYou] Failed to set VoiceChat category (iOS 13+): %@", error ? *error : nil);
+            NSLog(@"[MicYou] SystemNoise: setCategory:mode:options: failed (iOS 13+): %@", error ? *error : nil);
             return NO;
         }
+        NSLog(@"[MicYou] SystemNoise: after apply category=%@ mode=%@ (iOS 13+ path, ok=YES)",
+              session.category, session.mode);
         return YES;
     } else {
         // iOS 11/12: setCategory:withOptions: then setMode:
@@ -29,14 +35,16 @@
                           withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
                                 error:error];
         if (!ok) {
-            NSLog(@"[MicYou] Failed to set category (iOS 11/12): %@", error ? *error : nil);
+            NSLog(@"[MicYou] SystemNoise: setCategory:withOptions: failed (iOS 11/12): %@", error ? *error : nil);
             return NO;
         }
         ok = [session setMode:AVAudioSessionModeVoiceChat error:error];
         if (!ok) {
-            NSLog(@"[MicYou] Failed to set VoiceChat mode (iOS 11/12): %@", error ? *error : nil);
+            NSLog(@"[MicYou] SystemNoise: setMode: failed (iOS 11/12): %@", error ? *error : nil);
             return NO;
         }
+        NSLog(@"[MicYou] SystemNoise: after apply category=%@ mode=%@ (iOS 11/12 path, ok=YES)",
+              session.category, session.mode);
         return YES;
     }
 }

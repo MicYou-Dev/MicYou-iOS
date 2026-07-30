@@ -96,6 +96,9 @@ static const NSUInteger kRNNoiseFrameSize = 480;
 
 #pragma mark - Processing
 
+/// Frame counter for throttling diagnostic logs (every 50 frames ≈ 0.5s at 48kHz).
+static NSUInteger sRNNoiseProcessCount = 0;
+
 - (NSData *)process:(NSData *)pcm16Data intensity:(float)intensity {
     // Bypass on transparent intensity, empty input or zero channels.
     if (intensity <= 0.0f || pcm16Data.length == 0 || _channels == 0) {
@@ -114,6 +117,20 @@ static const NSUInteger kRNNoiseFrameSize = 480;
 
     if (inputLen == 0) {
         return pcm16Data;
+    }
+
+    // Diagnostic: input RMS (every 50 calls, throttled to avoid log spam).
+    // Uses channel 0 only for simplicity; log on the first call so the user
+    // can immediately confirm RNNoise is wired up even before 50 calls elapse.
+    BOOL shouldLog = (sRNNoiseProcessCount == 0) || (sRNNoiseProcessCount % 50 == 0);
+    float inputRMS = 0.0f;
+    if (shouldLog) {
+        double sumSq = 0.0;
+        for (NSUInteger i = 0; i < inputLen; i++) {
+            float s = (float)pcm16[i * _channels] / 32768.0f;
+            sumSq += (double)(s * s);
+        }
+        inputRMS = (float)sqrt(sumSq / (double)inputLen);
     }
 
     // Deinterleave into per-channel float buffers (PCM16 scale: [-32768, 32767]).
@@ -271,6 +288,31 @@ static const NSUInteger kRNNoiseFrameSize = 480;
     NSData *outputData = [NSData dataWithBytesNoCopy:outPcm16
                                                length:outputBytes
                                          freeWhenDone:YES];
+
+    // Diagnostic: output RMS and reduction ratio (throttled to every 50 calls).
+    // Logs both the input and output RMS in [0.0, 1.0] PCM-normalized scale,
+    // plus the dB reduction (positive = noise removed, negative = amplified).
+    if (shouldLog) {
+        const int16_t *outPcm16Read = (const int16_t *)outputData.bytes;
+        NSUInteger outSampleCount = outputData.length / sizeof(int16_t);
+        double outSumSq = 0.0;
+        NSUInteger outCh0Count = 0;
+        for (NSUInteger i = 0; i < outSampleCount; i += _channels) {
+            float s = (float)outPcm16Read[i] / 32768.0f;
+            outSumSq += (double)(s * s);
+            outCh0Count++;
+        }
+        float outputRMS = (outCh0Count > 0) ? (float)sqrt(outSumSq / (double)outCh0Count) : 0.0f;
+        float reductionDb = 20.0f * log10f((outputRMS > 1e-6f ? outputRMS : 1e-6f)
+                                            / (inputRMS  > 1e-6f ? inputRMS  : 1e-6f));
+        NSLog(@"[MicYou] RNNoise[%lu]: inRMS=%.4f outRMS=%.4f reduction=%.1f dB (intensity=%.0f%% mix=%.2f frames=%lu ch=%lu)",
+              (unsigned long)sRNNoiseProcessCount,
+              inputRMS, outputRMS, reductionDb,
+              (double)intensity, (double)mix,
+              (unsigned long)(outputData.length / sizeof(int16_t) / _channels / kRNNoiseFrameSize),
+              (unsigned long)_channels);
+    }
+    sRNNoiseProcessCount++;
 
     // Cleanup per-call temporaries (channelInputs, channelOutputs,
     // channelOutputLens). _denoiseStates / _accumBuffers are kept for the
