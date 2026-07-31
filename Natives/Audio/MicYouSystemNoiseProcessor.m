@@ -1,4 +1,5 @@
 #import "MicYouSystemNoiseProcessor.h"
+#import "MicYouLogger.h"
 
 @implementation MicYouSystemNoiseProcessor
 
@@ -15,6 +16,8 @@
     // Log pre-apply state so we can verify the session actually changed.
     NSLog(@"[MicYou] SystemNoise: before apply category=%@ mode=%@",
           session.category, session.mode);
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+        @"[SystemNS] before apply: category=%@ mode=%@", session.category, session.mode]];
 
     if (@available(iOS 13.0, *)) {
         // iOS 13+: one-shot category + mode + options
@@ -24,10 +27,15 @@
                                  error:error];
         if (!ok) {
             NSLog(@"[MicYou] SystemNoise: setCategory:mode:options: failed (iOS 13+): %@", error ? *error : nil);
+            [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:
+                @"[SystemNS] setCategory:mode:options: failed (iOS 13+): %@", error ? *error : nil]];
             return NO;
         }
         NSLog(@"[MicYou] SystemNoise: after apply category=%@ mode=%@ (iOS 13+ path, ok=YES)",
               session.category, session.mode);
+        [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+            @"[SystemNS] after apply: category=%@ mode=%@ (iOS 13+ path, ok=YES)",
+            session.category, session.mode]];
         return YES;
     } else {
         // iOS 11/12: setCategory:withOptions: then setMode:
@@ -36,15 +44,22 @@
                                 error:error];
         if (!ok) {
             NSLog(@"[MicYou] SystemNoise: setCategory:withOptions: failed (iOS 11/12): %@", error ? *error : nil);
+            [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:
+                @"[SystemNS] setCategory:withOptions: failed (iOS 11/12): %@", error ? *error : nil]];
             return NO;
         }
         ok = [session setMode:AVAudioSessionModeVoiceChat error:error];
         if (!ok) {
             NSLog(@"[MicYou] SystemNoise: setMode: failed (iOS 11/12): %@", error ? *error : nil);
+            [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:
+                @"[SystemNS] setMode: failed (iOS 11/12): %@", error ? *error : nil]];
             return NO;
         }
         NSLog(@"[MicYou] SystemNoise: after apply category=%@ mode=%@ (iOS 11/12 path, ok=YES)",
               session.category, session.mode);
+        [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+            @"[SystemNS] after apply: category=%@ mode=%@ (iOS 11/12 path, ok=YES)",
+            session.category, session.mode]];
         return YES;
     }
 }

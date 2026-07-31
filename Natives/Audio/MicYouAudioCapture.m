@@ -1,6 +1,7 @@
 #import "MicYouAudioCapture.h"
 #import "MicYouRNNoiseProcessor.h"
 #import "MicYouSystemNoiseProcessor.h"
+#import "MicYouLogger.h"
 
 @interface MicYouAudioCapture ()
 
@@ -47,6 +48,11 @@
           (int)self.noiseSuppressionEnabled,
           (long)self.noiseSuppressionType,
           (double)self.noiseSuppressionIntensity);
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+        @"[Audio] startCapture: noiseSuppression enabled=%d type=%ld intensity=%.1f",
+        (int)self.noiseSuppressionEnabled,
+        (long)self.noiseSuppressionType,
+        (double)self.noiseSuppressionIntensity]];
     if (self.noiseSuppressionEnabled
         && self.noiseSuppressionType == MicYouNoiseSuppressionTypeSystem) {
         if (self.systemProcessor == nil) {
@@ -55,6 +61,8 @@
         if (![self.systemProcessor applyToAudioSession:session error:&error]) {
             NSLog(@"[MicYou] System noise suppression failed to apply: %@",
                   error.localizedDescription);
+            [[MicYouLogger sharedLogger] logError:[NSString stringWithFormat:
+                @"[Audio] System noise suppression failed to apply: %@", error.localizedDescription]];
             // Fall through to default category below; don't fail startCapture.
             error = nil;
         }
@@ -83,6 +91,11 @@
                                                                           channels:self.channelCount];
         if (!self.rnnoiseProcessor) {
             NSLog(@"[MicYou] RNNoise processor init failed; falling back to passthrough.");
+            [[MicYouLogger sharedLogger] logError:@"[Audio] RNNoise processor init failed; falling back to passthrough."];
+        } else {
+            [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+                @"[Audio] RNNoise processor initialized (sampleRate=%.0f channels=%lu)",
+                (double)self.sampleRate, (unsigned long)self.channelCount]];
         }
     }
 
@@ -122,6 +135,11 @@
           self.sampleRate, (unsigned long)self.channelCount,
           (int)self.noiseSuppressionEnabled, (long)self.noiseSuppressionType,
           (double)self.noiseSuppressionIntensity);
+    [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+        @"[Audio] Capture started: %.0f Hz, %lu ch, NS enabled=%d type=%ld intensity=%.1f",
+        (double)self.sampleRate, (unsigned long)self.channelCount,
+        (int)self.noiseSuppressionEnabled, (long)self.noiseSuppressionType,
+        (double)self.noiseSuppressionIntensity]];
     return YES;
 }
 

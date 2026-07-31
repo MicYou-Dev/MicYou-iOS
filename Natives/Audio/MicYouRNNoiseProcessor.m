@@ -1,4 +1,5 @@
 #import "MicYouRNNoiseProcessor.h"
+#import "MicYouLogger.h"
 
 #include <rnnoise.h>
 
@@ -311,6 +312,13 @@ static NSUInteger sRNNoiseProcessCount = 0;
               (double)intensity, (double)mix,
               (unsigned long)(outputData.length / sizeof(int16_t) / _channels / kRNNoiseFrameSize),
               (unsigned long)_channels);
+        [[MicYouLogger sharedLogger] log:[NSString stringWithFormat:
+            @"[RNNoise] #%lu inRMS=%.4f outRMS=%.4f reduction=%.1f dB (intensity=%.0f%% mix=%.2f frames=%lu ch=%lu)",
+            (unsigned long)sRNNoiseProcessCount,
+            inputRMS, outputRMS, reductionDb,
+            (double)intensity, (double)mix,
+            (unsigned long)(outputData.length / sizeof(int16_t) / _channels / kRNNoiseFrameSize),
+            (unsigned long)_channels]];
     }
     sRNNoiseProcessCount++;
 
