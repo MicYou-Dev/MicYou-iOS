@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import MicYouProtocol
+import MicYouShared
 import SwiftUI
 
 struct SettingsView: View {
@@ -14,61 +15,61 @@ struct SettingsView: View {
             Form {
                 if model.isActive {
                     Section {
-                        Label("Connection and audio changes apply the next time you connect.", systemImage: "info.circle")
+                        Label(L10n.Settings.appliesNextTime, systemImage: "info.circle")
                             .font(.subheadline)
                     }
                 }
 
                 Section {
-                    Picker("Transport", selection: $settings.transport) {
-                        Text("TCP + UDP").tag(TransportMode.tcpUDP)
-                        Text("TCP Only").tag(TransportMode.tcp)
+                    Picker(L10n.Settings.transport, selection: $settings.transport) {
+                        Text(L10n.Settings.tcpUDP).tag(TransportMode.tcpUDP)
+                        Text(L10n.Settings.tcpOnly).tag(TransportMode.tcp)
                     }
                     if settings.transport == .tcpUDP {
-                        Toggle("Forward Error Correction", isOn: $settings.fecEnabled)
+                        Toggle(L10n.Settings.fec, isOn: $settings.fecEnabled)
                     }
-                    Toggle("Reconnect Automatically", isOn: $settings.autoReconnect)
+                    Toggle(L10n.Settings.autoReconnect, isOn: $settings.autoReconnect)
                 } header: {
-                    Text("Connection")
+                    Text(L10n.Settings.connection)
                 } footer: {
-                    Text("TCP + UDP has the lowest latency. Switch to TCP Only if audio drops out on your network. Error correction adds about 8% traffic to recover lost packets.")
+                    Text(L10n.Settings.connectionFooter)
                 }
 
                 Section {
-                    Picker("Codec", selection: $settings.codec) {
-                        Text("Opus").tag(CodecChoice.opus)
-                        Text("PCM (Uncompressed)").tag(CodecChoice.pcm)
+                    Picker(L10n.Settings.codec, selection: $settings.codec) {
+                        Text(L10n.Settings.opus).tag(CodecChoice.opus)
+                        Text(L10n.Settings.pcm).tag(CodecChoice.pcm)
                     }
                     if settings.codec == .opus {
-                        Picker("Bitrate", selection: $settings.opusBitrate) {
+                        Picker(L10n.Settings.bitrate, selection: $settings.opusBitrate) {
                             ForEach(AppSettings.opusBitrates, id: \.self) { rate in
-                                Text("\(rate / 1000) kbps").tag(rate)
+                                Text(L10n.Unit.kbps(rate / 1000)).tag(rate)
                             }
                         }
                     }
-                    Picker("Sample Rate", selection: $settings.sampleRate) {
+                    Picker(L10n.Settings.sampleRate, selection: $settings.sampleRate) {
                         ForEach(AppSettings.sampleRates, id: \.self) { rate in
-                            Text(rateLabel(rate)).tag(rate)
+                            Text(L10n.Unit.kHz(rate)).tag(rate)
                         }
                     }
-                    Picker("Channels", selection: $settings.stereo) {
-                        Text("Mono").tag(false)
-                        Text("Stereo").tag(true)
+                    Picker(L10n.Settings.channels, selection: $settings.stereo) {
+                        Text(L10n.Common.mono).tag(false)
+                        Text(L10n.Common.stereo).tag(true)
                     }
                 } header: {
-                    Text("Audio")
+                    Text(L10n.Settings.audio)
                 } footer: {
                     if settings.codec == .opus && settings.sampleRate == 44100 {
-                        Text("Opus does not support 44.1 kHz, 48 kHz is used instead.")
+                        Text(L10n.Settings.opusNo44Footer)
                     } else {
-                        Text("Opus uses far less bandwidth than PCM and sounds the same for voice.")
+                        Text(L10n.Settings.audioFooter)
                     }
                 }
 
                 Section {
                     VStack(alignment: .leading) {
-                        LabeledContent("Input Gain") {
-                            Text(verbatim: String(format: "%+.0f dB", settings.inputGainDB))
+                        LabeledContent(L10n.Settings.inputGain) {
+                            Text(L10n.Unit.signedDB(settings.inputGainDB))
                                 .monospacedDigit()
                         }
                         Slider(
@@ -76,7 +77,7 @@ struct SettingsView: View {
                             in: 0...24,
                             step: 1
                         ) {
-                            Text("Input Gain")
+                            Text(L10n.Settings.inputGain)
                         } minimumValueLabel: {
                             Image(systemName: "speaker.wave.1")
                         } maximumValueLabel: {
@@ -84,46 +85,42 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Microphone")
+                    Text(L10n.Settings.microphone)
                 } footer: {
-                    Text("Takes effect right away. A limiter keeps loud sounds from clipping.")
+                    Text(L10n.Settings.inputGainFooter)
                 }
 
                 Section {
-                    Toggle("Voice Processing", isOn: $settings.voiceProcessing)
+                    Toggle(L10n.Settings.voiceProcessing, isOn: $settings.voiceProcessing)
                 } footer: {
-                    Text("Uses the system echo cancellation, noise suppression and automatic gain. Good for calls and meetings, turn it off for music.")
+                    Text(L10n.Settings.voiceProcessingFooter)
                 }
 
                 Section {
-                    Toggle("Keep Screen On", isOn: $settings.keepScreenOn)
-                    Toggle("Live Activity", isOn: $settings.liveActivity)
+                    Toggle(L10n.Settings.keepScreenOn, isOn: $settings.keepScreenOn)
+                    Toggle(L10n.Settings.liveActivity, isOn: $settings.liveActivity)
                 } header: {
-                    Text("General")
+                    Text(L10n.Settings.general)
                 } footer: {
-                    Text("Live Activity shows the connection and mute controls on the Lock Screen and in the Dynamic Island.")
+                    Text(L10n.Settings.generalFooter)
                 }
 
                 Section {
                     NavigationLink {
                         AboutView()
                     } label: {
-                        Label("About", systemImage: "info.circle")
+                        Label(L10n.About.title, systemImage: "info.circle")
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(L10n.Common.settings)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(L10n.Common.done) { dismiss() }
                 }
             }
         }
-    }
-
-    private func rateLabel(_ rate: Int) -> String {
-        rate % 1000 == 0 ? "\(rate / 1000) kHz" : String(format: "%.1f kHz", Double(rate) / 1000)
     }
 }
 
@@ -132,30 +129,30 @@ struct AboutView: View {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "\(short) (\(build))"
+        return L10n.About.versionValue(short, build: build)
     }
 
     var body: some View {
         Form {
             Section {
-                LabeledContent("Version", value: version)
-                LabeledContent("Protocol", value: "MicYou 2.x")
-                LabeledContent("Default Port", value: String(MicYouWire.defaultPort))
+                LabeledContent(L10n.About.version, value: version)
+                LabeledContent(L10n.About.protocolLabel, value: L10n.About.protocolValue)
+                LabeledContent(L10n.About.defaultPort, value: String(MicYouWire.defaultPort))
             }
             Section {
                 Link(destination: URL(string: "https://github.com/MicYou-Dev/MicYou")!) {
-                    Label("MicYou Desktop", systemImage: "desktopcomputer")
+                    Label(L10n.About.desktop, systemImage: "desktopcomputer")
                 }
                 Link(destination: URL(string: "https://github.com/MicYou-Dev/MicYou-iOS")!) {
-                    Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
+                    Label(L10n.About.sourceCode, systemImage: "chevron.left.forwardslash.chevron.right")
                 }
                 Link(destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!) {
-                    Label("GNU General Public License v3.0", systemImage: "doc.text")
+                    Label(L10n.About.license, systemImage: "doc.text")
                 }
             } footer: {
-                Text("MicYou for iOS is free software released under the GPL 3.0 or later. Its protocol implementation is ported from MicYou by LanRhyme and contributors.")
+                Text(L10n.About.footer)
             }
         }
-        .navigationTitle("About")
+        .navigationTitle(L10n.About.title)
     }
 }

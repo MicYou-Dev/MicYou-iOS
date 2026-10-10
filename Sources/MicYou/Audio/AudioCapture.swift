@@ -2,6 +2,7 @@
 
 @preconcurrency import AVFoundation
 import Foundation
+import MicYouShared
 import os
 
 struct CaptureConfig: Equatable, Sendable {
@@ -17,9 +18,9 @@ enum CaptureError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .permissionDenied: String(localized: "Microphone access is off. Turn it on in Settings.")
-        case .noInput: String(localized: "No microphone is available.")
-        case .converterUnavailable: String(localized: "This audio format is not supported.")
+        case .permissionDenied: L10n.Failure.micDenied
+        case .noInput: L10n.Failure.noMicrophone
+        case .converterUnavailable: L10n.Failure.formatUnsupported
         }
     }
 }

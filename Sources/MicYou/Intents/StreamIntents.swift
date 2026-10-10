@@ -3,10 +3,11 @@
 // these intents. micyou:// URLs (see DeepLink) are the fallback for Shortcuts.
 
 import AppIntents
+import MicYouShared
 
 struct StartStreamingIntent: AppIntent {
-    static let title: LocalizedStringResource = "Start Streaming"
-    static let description = IntentDescription("Connects to the last used computer and starts streaming your microphone.")
+    static let title = L10n.Intent.startTitle
+    static let description = IntentDescription(L10n.Intent.startDescription)
     // Recording can only start while the app is in the foreground
     static let openAppWhenRun = true
 
@@ -18,8 +19,8 @@ struct StartStreamingIntent: AppIntent {
 }
 
 struct StopStreamingIntent: AppIntent {
-    static let title: LocalizedStringResource = "Stop Streaming"
-    static let description = IntentDescription("Disconnects from the computer.")
+    static let title = L10n.Intent.stopTitle
+    static let description = IntentDescription(L10n.Intent.stopDescription)
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -29,8 +30,8 @@ struct StopStreamingIntent: AppIntent {
 }
 
 struct ToggleMuteIntent: AppIntent {
-    static let title: LocalizedStringResource = "Toggle Mute"
-    static let description = IntentDescription("Mutes or unmutes your microphone while streaming.")
+    static let title = L10n.Intent.muteTitle
+    static let description = IntentDescription(L10n.Intent.muteDescription)
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -44,19 +45,19 @@ struct MicYouShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: StartStreamingIntent(),
             phrases: ["Start \(.applicationName)", "Connect \(.applicationName)"],
-            shortTitle: "Start Streaming",
+            shortTitle: L10n.Intent.startTitle,
             systemImageName: "mic.fill"
         )
         AppShortcut(
             intent: StopStreamingIntent(),
             phrases: ["Stop \(.applicationName)"],
-            shortTitle: "Stop Streaming",
+            shortTitle: L10n.Intent.stopTitle,
             systemImageName: "stop.fill"
         )
         AppShortcut(
             intent: ToggleMuteIntent(),
             phrases: ["Mute \(.applicationName)"],
-            shortTitle: "Toggle Mute",
+            shortTitle: L10n.Intent.muteTitle,
             systemImageName: "mic.slash.fill"
         )
     }

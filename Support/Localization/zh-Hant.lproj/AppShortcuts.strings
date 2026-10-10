@@ -1,0 +1,6 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+"Start ${applicationName}" = "開始 ${applicationName}";
+"Connect ${applicationName}" = "連線 ${applicationName}";
+"Stop ${applicationName}" = "停止 ${applicationName}";
+"Mute ${applicationName}" = "${applicationName} 靜音";

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import Foundation
+import MicYouShared
 import Network
 
 enum StreamError: LocalizedError, Equatable {
@@ -10,25 +11,28 @@ enum StreamError: LocalizedError, Equatable {
     case heartbeatTimeout
     case closedByPeer
     case protocolError(String)
+    case noPeerAddress
     case udpFailed
     case capture(String)
 
     var errorDescription: String? {
         switch self {
         case .unreachable(let reason):
-            String(localized: "Cannot reach the computer: \(reason)")
+            L10n.Failure.unreachable(reason)
         case .connectTimeout:
-            String(localized: "Connection timed out. Check that MicYou is running on the computer and both devices are on the same network.")
+            L10n.Failure.timeout
         case .handshakeFailed:
-            String(localized: "The computer did not answer the MicYou handshake. Check the port and the desktop version.")
+            L10n.Failure.handshake
         case .heartbeatTimeout:
-            String(localized: "Lost contact with the computer. It may be asleep or off the network.")
+            L10n.Failure.heartbeat
         case .closedByPeer:
-            String(localized: "MicYou on the computer closed the connection.")
+            L10n.Failure.closedByPeer
         case .protocolError(let detail):
-            String(localized: "Unexpected data from the computer: \(detail)")
+            L10n.Failure.unexpectedData(detail)
+        case .noPeerAddress:
+            L10n.Failure.noPeerAddress
         case .udpFailed:
-            String(localized: "Sending audio over UDP keeps failing. Switch to TCP Only in Settings.")
+            L10n.Failure.udpFailed
         case .capture(let detail):
             detail
         }

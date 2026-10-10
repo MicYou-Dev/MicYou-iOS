@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import MicYouShared
 import SwiftUI
 
 struct StatusView: View {
@@ -41,17 +42,17 @@ struct StatusView: View {
         if model.phase == .streaming {
             HStack(alignment: .top) {
                 if let since = model.streamingSince {
-                    StatCell(label: "Duration") {
+                    StatCell(label: L10n.Status.duration) {
                         Text(timerInterval: since...Date.distantFuture, countsDown: false)
                     }
                 }
                 if let format = model.activeFormat {
-                    StatCell(label: "Format") {
-                        Text(verbatim: FormatText.short(format) + (format.channelCount == 2 ? " · " + String(localized: "Stereo") : ""))
+                    StatCell(label: L10n.Status.formatLabel) {
+                        Text(L10n.Common.joined([FormatText.short(format), format.channelCount == 2 ? L10n.Common.stereo : ""]))
                     }
                 }
-                StatCell(label: "Bitrate") {
-                    Text(verbatim: "\(model.throughput / 1000) kbps")
+                StatCell(label: L10n.Status.bitrate) {
+                    Text(L10n.Unit.kbps(model.throughput / 1000))
                 }
             }
             .padding(.vertical, 2)
@@ -89,11 +90,11 @@ struct StatusView: View {
 
     private var title: String {
         switch model.phase {
-        case .idle: String(localized: "Not Connected")
-        case .connecting: String(localized: "Connecting…")
-        case .streaming: model.isMuted ? String(localized: "Muted") : String(localized: "Streaming")
-        case .reconnecting(let attempt): String(localized: "Reconnecting (\(attempt)/\(AppModel.maxReconnectAttempts))…")
-        case .failed: String(localized: "Connection Failed")
+        case .idle: L10n.Status.notConnected
+        case .connecting: L10n.Status.connecting
+        case .streaming: model.isMuted ? L10n.Status.muted : L10n.Status.streaming
+        case .reconnecting(let attempt): L10n.Status.reconnectingAttempt(attempt, of: AppModel.maxReconnectAttempts)
+        case .failed: L10n.Status.failed
         }
     }
 
@@ -103,13 +104,13 @@ struct StatusView: View {
             return message
         case .idle:
             if let name = model.selectedName {
-                return String(localized: "Ready to connect to \(name)")
+                return L10n.Status.ready(name)
             }
-            return String(localized: "Turn your iPhone into a microphone for your computer")
+            return L10n.App.tagline
         case .connecting, .streaming, .reconnecting:
             guard let name = model.connectedName else { return nil }
             if let address = model.remoteAddress, address != name {
-                return "\(name) · \(address)"
+                return L10n.Common.joined([name, address])
             }
             return name
         }
@@ -118,7 +119,7 @@ struct StatusView: View {
 
 /// A small value over caption pair used in the streaming stats row
 private struct StatCell<Value: View>: View {
-    let label: LocalizedStringKey
+    let label: String
     @ViewBuilder var value: Value
 
     var body: some View {
@@ -153,8 +154,8 @@ struct LevelMeterView: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Input Level")
-        .accessibilityValue("\(Int(levelDB.rounded())) dB")
+        .accessibilityLabel(L10n.Status.inputLevel)
+        .accessibilityValue(L10n.Unit.dB(Int(levelDB.rounded())))
     }
 
     private var color: Color {

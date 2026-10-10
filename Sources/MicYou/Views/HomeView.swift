@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import MicYouProtocol
+import MicYouShared
 import SwiftUI
 
 struct HomeView: View {
@@ -21,10 +23,10 @@ struct HomeView: View {
                 ServerListSection()
                 ManualSection()
             }
-            .navigationTitle("MicYou")
+            .navigationTitle(L10n.App.name)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Settings", systemImage: "gearshape") { showSettings = true }
+                    Button(L10n.Common.settings, systemImage: "gearshape") { showSettings = true }
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -55,8 +57,8 @@ private struct ServerListSection: View {
             switch model.browser.state {
             case .denied:
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Allow Local Network access so MicYou can find your computer.", systemImage: "network.slash")
-                    Button("Open Settings") {
+                    Label(L10n.Home.localNetworkDenied, systemImage: "network.slash")
+                    Button(L10n.Common.openSettings) {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)
                         }
@@ -69,16 +71,16 @@ private struct ServerListSection: View {
                 if model.browser.servers.isEmpty {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Looking for computers…")
+                        Text(L10n.Home.searching)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
         } header: {
-            Text("Nearby Computers")
+            Text(L10n.Home.nearbyHeader)
         } footer: {
             if model.browser.servers.isEmpty && model.browser.state == .searching {
-                Text("Open MicYou on your computer and make sure both devices are on the same Wi-Fi.")
+                Text(L10n.Home.searchHint)
             }
         }
         .disabled(model.isActive)
@@ -93,7 +95,7 @@ private struct ManualSection: View {
         @Bindable var settings = settings
         Section {
             ServerRow(
-                title: String(localized: "Connect by IP Address"),
+                title: L10n.Home.manualRow,
                 subtitle: nil,
                 systemImage: "keyboard",
                 isSelected: model.selection == .manual
@@ -101,9 +103,9 @@ private struct ManualSection: View {
                 model.selection = .manual
             }
             if model.selection == .manual {
-                LabeledContent("Address") {
+                LabeledContent(L10n.Home.address) {
                     HStack {
-                        TextField("192.168.1.5", text: $settings.host)
+                        TextField(L10n.Home.addressPlaceholder, text: $settings.host)
                             .keyboardType(.numbersAndPunctuation)
                             .textContentType(.URL)
                             .textInputAutocapitalization(.never)
@@ -117,21 +119,21 @@ private struct ManualSection: View {
                             } label: {
                                 Image(systemName: "clock.arrow.circlepath")
                             }
-                            .accessibilityLabel("Recent Addresses")
+                            .accessibilityLabel(L10n.Home.recentAddresses)
                         }
                     }
                 }
-                LabeledContent("Port") {
-                    TextField("8554", value: $settings.port, format: .number.grouping(.never))
+                LabeledContent(L10n.Home.port) {
+                    TextField(String(MicYouWire.defaultPort), value: $settings.port, format: .number.grouping(.never))
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                 }
             }
         } header: {
-            Text("Manual")
+            Text(L10n.Home.manualHeader)
         } footer: {
             if model.selection == .manual {
-                Text("Use the IP address shown in MicYou on your computer. The default port is 8554.")
+                Text(L10n.Home.manualHint(port: Int(MicYouWire.defaultPort)))
             }
         }
         .disabled(model.isActive)
@@ -168,7 +170,7 @@ private struct ControlBar: View {
             }
             .buttonStyle(muteStyle)
             .tint(model.isMuted ? .red : nil)
-            .accessibilityLabel(model.isMuted ? Text("Unmute") : Text("Mute"))
+            .accessibilityLabel(model.isMuted ? L10n.Common.unmute : L10n.Common.mute)
             .sensoryFeedback(.selection, trigger: model.isMuted)
 
             Button {
@@ -187,11 +189,11 @@ private struct ControlBar: View {
         .controlSize(.large)
     }
 
-    private var connectTitle: LocalizedStringKey {
+    private var connectTitle: String {
         switch model.phase {
-        case .connecting, .reconnecting: "Cancel"
-        case .streaming: "Disconnect"
-        case .idle, .failed: "Connect"
+        case .connecting, .reconnecting: L10n.Common.cancel
+        case .streaming: L10n.Common.disconnect
+        case .idle, .failed: L10n.Common.connect
         }
     }
 }

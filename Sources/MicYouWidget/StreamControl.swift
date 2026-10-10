@@ -10,10 +10,10 @@ struct StreamControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "com.chouchiu.micyou.toggle") {
             ControlWidgetButton(action: OpenURLIntent(DeepLink.toggle.url)) {
-                Label("MicYou", systemImage: "mic.fill")
+                Label(L10n.App.name, systemImage: "mic.fill")
             }
         }
-        .displayName("MicYou")
-        .description("Start or stop streaming to your computer.")
+        .displayName(L10n.Control.name)
+        .description(L10n.Control.description)
     }
 }

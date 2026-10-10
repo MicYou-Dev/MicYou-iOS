@@ -157,7 +157,7 @@ final class StreamSession: @unchecked Sendable {
                 remoteHost = host
                 if config.transport == .tcpUDP { openUDP(host: host, tcpPort: tcpPort) }
             } else if config.transport == .tcpUDP {
-                return finish(.protocolError("missing peer address"))
+                return finish(.noPeerAddress)
             }
             ready = true
             startStats()

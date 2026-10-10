@@ -1,2 +1,112 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* Keys are the English text, only entries that differ from their key belong here */
+
+/* Sentences end with a period, labels and buttons have no punctuation */
+
+"app.name" = "MicYou";
+"app.tagline" = "Turn your iPhone into a microphone for your computer";
+
+"common.connect" = "Connect";
+"common.disconnect" = "Disconnect";
+"common.cancel" = "Cancel";
+"common.mute" = "Mute";
+"common.unmute" = "Unmute";
+"common.settings" = "Settings";
+"common.done" = "Done";
+"common.open-settings" = "Open Settings";
+"common.mono" = "Mono";
+"common.stereo" = "Stereo";
+"common.separator" = " · ";
+"common.codec-rate" = "%1$@ %2$@";
+
+"unit.kbps" = "%lld kbps";
+"unit.khz" = "%@ kHz";
+"unit.db" = "%lld dB";
+"unit.db-signed" = "%+.0f dB";
+
+"status.not-connected" = "Not Connected";
+"status.connecting" = "Connecting…";
+"status.reconnecting" = "Reconnecting…";
+"status.reconnecting-attempt" = "Reconnecting (%1$lld/%2$lld)…";
+"status.streaming" = "Streaming";
+"status.waiting" = "…";
+"status.muted" = "Muted";
+"status.failed" = "Connection Failed";
+"status.ready" = "Ready to connect to %@";
+"status.duration" = "Duration";
+"status.format" = "Format";
+"status.bitrate" = "Bitrate";
+"status.input-level" = "Input Level";
+
+"home.nearby.header" = "Nearby Computers";
+"home.nearby.searching" = "Looking for computers…";
+"home.nearby.hint" = "Open MicYou on your computer and make sure both devices are on the same Wi-Fi.";
+"home.nearby.denied" = "Allow Local Network access so MicYou can find your computer.";
+"home.manual.header" = "Manual";
+"home.manual.row" = "Connect by IP Address";
+"home.manual.address" = "Address";
+"home.manual.address-placeholder" = "192.168.1.5";
+"home.manual.port" = "Port";
+"home.manual.recent" = "Recent Addresses";
+"home.manual.hint" = "Use the IP address shown in MicYou on your computer. The default port is %@.";
+
+"settings.applies-next-time" = "Connection and audio changes apply the next time you connect.";
+"settings.connection" = "Connection";
+"settings.transport" = "Transport";
+"settings.transport.tcp-udp" = "TCP + UDP";
+"settings.transport.tcp" = "TCP Only";
+"settings.fec" = "Forward Error Correction";
+"settings.auto-reconnect" = "Reconnect Automatically";
+"settings.connection.footer" = "TCP + UDP has the lowest latency. Switch to TCP Only if audio drops out on your network. Error correction adds about 8% traffic to recover lost packets.";
+"settings.audio" = "Audio";
+"settings.codec" = "Codec";
+"settings.codec.opus" = "Opus";
+"settings.codec.pcm" = "PCM (Uncompressed)";
+"settings.codec.pcm-short" = "PCM";
+"settings.bitrate" = "Bitrate";
+"settings.sample-rate" = "Sample Rate";
+"settings.channels" = "Channels";
+"settings.audio.footer-opus-44" = "Opus does not support 44.1 kHz, 48 kHz is used instead.";
+"settings.audio.footer" = "Opus uses far less bandwidth than PCM and sounds the same for voice.";
+"settings.microphone" = "Microphone";
+"settings.input-gain" = "Input Gain";
+"settings.input-gain.footer" = "Takes effect right away. A limiter keeps loud sounds from clipping.";
+"settings.voice-processing" = "Voice Processing";
+"settings.voice-processing.footer" = "Uses the system echo cancellation, noise suppression and automatic gain. Good for calls and meetings, turn it off for music.";
+"settings.general" = "General";
+"settings.keep-screen-on" = "Keep Screen On";
+"settings.live-activity" = "Live Activity";
+"settings.general.footer" = "Live Activity shows the connection and mute controls on the Lock Screen and in the Dynamic Island.";
+
+"about.title" = "About";
+"about.version" = "Version";
+"about.version.value" = "%1$@ (%2$@)";
+"about.protocol" = "Protocol";
+"about.protocol.value" = "MicYou 2.x";
+"about.default-port" = "Default Port";
+"about.desktop" = "MicYou Desktop";
+"about.source-code" = "Source Code";
+"about.license" = "GNU General Public License v3.0";
+"about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
+
+"error.choose-target" = "Choose a computer or enter its address first.";
+"error.opus-unavailable" = "Opus is not available on this device, streaming PCM instead.";
+"error.unreachable" = "Cannot reach the computer: %@";
+"error.timeout" = "Connection timed out. Check that MicYou is running on the computer and both devices are on the same network.";
+"error.handshake" = "The computer did not answer the MicYou handshake. Check the port and the desktop version.";
+"error.heartbeat" = "Lost contact with the computer. It may be asleep or off the network.";
+"error.closed" = "MicYou on the computer closed the connection.";
+"error.unexpected-data" = "Unexpected data from the computer: %@";
+"error.no-peer-address" = "Could not get the computer's IP address for UDP. Try TCP Only in Settings.";
+"error.udp" = "Sending audio over UDP keeps failing. Switch to TCP Only in Settings.";
+"error.mic-denied" = "Microphone access is off. Turn it on in Settings.";
+"error.no-mic" = "No microphone is available.";
+"error.format-unsupported" = "This audio format is not supported.";
+
+"intent.start.title" = "Start Streaming";
+"intent.start.description" = "Connects to the last used computer and starts streaming your microphone.";
+"intent.stop.title" = "Stop Streaming";
+"intent.stop.description" = "Disconnects from the computer.";
+"intent.mute.title" = "Toggle Mute";
+"intent.mute.description" = "Mutes or unmutes your microphone while streaming.";
+
+"control.description" = "Start or stop streaming to your computer.";

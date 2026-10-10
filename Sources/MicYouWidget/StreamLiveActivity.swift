@@ -63,7 +63,7 @@ private struct LockScreenView: View {
                 Text(context.attributes.serverName)
                     .font(.headline)
                     .lineLimit(1)
-                Text(phaseText(state) + (state.detail.isEmpty ? "" : " · \(state.detail)"))
+                Text(L10n.Common.joined([phaseText(state), state.detail]))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -102,7 +102,7 @@ private struct ElapsedText: View {
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)
         } else {
-            Text("…")
+            Text(L10n.Status.waiting)
         }
     }
 }
@@ -118,14 +118,14 @@ private struct ActionLinks: View {
                     .frame(width: 32, height: 32)
                     .background(.fill.secondary, in: Circle())
             }
-            .accessibilityLabel(state.isMuted ? Text("Unmute") : Text("Mute"))
+            .accessibilityLabel(state.isMuted ? L10n.Common.unmute : L10n.Common.mute)
             Link(destination: DeepLink.disconnect.url) {
                 Image(systemName: "xmark")
                     .frame(width: 32, height: 32)
                     .background(.red.opacity(0.85), in: Circle())
                     .foregroundStyle(.white)
             }
-            .accessibilityLabel(Text("Disconnect"))
+            .accessibilityLabel(L10n.Common.disconnect)
         }
         .font(.subheadline.weight(.semibold))
     }
@@ -133,8 +133,8 @@ private struct ActionLinks: View {
 
 private func phaseText(_ state: StreamActivityAttributes.ContentState) -> String {
     switch state.phase {
-    case .connecting: String(localized: "Connecting…")
-    case .reconnecting: String(localized: "Reconnecting…")
-    case .streaming: state.isMuted ? String(localized: "Muted") : String(localized: "Streaming")
+    case .connecting: L10n.Status.connecting
+    case .reconnecting: L10n.Status.reconnecting
+    case .streaming: state.isMuted ? L10n.Status.muted : L10n.Status.streaming
     }
 }

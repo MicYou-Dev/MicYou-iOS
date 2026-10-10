@@ -107,7 +107,7 @@ final class AppModel {
         }
         guard phase == .connecting, let (endpoint, name, preferIPv4) = resolveTarget() else {
             if phase == .connecting {
-                phase = .failed(String(localized: "Choose a computer or enter its address first."))
+                phase = .failed(L10n.Failure.chooseTarget)
             }
             return
         }
@@ -232,7 +232,7 @@ final class AppModel {
         case .throughput(let bits):
             throughput = bits
         case .codecFallback:
-            notice = String(localized: "Opus is not available on this device, streaming PCM instead.")
+            notice = L10n.Failure.opusUnavailable
             activeFormat?.codec = .pcm
         case .failed(let error):
             log.error("Session failed: \(error.localizedDescription)")
@@ -337,9 +337,7 @@ final class SessionSink: @unchecked Sendable {
 
 enum FormatText {
     static func short(_ format: AudioStreamFormat) -> String {
-        let codec = format.codec == .opus ? "Opus" : "PCM"
-        let khz = Double(format.sampleRate) / 1000
-        let rate = khz == khz.rounded() ? String(Int(khz)) : String(format: "%.1f", khz)
-        return "\(codec) \(rate) kHz"
+        let codec = format.codec == .opus ? L10n.Settings.opus : L10n.Settings.pcmShort
+        return L10n.Common.codecAndRate(codec, L10n.Unit.kHz(Int(format.sampleRate)))
     }
 }
