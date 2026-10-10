@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "MicYou";
+"NSMicrophoneUsageDescription" = "MicYou 需要使用麥克風，把聲音傳輸到你的電腦。";
+"NSLocalNetworkUsageDescription" = "MicYou 需要在區域網路中尋找並連線你的電腦。";
