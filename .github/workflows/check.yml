@@ -1,0 +1,19 @@
+name: Check
+# The app itself needs a Darwin SDK, these run on plain Linux
+on:
+  push:
+  pull_request:
+jobs:
+  protocol:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Protocol tests
+        run: swift test --package-path Packages/MicYouProtocol
+  strings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Localization tables
+        run: python3 Tools/check-strings.py
