@@ -254,7 +254,9 @@ final class AppModel {
             try capture.start(captureConfig) { [weak self] pcm, level in
                 if let smoothed = sink.push(pcm, level: level) {
                     Task { @MainActor in
-                        if self?.isActive == true { self?.levelDB = smoothed }
+                        guard let self, self.isActive else { return }
+                        self.levelDB = smoothed
+                        self.refreshSideEffects()
                     }
                 }
             }
@@ -301,7 +303,8 @@ final class AppModel {
             phase: activityPhase,
             isMuted: isMuted,
             startedAt: streamingSince ?? .now,
-            detail: activeFormat.map(FormatText.short) ?? ""
+            detail: activeFormat.map(FormatText.short) ?? "",
+            level: phase == .streaming && !isMuted ? StreamActivityAttributes.ContentState.quantizedLevel(dB: levelDB) : 0
         ))
     }
 }

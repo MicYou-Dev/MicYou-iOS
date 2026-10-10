@@ -33,11 +33,15 @@ struct StreamLiveActivity: Widget {
                         .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        Text(state.detail.isEmpty ? phaseText(state) : state.detail)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Spacer()
+                    HStack(spacing: 12) {
+                        if state.phase == .streaming {
+                            LevelBar(state: state)
+                        } else {
+                            Text(phaseText(state))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
                         ActionLinks(state: state)
                     }
                 }
@@ -122,6 +126,25 @@ private struct ElapsedText: View {
         } else {
             Text(L10n.Status.waiting)
         }
+    }
+}
+
+/// Input level, updated about once a second by the app
+private struct LevelBar: View {
+    let state: StreamActivityAttributes.ContentState
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.white.opacity(0.2))
+                Capsule()
+                    .fill(state.tint)
+                    .frame(width: proxy.size.width * CGFloat(state.level))
+            }
+        }
+        .frame(height: 6)
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel(L10n.Status.inputLevel)
     }
 }
 
