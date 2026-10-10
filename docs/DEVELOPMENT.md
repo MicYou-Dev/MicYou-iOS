@@ -74,7 +74,7 @@ git push origin v1.2.0
 gh api repos/xtool-org/xtool/releases/tags/<版本> --jq '.assets[] | select(.name=="xtool.app.zip") | .digest'
 ```
 
-`Package.swift` 里修正 SDK 版本的链接参数只在 Linux 上生效，macOS 的链接器会自己写入正确的 SDK 版本
+`Package.swift` 里修正 SDK 版本的链接参数在 macOS 上同样需要，xtool 在两边都会把部署目标写成 SDK 版本；CI 通过环境变量 `MICYOU_IOS_SDK_VERSION` 传入所选 Xcode 的 SDK 版本，构建后由 `Tools/verify-ipa.sh` 确认
 
 ## 图标
 

@@ -29,6 +29,8 @@ runs:
           echo "::error::iOS SDK $SDK is older than $MIN_SDK_MAJOR, the app would lose Liquid Glass"
           exit 1
         fi
+        # Package.swift writes this into the binary, see the comment there
+        echo "MICYOU_IOS_SDK_VERSION=$SDK" >> "$GITHUB_ENV"
         # Version and build, for example 26.1-17B55, so a new Xcode never reuses old modules
         echo "id=$(xcodebuild -version | awk 'NR==1 { v=$2 } NR==2 { b=$3 } END { print v "-" b }')" >> "$GITHUB_OUTPUT"
 
