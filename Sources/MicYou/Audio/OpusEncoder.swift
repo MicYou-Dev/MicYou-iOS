@@ -92,19 +92,10 @@ final class OpusEncoder {
         }
         input.frameLength = framesPerPacket
 
-        var supplied = false
         var error: NSError?
         output.packetCount = 0
         output.byteLength = 0
-        let status = converter.convert(to: output, error: &error) { [input] _, inputStatus in
-            if supplied {
-                inputStatus.pointee = .noDataNow
-                return nil
-            }
-            supplied = true
-            inputStatus.pointee = .haveData
-            return input
-        }
+        let status = converter.convert(to: output, feeding: input, error: &error)
         if status == .error {
             throw OpusEncoderError.encodeFailed(OSStatus((error?.code) ?? -1))
         }

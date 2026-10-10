@@ -217,17 +217,8 @@ final class AudioCapture: @unchecked Sendable {
         let capacity = AVAudioFrameCount((Double(buffer.frameLength) * ratio).rounded(.up)) + 64
         guard let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
 
-        var consumed = false
         var error: NSError?
-        let status = converter.convert(to: out, error: &error) { _, inputStatus in
-            if consumed {
-                inputStatus.pointee = .noDataNow
-                return nil
-            }
-            consumed = true
-            inputStatus.pointee = .haveData
-            return buffer
-        }
+        let status = converter.convert(to: out, feeding: buffer, error: &error)
         // Interleaved float, so channel 0 points at the whole buffer
         guard status != .error, out.frameLength > 0, let samples = out.floatChannelData?[0] else { return }
 
