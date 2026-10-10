@@ -3,7 +3,6 @@
 /* 规则：完整句子以句号结尾，标签与按钮不加标点 */
 
 "app.name" = "MicYou";
-"app.tagline" = "把 iPhone 变成电脑的麦克风";
 
 "common.connect" = "连接";
 "common.disconnect" = "断开连接";
@@ -25,7 +24,6 @@
 "unit.db" = "%lld dB";
 "unit.db-signed" = "%+.0f dB";
 
-"status.not-connected" = "未连接";
 "status.connecting" = "正在连接…";
 "status.reconnecting" = "正在重连…";
 "status.reconnecting-attempt" = "正在重连（%1$lld/%2$lld）…";
@@ -38,21 +36,38 @@
 "status.format" = "格式";
 "status.bitrate" = "码率";
 "status.input-level" = "输入电平";
+"status.transport" = "传输";
+"status.fec" = "纠错";
+"status.muted-detail" = "电脑收到的是静音，连接保持不变。";
+"status.reconnect-detail" = "麦克风保持开启，重新连上后会自动继续传输。";
 
 "home.nearby.header" = "附近的电脑";
 "home.nearby.searching" = "正在查找电脑…";
 "home.nearby.hint" = "请在电脑上打开 MicYou，并确认两台设备连接的是同一个 Wi-Fi。下拉可以重新查找。";
 "home.nearby.denied" = "请允许本地网络权限，MicYou 才能找到你的电脑。";
+"home.nearby.more" = "正在查找更多电脑…";
 "home.manual.header" = "手动连接";
-"home.manual.row" = "通过 IP 地址连接";
 "home.manual.address" = "地址";
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "端口";
 "home.manual.recent" = "最近使用的地址";
 "home.manual.hint" = "填写电脑上 MicYou 显示的 IP 地址，默认端口为 %@，也可以写成“地址:端口”。";
 "home.manual.invalid" = "地址或端口无效，端口范围为 1 到 65535。";
+"home.manual.use" = "使用这个地址";
+"home.target.label" = "将连接到";
+"home.target.none" = "未选择电脑";
+"home.target.change" = "更换";
+"home.choose" = "选择电脑";
+"home.hint" = "轻点开始传输，开始后可以锁屏或切到后台。";
+"home.format" = "传输格式";
+"home.format.adjust" = "调整";
 
 "settings.applies-next-time" = "连接和音频设置将在下次连接时生效。";
+"settings.preset" = "场景";
+"settings.preset.low-latency" = "低延迟";
+"settings.preset.stable" = "稳定";
+"settings.preset.lossless" = "无损";
+"settings.preset.footer" = "选择场景会一次改好传输方式、编码格式与采样率，之后仍可单独调整。";
 "settings.connection" = "连接";
 "settings.transport" = "传输方式";
 "settings.transport.tcp-udp" = "TCP + UDP";
@@ -72,7 +87,7 @@
 "settings.audio.footer" = "Opus 占用的带宽远低于 PCM，人声听感几乎没有差别。";
 "settings.microphone" = "麦克风";
 "settings.input-gain" = "输入增益";
-"settings.input-gain.footer" = "调整后立即生效，内置限幅器可防止大音量时爆音。";
+"settings.input-gain.footer" = "调整后立即生效，传输时也可以在主界面调整，内置限幅器可防止大音量时爆音。";
 "settings.voice-processing" = "人声处理";
 "settings.voice-processing.footer" = "使用系统的回声消除、降噪和自动增益，适合通话和会议，传输音乐时建议关闭。";
 "settings.general" = "通用";

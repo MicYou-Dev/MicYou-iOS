@@ -3,7 +3,6 @@
 /* Sentences end with a period, labels and buttons have no punctuation */
 
 "app.name" = "MicYou";
-"app.tagline" = "Turn your iPhone into a microphone for your computer";
 
 "common.connect" = "Connect";
 "common.disconnect" = "Disconnect";
@@ -25,7 +24,6 @@
 "unit.db" = "%lld dB";
 "unit.db-signed" = "%+.0f dB";
 
-"status.not-connected" = "Not Connected";
 "status.connecting" = "Connecting…";
 "status.reconnecting" = "Reconnecting…";
 "status.reconnecting-attempt" = "Reconnecting (%1$lld/%2$lld)…";
@@ -38,21 +36,38 @@
 "status.format" = "Format";
 "status.bitrate" = "Bitrate";
 "status.input-level" = "Input Level";
+"status.transport" = "Transport";
+"status.fec" = "FEC";
+"status.muted-detail" = "Your computer receives silence, the connection stays open.";
+"status.reconnect-detail" = "The microphone stays on and streaming resumes once reconnected.";
 
 "home.nearby.header" = "Nearby Computers";
 "home.nearby.searching" = "Looking for computers…";
 "home.nearby.hint" = "Open MicYou on your computer and make sure both devices are on the same Wi-Fi. Pull down to search again.";
 "home.nearby.denied" = "Allow Local Network access so MicYou can find your computer.";
+"home.nearby.more" = "Looking for more computers…";
 "home.manual.header" = "Manual Connection";
-"home.manual.row" = "Connect by IP Address";
 "home.manual.address" = "Address";
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "Port";
 "home.manual.recent" = "Recent Addresses";
 "home.manual.hint" = "Use the IP address shown in MicYou on your computer. The default port is %@, or type address:port.";
 "home.manual.invalid" = "Check the address and port. The port must be between 1 and 65535.";
+"home.manual.use" = "Use This Address";
+"home.target.label" = "Connect to";
+"home.target.none" = "No Computer Selected";
+"home.target.change" = "Change";
+"home.choose" = "Choose Computer";
+"home.hint" = "Tap to start streaming. You can lock the screen or switch apps afterwards.";
+"home.format" = "Format";
+"home.format.adjust" = "Adjust";
 
 "settings.applies-next-time" = "Connection and audio changes apply the next time you connect.";
+"settings.preset" = "Presets";
+"settings.preset.low-latency" = "Low Latency";
+"settings.preset.stable" = "Stable";
+"settings.preset.lossless" = "Lossless";
+"settings.preset.footer" = "A preset sets the transport, codec and sample rate at once. You can still change each one afterwards.";
 "settings.connection" = "Connection";
 "settings.transport" = "Transport";
 "settings.transport.tcp-udp" = "TCP + UDP";
@@ -72,7 +87,7 @@
 "settings.audio.footer" = "Opus uses far less bandwidth than PCM and sounds the same for voice.";
 "settings.microphone" = "Microphone";
 "settings.input-gain" = "Input Gain";
-"settings.input-gain.footer" = "Takes effect right away. A built-in limiter keeps loud sounds from clipping.";
+"settings.input-gain.footer" = "Takes effect right away and can also be changed while streaming. A built-in limiter keeps loud sounds from clipping.";
 "settings.voice-processing" = "Voice Processing";
 "settings.voice-processing.footer" = "Uses the system echo cancellation, noise suppression and automatic gain. Good for calls and meetings, turn it off for music.";
 "settings.general" = "General";

@@ -41,6 +41,8 @@ final class AppModel {
     private(set) var activeFormat: AudioStreamFormat?
     private(set) var streamingSince: Date?
     private(set) var connectedName: String?
+    /// The microphone in use, follows headsets coming and going
+    private(set) var audioInput: AudioInputInfo?
     /// One-off message, for example when Opus is not available
     var notice: String?
     var selection: ServerSelection {
@@ -92,6 +94,9 @@ final class AppModel {
     }
 
     var canConnect: Bool { selectedName != nil }
+
+    /// Settings of the running stream, edits in AppSettings only apply to the next one
+    var streamConfig: StreamConfig? { isActive ? currentConfig : nil }
 
     // MARK: Actions
 
@@ -296,6 +301,7 @@ final class AppModel {
 
     private func refreshSideEffects() {
         UIApplication.shared.isIdleTimerDisabled = settings.keepScreenOn && isActive
+        audioInput = isActive ? AudioInputInfo.current() : nil
 
         guard settings.liveActivity, isActive, let name = connectedName else {
             liveActivity.end()
@@ -312,7 +318,7 @@ final class AppModel {
         if let format = activeFormat, let config = currentConfig {
             detail = StreamText.activityDetail(format, opusBitrate: config.opusBitrate, transport: config.transport)
         }
-        let input = AudioInputInfo.current()
+        let input = audioInput
         liveActivity.update(serverName: name, state: .init(
             phase: activityPhase,
             isMuted: isMuted,

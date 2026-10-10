@@ -3,7 +3,6 @@
 /* 規則：完整句子以句號結尾，標籤與按鈕不加標點 */
 
 "app.name" = "MicYou";
-"app.tagline" = "把 iPhone 變成電腦的麥克風";
 
 "common.connect" = "連線";
 "common.disconnect" = "中斷連線";
@@ -25,7 +24,6 @@
 "unit.db" = "%lld dB";
 "unit.db-signed" = "%+.0f dB";
 
-"status.not-connected" = "未連線";
 "status.connecting" = "正在連線…";
 "status.reconnecting" = "正在重新連線…";
 "status.reconnecting-attempt" = "正在重新連線（%1$lld/%2$lld）…";
@@ -38,21 +36,38 @@
 "status.format" = "格式";
 "status.bitrate" = "位元率";
 "status.input-level" = "輸入音量";
+"status.transport" = "傳輸";
+"status.fec" = "糾錯";
+"status.muted-detail" = "電腦收到的是靜音，連線保持不變。";
+"status.reconnect-detail" = "麥克風保持開啟，重新連上後會自動繼續傳輸。";
 
 "home.nearby.header" = "附近的電腦";
 "home.nearby.searching" = "正在尋找電腦…";
 "home.nearby.hint" = "請在電腦上打開 MicYou，並確認兩台裝置連接的是同一個 Wi-Fi。下拉可以重新尋找。";
 "home.nearby.denied" = "請允許區域網路權限，MicYou 才能找到你的電腦。";
+"home.nearby.more" = "正在尋找更多電腦…";
 "home.manual.header" = "手動連線";
-"home.manual.row" = "透過 IP 位址連線";
 "home.manual.address" = "位址";
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "連接埠";
 "home.manual.recent" = "最近使用的位址";
 "home.manual.hint" = "填寫電腦上 MicYou 顯示的 IP 位址，預設連接埠為 %@，也可以寫成「位址:連接埠」。";
 "home.manual.invalid" = "位址或連接埠無效，連接埠範圍為 1 到 65535。";
+"home.manual.use" = "使用這個位址";
+"home.target.label" = "將連線到";
+"home.target.none" = "未選擇電腦";
+"home.target.change" = "更換";
+"home.choose" = "選擇電腦";
+"home.hint" = "輕點開始傳輸，開始後可以鎖定螢幕或切換到背景。";
+"home.format" = "傳輸格式";
+"home.format.adjust" = "調整";
 
 "settings.applies-next-time" = "連線和音訊設定將在下次連線時生效。";
+"settings.preset" = "情境";
+"settings.preset.low-latency" = "低延遲";
+"settings.preset.stable" = "穩定";
+"settings.preset.lossless" = "無損";
+"settings.preset.footer" = "選擇情境會一次設定好傳輸方式、編碼格式與取樣率，之後仍可個別調整。";
 "settings.connection" = "連線";
 "settings.transport" = "傳輸方式";
 "settings.transport.tcp-udp" = "TCP + UDP";
@@ -72,7 +87,7 @@
 "settings.audio.footer" = "Opus 佔用的頻寬遠低於 PCM，人聲聽感幾乎沒有差別。";
 "settings.microphone" = "麥克風";
 "settings.input-gain" = "輸入增益";
-"settings.input-gain.footer" = "調整後立即生效，內建限幅器可防止大音量時爆音。";
+"settings.input-gain.footer" = "調整後立即生效，傳輸時也可以在主畫面調整，內建限幅器可防止大音量時爆音。";
 "settings.voice-processing" = "人聲處理";
 "settings.voice-processing.footer" = "使用系統的回音消除、降噪與自動增益，適合通話和會議，傳輸音樂時建議關閉。";
 "settings.general" = "一般";

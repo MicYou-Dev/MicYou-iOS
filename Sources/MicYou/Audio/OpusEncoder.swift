@@ -24,9 +24,9 @@ final class OpusEncoder {
     private let output: AVAudioCompressedBuffer
     private var pending = Data()
 
-    /// Picks the closest supported Opus rate for a capture rate, 44.1 kHz maps to 48 kHz like on Android
+    /// Keeps a supported capture rate and sends anything else at 48 kHz, so 44.1 kHz maps to 48 kHz like on Android
     static func opusRate(for captureRate: Double) -> Double {
-        supportedRates.first { $0 <= captureRate } ?? 48000
+        supportedRates.contains(captureRate) ? captureRate : 48000
     }
 
     init(sampleRate: Double, channels: AVAudioChannelCount, bitrate: Int) throws {

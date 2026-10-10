@@ -20,7 +20,6 @@ public enum L10n {
 
     public enum App {
         public static var name: String { string("app.name") }
-        public static var tagline: String { string("app.tagline") }
     }
 
     public enum Common {
@@ -57,7 +56,6 @@ public enum L10n {
     }
 
     public enum Status {
-        public static var notConnected: String { string("status.not-connected") }
         public static var connecting: String { string("status.connecting") }
         public static var reconnecting: String { string("status.reconnecting") }
         public static func reconnectingAttempt(_ attempt: Int, of total: Int) -> String {
@@ -73,6 +71,11 @@ public enum L10n {
         public static var formatLabel: String { string("status.format") }
         public static var bitrate: String { string("status.bitrate") }
         public static var inputLevel: String { string("status.input-level") }
+        public static var transport: String { string("status.transport") }
+        /// Short form of forward error correction for the stats tile
+        public static var fec: String { string("status.fec") }
+        public static var mutedDetail: String { string("status.muted-detail") }
+        public static var reconnectDetail: String { string("status.reconnect-detail") }
     }
 
     public enum Home {
@@ -80,18 +83,31 @@ public enum L10n {
         public static var searching: String { string("home.nearby.searching") }
         public static var searchHint: String { string("home.nearby.hint") }
         public static var localNetworkDenied: String { string("home.nearby.denied") }
+        public static var searchingMore: String { string("home.nearby.more") }
         public static var manualHeader: String { string("home.manual.header") }
-        public static var manualRow: String { string("home.manual.row") }
         public static var address: String { string("home.manual.address") }
         public static var addressPlaceholder: String { string("home.manual.address-placeholder") }
         public static var port: String { string("home.manual.port") }
         public static var recentAddresses: String { string("home.manual.recent") }
         public static func manualHint(port: Int) -> String { format("home.manual.hint", String(port)) }
         public static var manualInvalid: String { string("home.manual.invalid") }
+        public static var useAddress: String { string("home.manual.use") }
+        public static var targetLabel: String { string("home.target.label") }
+        public static var noTarget: String { string("home.target.none") }
+        public static var change: String { string("home.target.change") }
+        public static var chooseComputer: String { string("home.choose") }
+        public static var hint: String { string("home.hint") }
+        public static var formatHeader: String { string("home.format") }
+        public static var adjust: String { string("home.format.adjust") }
     }
 
     public enum Settings {
         public static var appliesNextTime: String { string("settings.applies-next-time") }
+        public static var presets: String { string("settings.preset") }
+        public static var presetLowLatency: String { string("settings.preset.low-latency") }
+        public static var presetStable: String { string("settings.preset.stable") }
+        public static var presetLossless: String { string("settings.preset.lossless") }
+        public static var presetFooter: String { string("settings.preset.footer") }
         public static var connection: String { string("settings.connection") }
         public static var transport: String { string("settings.transport") }
         public static var tcpUDP: String { string("settings.transport.tcp-udp") }

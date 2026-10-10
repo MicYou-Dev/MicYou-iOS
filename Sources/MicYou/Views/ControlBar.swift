@@ -3,7 +3,7 @@
 import MicYouShared
 import SwiftUI
 
-/// Mute and connect buttons pinned above the home indicator
+/// Mute and disconnect pinned above the home indicator while a session is active
 struct ControlBar: View {
     @Environment(AppModel.self) private var model
 
@@ -11,55 +11,45 @@ struct ControlBar: View {
         if #available(iOS 26, *) {
             // Floating Liquid Glass controls, no bar background
             GlassEffectContainer(spacing: 12) {
-                buttons(muteStyle: .glass, connectStyle: .glassProminent)
+                buttons
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
             .padding(.bottom, 8)
         } else {
-            buttons(muteStyle: .bordered, connectStyle: .borderedProminent)
-                .padding(.horizontal)
+            buttons
+                .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 .background(.bar)
         }
     }
 
-    private func buttons(muteStyle: some PrimitiveButtonStyle, connectStyle: some PrimitiveButtonStyle) -> some View {
+    private var buttons: some View {
         HStack(spacing: 12) {
             Button {
                 model.toggleMute()
             } label: {
                 Image(systemName: model.isMuted ? "mic.slash.fill" : "mic.fill")
+                    .font(.title2)
                     .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 28, height: 28)
+                    .frame(width: 40, height: 40)
             }
-            .buttonStyle(muteStyle)
-            .tint(model.isMuted ? .red : nil)
+            .glassButtonStyle(prominent: model.isMuted)
+            .buttonBorderShape(.circle)
+            .tint(model.isMuted ? .orange : nil)
             .accessibilityLabel(model.isMuted ? L10n.Common.unmute : L10n.Common.mute)
             .sensoryFeedback(.selection, trigger: model.isMuted)
 
-            Button {
-                model.toggleConnection()
+            Button(role: .destructive) {
+                model.disconnect()
             } label: {
-                Text(connectTitle)
+                Text(model.phase == .streaming ? L10n.Common.disconnect : L10n.Common.cancel)
                     .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 28)
+                    .frame(maxWidth: .infinity, minHeight: 40)
             }
-            .buttonStyle(connectStyle)
-            .tint(model.isActive ? .red : .accentColor)
-            .disabled(!model.isActive && !model.canConnect)
-            .sensoryFeedback(.impact, trigger: model.isActive)
+            .glassButtonStyle()
+            .buttonBorderShape(.capsule)
+            .tint(.red)
         }
-        .buttonBorderShape(.capsule)
         .controlSize(.large)
-        .animation(.default, value: model.phase)
-    }
-
-    private var connectTitle: String {
-        switch model.phase {
-        case .connecting, .reconnecting: L10n.Common.cancel
-        case .streaming: L10n.Common.disconnect
-        case .failed: L10n.Common.retry
-        case .idle: L10n.Common.connect
-        }
     }
 }

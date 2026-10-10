@@ -122,3 +122,43 @@ final class AppSettings {
         defaults.set(value, forKey: key.rawValue)
     }
 }
+
+/// One tap combinations of the connection and audio settings, channels and FEC stay as they are
+enum StreamPreset: CaseIterable, Identifiable {
+    case lowLatency
+    case stable
+    case lossless
+
+    var id: Self { self }
+
+    var transport: TransportMode {
+        self == .stable ? .tcp : .tcpUDP
+    }
+
+    var codec: CodecChoice {
+        self == .lossless ? .pcm : .opus
+    }
+
+    var opusBitrate: Int {
+        self == .stable ? 96000 : 64000
+    }
+
+    var sampleRate: Int { 48000 }
+}
+
+extension AppSettings {
+    func apply(_ preset: StreamPreset) {
+        transport = preset.transport
+        codec = preset.codec
+        if preset.codec == .opus { opusBitrate = preset.opusBitrate }
+        sampleRate = preset.sampleRate
+    }
+
+    /// The preset the current settings match, nil once something was changed by hand
+    var matchingPreset: StreamPreset? {
+        StreamPreset.allCases.first { preset in
+            transport == preset.transport && codec == preset.codec && sampleRate == preset.sampleRate
+                && (codec == .pcm || opusBitrate == preset.opusBitrate)
+        }
+    }
+}

@@ -13,8 +13,10 @@ struct DiscoveredServer: Identifiable, Hashable, Sendable {
 
     var id: String { name }
 
+    var displayName: String { Self.displayName(for: name) }
+
     /// The host name inside the instance name, the desktop registers "MicYou (<hostname>)"
-    var displayName: String {
+    static func displayName(for name: String) -> String {
         if name.hasPrefix("MicYou ("), name.hasSuffix(")") {
             return String(name.dropFirst("MicYou (".count).dropLast())
         }
