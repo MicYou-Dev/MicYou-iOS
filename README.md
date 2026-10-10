@@ -62,6 +62,7 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5
 - `Sources/MicYouShared` 应用与小组件共用的实时活动定义和 URL
 - `Sources/MicYouWidget` 实时活动与控制中心小组件
 - `Proto/network.proto` 上游协议定义原文
+- `Icon/MicYou.icon` 液态玻璃图标源文件（来自 MicYou PR 350），xtool 无法编译，由 `.github/workflows/compile-icon.yml` 在 macOS 上用 actool 生成 `Resources/AppIcon/Assets.car`
 - `docs/PROTOCOL.md` 协议说明
 
 ## 已知限制
