@@ -1,0 +1,62 @@
+name: Set up xtool
+description: Selects the newest stable Xcode, installs a pinned xtool and restores the SwiftPM build cache
+inputs:
+  xtool-version:
+    description: xtool release to install
+    default: "1.21.0"
+  xtool-sha256:
+    description: SHA-256 of that release's xtool.app.zip
+    default: "33bb2ef12de3f2acfb5eb8385fca0de9df3a982862ec067185a59e8ae18b64e8"
+  min-sdk-major:
+    description: Oldest iOS SDK major version allowed, Liquid Glass needs 26
+    default: "26"
+runs:
+  using: composite
+  steps:
+    - name: Select newest stable Xcode
+      id: xcode
+      shell: bash
+      env:
+        MIN_SDK_MAJOR: ${{ inputs.min-sdk-major }}
+      run: |
+        XCODE=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
+        echo "Using $XCODE"
+        sudo xcode-select -s "$XCODE"
+        xcodebuild -version
+        SDK=$(xcrun -sdk iphoneos --show-sdk-version)
+        echo "iOS SDK $SDK"
+        if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
+          echo "::error::iOS SDK $SDK is older than $MIN_SDK_MAJOR, the app would lose Liquid Glass"
+          exit 1
+        fi
+        # Version and build, for example 26.1-17B55, so a new Xcode never reuses old modules
+        echo "id=$(xcodebuild -version | awk 'NR==1 { v=$2 } NR==2 { b=$3 } END { print v "-" b }')" >> "$GITHUB_OUTPUT"
+
+    - name: Install xtool
+      shell: bash
+      env:
+        XTOOL_VERSION: ${{ inputs.xtool-version }}
+        XTOOL_SHA256: ${{ inputs.xtool-sha256 }}
+      run: |
+        curl -fsSL -o "$RUNNER_TEMP/xtool.app.zip" \
+          "https://github.com/xtool-org/xtool/releases/download/$XTOOL_VERSION/xtool.app.zip"
+        echo "$XTOOL_SHA256  $RUNNER_TEMP/xtool.app.zip" | shasum -a 256 -c -
+        ditto -x -k "$RUNNER_TEMP/xtool.app.zip" "$RUNNER_TEMP"
+        # The app binary opens the setup window unless XTL_CLI=1 is set, and in CI that waits
+        # forever without a word. The bundle's own bin script sets it, this wrapper does the same
+        mkdir -p "$RUNNER_TEMP/bin"
+        printf '#!/bin/bash\nXTL_CLI=1 exec "%s" "$@"\n' "$RUNNER_TEMP/xtool.app/Contents/MacOS/xtool" > "$RUNNER_TEMP/bin/xtool"
+        chmod +x "$RUNNER_TEMP/bin/xtool"
+        echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+        # Fail within a minute if it still does not behave like a command line tool
+        perl -e 'alarm 60; exec @ARGV' "$RUNNER_TEMP/bin/xtool" --version < /dev/null
+
+    # A cold build spends most of its time precompiling the SDK modules, they live under .build
+    # Tag builds can only read caches saved on the default branch, Build keeps those warm
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: .build
+        key: xtool-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.id }}-xtool${{ inputs.xtool-version }}-${{ hashFiles('Package.swift', 'Packages/*/Package.swift', 'Sources/**', 'Packages/*/Sources/**') }}
+        restore-keys: |
+          xtool-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.id }}-xtool${{ inputs.xtool-version }}-

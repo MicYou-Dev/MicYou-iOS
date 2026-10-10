@@ -49,6 +49,8 @@ xtool 无法运行 Xcode 的 App Intents 元数据处理器，系统可能不会
 
 `.github/workflows/release.yml` 在 macOS 上用 Xcode 自带的 SDK 与固定版本的 xtool（校验 SHA-256）构建，不依赖本机的 Darwin SDK
 
+`.github/workflows/build.yml` 在推送到 `swiftui` 与 PR 时用同样的命令构建，产物保留 14 天，同时给发布留好构建缓存：标签触发的构建只能读默认分支存下的缓存，冷启动约 10 分钟，命中缓存后只编译改动部分；两个工作流共用 `.github/actions/setup-xtool` 与 `Tools/verify-ipa.sh`
+
 1. 确认 `main` 上的检查通过
 2. 打标签并推送，正式版 `v1.2.0`，带后缀的 `v1.2.0-beta.1` 发布为预发布
 
@@ -66,7 +68,7 @@ git push origin v1.2.0
 - 构建后会检查小组件扩展仍在、二进制记录的 SDK 不低于 26（否则没有液态玻璃）、LiveContainer 包里没有扩展
 - 发布说明列出上一个 `v*` 标签以来的提交标题
 - 在 Actions 里手动运行只构建不发布，IPA 留在运行的产物里，用来提前验证构建
-- 升级 xtool 时同步改 `XTOOL_VERSION` 与 `XTOOL_SHA256`，摘要可以这样查
+- 升级 xtool 时同步改 `.github/actions/setup-xtool/action.yml` 里的版本与 SHA-256，摘要可以这样查
 
 ```bash
 gh api repos/xtool-org/xtool/releases/tags/<版本> --jq '.assets[] | select(.name=="xtool.app.zip") | .digest'

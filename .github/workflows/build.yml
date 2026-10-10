@@ -1,0 +1,48 @@
+name: Build
+# Builds the app on macOS for every push to the default branch and every pull request,
+# which also keeps the build cache warm for release tags, they can only read default branch caches
+on:
+  push:
+    branches:
+      - swiftui
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-xtool
+
+      # Same command and configuration as a release, so the cache it leaves matches
+      - name: Build IPAs
+        run: Tools/build-livecontainer.sh
+        timeout-minutes: 20
+
+      - name: Verify
+        run: Tools/verify-ipa.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MicYou-${{ github.sha }}
+          path: |
+            xtool/MicYou.ipa
+            xtool/MicYou-LiveContainer.ipa
+          retention-days: 14
+          if-no-files-found: error

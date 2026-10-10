@@ -14,12 +14,6 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  XTOOL_VERSION: "1.21.0"
-  XTOOL_SHA256: "33bb2ef12de3f2acfb5eb8385fca0de9df3a982862ec067185a59e8ae18b64e8"
-  # Liquid Glass needs the app linked against this SDK or newer
-  MIN_SDK_MAJOR: "26"
-
 jobs:
   check:
     uses: ./.github/workflows/check.yml
@@ -27,6 +21,8 @@ jobs:
   build:
     needs: check
     runs-on: macos-latest
+    # A cold build takes about ten minutes, anything far beyond that is a hang
+    timeout-minutes: 30
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
@@ -36,26 +32,7 @@ jobs:
           # Full history for the build number and the release notes
           fetch-depth: 0
 
-      - name: Select newest stable Xcode
-        run: |
-          XCODE=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
-          echo "Using $XCODE"
-          sudo xcode-select -s "$XCODE"
-          xcodebuild -version
-          SDK=$(xcrun -sdk iphoneos --show-sdk-version)
-          echo "iOS SDK $SDK"
-          if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
-            echo "::error::iOS SDK $SDK is older than $MIN_SDK_MAJOR, the app would lose Liquid Glass"
-            exit 1
-          fi
-
-      - name: Install xtool
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/xtool.app.zip" \
-            "https://github.com/xtool-org/xtool/releases/download/$XTOOL_VERSION/xtool.app.zip"
-          echo "$XTOOL_SHA256  $RUNNER_TEMP/xtool.app.zip" | shasum -a 256 -c -
-          ditto -x -k "$RUNNER_TEMP/xtool.app.zip" "$RUNNER_TEMP"
-          echo "$RUNNER_TEMP/xtool.app/Contents/MacOS" >> "$GITHUB_PATH"
+      - uses: ./.github/actions/setup-xtool
 
       - name: Set version
         id: version
@@ -88,31 +65,16 @@ jobs:
 
       - name: Build IPAs
         run: Tools/build-livecontainer.sh
+        timeout-minutes: 20
 
-      - name: Verify and collect
+      - name: Verify
+        run: Tools/verify-ipa.sh
+
+      - name: Collect
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          mkdir -p dist check
-          unzip -q xtool/MicYou.ipa -d check
-          APP=check/Payload/MicYou.app
-          # The widget must survive linking, see docs/DEVELOPMENT.md
-          test -d "$APP/PlugIns/MicYouWidget.appex" || { echo "::error::Widget extension missing"; exit 1; }
-          for key in CFBundleShortVersionString CFBundleVersion; do
-            A=$(/usr/libexec/PlistBuddy -c "Print :$key" "$APP/Info.plist")
-            W=$(/usr/libexec/PlistBuddy -c "Print :$key" "$APP/PlugIns/MicYouWidget.appex/Info.plist")
-            [ "$A" = "$W" ] || { echo "::error::$key differs: app $A, widget $W"; exit 1; }
-          done
-          xcrun vtool -show-build "$APP/MicYou"
-          SDK=$(xcrun vtool -show-build "$APP/MicYou" | awk '/sdk/ { print $2; exit }')
-          if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
-            echo "::error::Binary records SDK $SDK, the app would run without Liquid Glass"
-            exit 1
-          fi
-          if unzip -l xtool/MicYou-LiveContainer.ipa | grep -q 'PlugIns/'; then
-            echo "::error::LiveContainer IPA still contains extensions"
-            exit 1
-          fi
+          mkdir -p dist
           cp xtool/MicYou.ipa "dist/MicYou-$VERSION.ipa"
           cp xtool/MicYou-LiveContainer.ipa "dist/MicYou-$VERSION-LiveContainer.ipa"
           (cd dist && shasum -a 256 *.ipa > SHA256SUMS.txt && cat SHA256SUMS.txt)
