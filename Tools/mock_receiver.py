@@ -264,6 +264,7 @@ def main():
     ap.add_argument("--wav", default="mock_capture.wav")
     ap.add_argument("--opus-out")
     ap.add_argument("--mdns", action="store_true", help="publish _micyou._tcp with avahi-publish")
+    ap.add_argument("--name", help="computer name shown in the app, defaults to <hostname>-mock")
     ap.add_argument("--toggle-mute", type=int, metavar="SECONDS", help="flip the desktop mute every N seconds")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
@@ -280,7 +281,7 @@ def main():
     tcp.bind(("0.0.0.0", args.port))
     tcp.listen(1)
     if args.mdns:
-        subprocess.Popen(["avahi-publish", "-s", f"MicYou ({socket.gethostname()}-mock)", "_micyou._tcp", str(args.port)])
+        subprocess.Popen(["avahi-publish", "-s", f"MicYou ({args.name or socket.gethostname() + '-mock'})", "_micyou._tcp", str(args.port)])
     print(f"listening on tcp/{args.port} udp/{args.port + 1}")
     while True:
         conn, addr = tcp.accept()
