@@ -32,6 +32,12 @@ xtool dev run
 swift test --package-path Packages/MicYouProtocol
 ```
 
+LiveContainer 无法签名和运行 App 扩展，用下面的脚本生成去掉小组件的 IPA（`xtool/MicYou-LiveContainer.ipa`），实时活动和控制中心按钮在其中不可用
+
+```bash
+Tools/build-livecontainer.sh
+```
+
 ## 调试
 
 `Tools/mock_receiver.py` 是一个简易的桌面端替身，会回应握手、发送心跳、打印控制消息，并把 PCM 音频写成 WAV
