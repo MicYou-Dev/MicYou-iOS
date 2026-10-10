@@ -16,14 +16,13 @@ struct StreamLiveActivity: Widget {
         } dynamicIsland: { context in
             let state = context.state
             return DynamicIsland {
-                DynamicIslandExpandedRegion(.leading, priority: 1) {
-                    HStack(spacing: 10) {
-                        Badge(state: state, size: 40)
-                        TitleStack(serverName: context.attributes.serverName, subtitle: phaseText(state))
-                    }
-                    // Keep the top row clear of the island's rounded corners
-                    .padding(.leading, 6)
-                    .padding(.top, 4)
+                // The leading and trailing regions only reach the camera, too narrow for a host name,
+                // so the top row holds the badge and the timer and everything with text goes below
+                DynamicIslandExpandedRegion(.leading) {
+                    Badge(state: state, size: 40)
+                        // Keep the top row clear of the island's rounded corners
+                        .padding(.leading, 6)
+                        .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     ElapsedText(state: state)
@@ -34,7 +33,7 @@ struct StreamLiveActivity: Widget {
                         .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ControlRow(state: state)
+                    IslandDetails(serverName: context.attributes.serverName, state: state)
                         .padding(.horizontal, 6)
                         .padding(.top, 6)
                 }
@@ -152,6 +151,42 @@ private struct ControlRow: View {
             return L10n.Status.reconnectingAttempt(state.attempt, of: state.maxAttempts)
         }
         return phaseText(state)
+    }
+}
+
+/// Bottom of the expanded island, full width so long host names fit
+/// Status and microphone share a line, the badge color already tells the phase at a glance
+private struct IslandDetails: View {
+    let serverName: String
+    let state: State
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(serverName)
+                    .font(.headline)
+                Text(status)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if !state.detail.isEmpty {
+                    Text(state.detail)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            ActionLinks(state: state)
+        }
+    }
+
+    /// For example "Streaming · iPhone Microphone" or "Reconnecting (2/6)…"
+    private var status: String {
+        if state.phase == .reconnecting, state.attempt > 0 {
+            return L10n.Status.reconnectingAttempt(state.attempt, of: state.maxAttempts)
+        }
+        return L10n.Common.joined([phaseText(state), state.phase == .streaming ? state.input : ""])
     }
 }
 
