@@ -21,11 +21,16 @@ struct StreamLiveActivity: Widget {
                         StatusIcon(state: state)
                     }
                     .font(.headline)
+                    // Keep the top row clear of the island's rounded corners
+                    .padding(.leading, 8)
+                    .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     ElapsedText(state: state)
                         .font(.headline)
                         .frame(maxWidth: 80, alignment: .trailing)
+                        .padding(.trailing, 8)
+                        .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
