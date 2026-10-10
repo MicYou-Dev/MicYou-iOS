@@ -4,7 +4,7 @@ product: MicYou
 infoPath: Support/App-Info.plist
 # Everything below is copied to the bundle root so Bundle.main and InfoPlist.strings localization work
 resources:
-# Liquid Glass icon compiled from Icon/MicYou.icon by actool, see .github/workflows/compile-icon.yml
+# Liquid Glass icon compiled from Resources/AppIcon/MicYou.icon by actool, see .github/workflows/compile-icon.yml
 - Resources/AppIcon/Assets.car
 - Resources/AppIcon/MicYou60x60@2x.png
 - Resources/AppIcon/MicYou76x76@2x~ipad.png

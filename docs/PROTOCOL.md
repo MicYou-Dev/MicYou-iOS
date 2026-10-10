@@ -1,6 +1,6 @@
 # MicYou 协议
 
-依据 MicYou 2.1.0（commit 6a34e09）的桌面端与 Android 端整理，权威定义见 `Proto/network.proto`
+依据 MicYou 2.1.0（commit 6a34e09）的桌面端与 Android 端整理，权威定义见 `Packages/MicYouProtocol/Proto/network.proto`
 
 ## 发现
 

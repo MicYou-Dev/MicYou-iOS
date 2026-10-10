@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Swift mirror of Proto/network.proto (package micyou)
+// Swift mirror of Proto/network.proto in this package (package micyou)
 
 import Foundation
 

@@ -26,7 +26,7 @@ jobs:
             --minimum-deployment-target 18.0 \
             --platform iphoneos \
             --compile out \
-            Icon/MicYou.icon
+            Resources/AppIcon/MicYou.icon
           ls -la out
           cat out/partial.plist
           xcrun assetutil --info out/Assets.car | head -80

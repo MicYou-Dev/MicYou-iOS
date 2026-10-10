@@ -4,7 +4,8 @@ import Foundation
 import Testing
 @testable import MicYouProtocol
 
-// Golden bytes come from: protoc --encode=micyou.MessageWrapper -I Proto Proto/network.proto
+// Golden bytes come from, run in Packages/MicYouProtocol:
+// protoc --encode=micyou.MessageWrapper -I Proto Proto/network.proto
 private func hex(_ s: String) -> Data {
     var data = Data()
     var i = s.startIndex
