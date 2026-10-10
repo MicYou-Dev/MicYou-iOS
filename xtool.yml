@@ -1,0 +1,17 @@
+version: 1
+bundleID: com.chouchiu.micyou
+product: MicYou
+infoPath: Support/App-Info.plist
+iconPath: Resources/AppIcon.png
+# Copied to the bundle root so Bundle.main and InfoPlist.strings localization work
+resources:
+- Support/Localization/en.lproj
+- Support/Localization/zh-Hans.lproj
+- Support/Localization/zh-Hant.lproj
+extensions:
+- product: MicYouWidget
+  infoPath: Support/Widget-Info.plist
+  resources:
+  - Support/Localization/en.lproj
+  - Support/Localization/zh-Hans.lproj
+  - Support/Localization/zh-Hant.lproj

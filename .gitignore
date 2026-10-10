@@ -1,0 +1,8 @@
+/.build
+/xtool
+/Packages/*/.build
+/.swiftpm
+.DS_Store
+*.wav
+__pycache__/
+/.bsp

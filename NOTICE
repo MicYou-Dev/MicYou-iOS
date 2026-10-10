@@ -1,0 +1,23 @@
+MicYou for iOS
+Copyright (C) 2026 ChouChiu
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See LICENSE for the full text.
+
+This project talks to the MicYou desktop receiver and contains material derived
+from the following GPL-3.0 licensed projects:
+
+- MicYou (https://github.com/MicYou-Dev/MicYou)
+  Copyright (C) LanRhyme and MicYou contributors
+  Proto/network.proto is copied verbatim; the client behaviour (handshake,
+  heartbeat, mute sync, FEC) is ported from the Android sender, and the app
+  icon is derived from the MicYou icon
+
+- MicYou-iOS (https://github.com/MicYou-Dev/MicYou-iOS)
+  Copyright (C) MicYou contributors
+  Interface wording and settings layout were used as a reference
+
+MicWisp (https://github.com/TimmySheep/MicWisp, MIT) was consulted as a
+reference for the iOS audio session setup; no code was copied from it.
