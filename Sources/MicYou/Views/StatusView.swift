@@ -29,7 +29,8 @@ struct StatusView: View {
                         .lineLimit(isFailed ? nil : 2)
                         .fixedSize(horizontal: false, vertical: isFailed)
                 }
-                if model.isActive {
+                // Only while audio actually reaches the computer, capture keeps running during reconnects
+                if model.phase == .streaming {
                     LevelMeterView(levelDB: model.isMuted ? -160 : model.levelDB)
                         .frame(height: 6)
                         .padding(.top, 4)
