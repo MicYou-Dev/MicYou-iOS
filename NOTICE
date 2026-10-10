@@ -12,8 +12,9 @@ from the following GPL-3.0 licensed projects:
 - MicYou (https://github.com/MicYou-Dev/MicYou)
   Copyright (C) LanRhyme and MicYou contributors
   Proto/network.proto is copied verbatim; the client behaviour (handshake,
-  heartbeat, mute sync, FEC) is ported from the Android sender, and the app
-  icon is derived from the MicYou icon
+  heartbeat, mute sync, FEC) is ported from the Android sender, and
+  Icon/MicYou.icon is the Liquid Glass icon from MicYou pull request #350
+  by WhatDamon
 
 - MicYou-iOS (https://github.com/MicYou-Dev/MicYou-iOS)
   Copyright (C) MicYou contributors

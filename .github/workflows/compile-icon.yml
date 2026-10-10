@@ -1,0 +1,36 @@
+name: Compile icon
+# actool only runs on macOS, copy the artifact into Resources/AppIcon
+on:
+  workflow_dispatch:
+jobs:
+  actool:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          sw_vers
+      - name: Compile MicYou.icon for iOS
+        run: |
+          mkdir -p out
+          xcrun actool \
+            --output-format human-readable-text --notices --warnings --errors \
+            --output-partial-info-plist out/partial.plist \
+            --app-icon MicYou --include-all-app-icons \
+            --development-region en \
+            --target-device iphone --target-device ipad \
+            --minimum-deployment-target 18.0 \
+            --platform iphoneos \
+            --compile out \
+            Icon/MicYou.icon
+          ls -la out
+          cat out/partial.plist
+          xcrun assetutil --info out/Assets.car | head -80
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-assets
+          path: out/
