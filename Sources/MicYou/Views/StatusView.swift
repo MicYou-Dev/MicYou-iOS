@@ -24,32 +24,42 @@ struct StatusView: View {
                 if let subtitle {
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .foregroundStyle(isFailed ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+                        .lineLimit(isFailed ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: isFailed)
                 }
                 if model.isActive {
                     LevelMeterView(levelDB: model.isMuted ? -160 : model.levelDB)
                         .frame(height: 6)
-                        .padding(.top, 2)
+                        .padding(.top, 4)
                 }
             }
         }
         .padding(.vertical, 6)
+        .animation(.default, value: model.phase)
 
         if model.phase == .streaming {
-            if let since = model.streamingSince {
-                LabeledContent("Duration") {
-                    Text(timerInterval: since...Date.distantFuture, countsDown: false)
-                        .monospacedDigit()
+            HStack(alignment: .top) {
+                if let since = model.streamingSince {
+                    StatCell(label: "Duration") {
+                        Text(timerInterval: since...Date.distantFuture, countsDown: false)
+                    }
+                }
+                if let format = model.activeFormat {
+                    StatCell(label: "Format") {
+                        Text(verbatim: FormatText.short(format) + (format.channelCount == 2 ? " · " + String(localized: "Stereo") : ""))
+                    }
+                }
+                StatCell(label: "Bitrate") {
+                    Text(verbatim: "\(model.throughput / 1000) kbps")
                 }
             }
-            if let format = model.activeFormat {
-                LabeledContent("Format", value: FormatText.short(format) + (format.channelCount == 2 ? " · " + String(localized: "Stereo") : ""))
-            }
-            LabeledContent("Bitrate") {
-                Text("\(model.throughput / 1000) kbps").monospacedDigit()
-            }
+            .padding(.vertical, 2)
         }
+    }
+
+    private var isFailed: Bool {
+        if case .failed = model.phase { true } else { false }
     }
 
     private var isWaiting: Bool {
@@ -88,13 +98,42 @@ struct StatusView: View {
     }
 
     private var subtitle: String? {
-        guard model.isActive, let name = model.connectedName else {
-            return model.phase == .idle ? String(localized: "Turn your iPhone into a microphone for your computer") : nil
+        switch model.phase {
+        case .failed(let message):
+            return message
+        case .idle:
+            if let name = model.selectedName {
+                return String(localized: "Ready to connect to \(name)")
+            }
+            return String(localized: "Turn your iPhone into a microphone for your computer")
+        case .connecting, .streaming, .reconnecting:
+            guard let name = model.connectedName else { return nil }
+            if let address = model.remoteAddress, address != name {
+                return "\(name) · \(address)"
+            }
+            return name
         }
-        if let address = model.remoteAddress, address != name {
-            return "\(name) · \(address)"
+    }
+}
+
+/// A small value over caption pair used in the streaming stats row
+private struct StatCell<Value: View>: View {
+    let label: LocalizedStringKey
+    @ViewBuilder var value: Value
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            value
+                .font(.callout.weight(.medium))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        return name
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 

@@ -14,8 +14,8 @@ struct SettingsView: View {
             Form {
                 if model.isActive {
                     Section {
-                        Label("Changes apply the next time you connect.", systemImage: "info.circle")
-                            .font(.footnote)
+                        Label("Connection and audio changes apply the next time you connect.", systemImage: "info.circle")
+                            .font(.subheadline)
                     }
                 }
 
@@ -31,7 +31,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Connection")
                 } footer: {
-                    Text("TCP + UDP has the lowest latency. Use TCP Only on networks that drop UDP.")
+                    Text("TCP + UDP has the lowest latency. Switch to TCP Only if audio drops out on your network. Error correction adds about 8% traffic to recover lost packets.")
                 }
 
                 Section {
@@ -61,7 +61,7 @@ struct SettingsView: View {
                     if settings.codec == .opus && settings.sampleRate == 44100 {
                         Text("Opus does not support 44.1 kHz, 48 kHz is used instead.")
                     } else {
-                        Text("Opus needs far less bandwidth than PCM with no audible loss for voice.")
+                        Text("Opus uses far less bandwidth than PCM and sounds the same for voice.")
                     }
                 }
 
@@ -83,18 +83,33 @@ struct SettingsView: View {
                             Image(systemName: "speaker.wave.3")
                         }
                     }
-                    Toggle("Voice Processing", isOn: $settings.voiceProcessing)
+                } header: {
+                    Text("Microphone")
                 } footer: {
-                    Text("Input gain applies right away, a limiter keeps loud sounds from clipping. Voice processing uses the system echo cancellation, noise suppression and automatic gain, best for calls and meetings.")
-                }
-
-                Section("General") {
-                    Toggle("Keep Screen On", isOn: $settings.keepScreenOn)
-                    Toggle("Live Activity", isOn: $settings.liveActivity)
+                    Text("Takes effect right away. A limiter keeps loud sounds from clipping.")
                 }
 
                 Section {
-                    NavigationLink("About") { AboutView() }
+                    Toggle("Voice Processing", isOn: $settings.voiceProcessing)
+                } footer: {
+                    Text("Uses the system echo cancellation, noise suppression and automatic gain. Good for calls and meetings, turn it off for music.")
+                }
+
+                Section {
+                    Toggle("Keep Screen On", isOn: $settings.keepScreenOn)
+                    Toggle("Live Activity", isOn: $settings.liveActivity)
+                } header: {
+                    Text("General")
+                } footer: {
+                    Text("Live Activity shows the connection and mute controls on the Lock Screen and in the Dynamic Island.")
+                }
+
+                Section {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Label("About", systemImage: "info.circle")
+                    }
                 }
             }
             .navigationTitle("Settings")
@@ -130,6 +145,9 @@ struct AboutView: View {
             Section {
                 Link(destination: URL(string: "https://github.com/MicYou-Dev/MicYou")!) {
                     Label("MicYou Desktop", systemImage: "desktopcomputer")
+                }
+                Link(destination: URL(string: "https://github.com/MicYou-Dev/MicYou-iOS")!) {
+                    Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
                 }
                 Link(destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!) {
                     Label("GNU General Public License v3.0", systemImage: "doc.text")

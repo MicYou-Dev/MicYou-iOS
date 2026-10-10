@@ -22,13 +22,13 @@ enum StreamError: LocalizedError, Equatable {
         case .handshakeFailed:
             String(localized: "The computer did not answer the MicYou handshake. Check the port and the desktop version.")
         case .heartbeatTimeout:
-            String(localized: "Lost contact with the computer.")
+            String(localized: "Lost contact with the computer. It may be asleep or off the network.")
         case .closedByPeer:
-            String(localized: "The computer closed the connection.")
+            String(localized: "MicYou on the computer closed the connection.")
         case .protocolError(let detail):
             String(localized: "Unexpected data from the computer: \(detail)")
         case .udpFailed:
-            String(localized: "Sending audio over UDP keeps failing. Try TCP in Settings.")
+            String(localized: "Sending audio over UDP keeps failing. Switch to TCP Only in Settings.")
         case .capture(let detail):
             detail
         }

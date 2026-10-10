@@ -12,16 +12,10 @@ struct HomeView: View {
                 Section {
                     StatusView()
                 }
-                if case .failed(let message) = model.phase {
-                    Section {
-                        Label(message, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.red)
-                            .symbolRenderingMode(.multicolor)
-                    }
-                }
                 if let notice = model.notice {
                     Section {
                         Label(notice, systemImage: "info.circle")
+                            .font(.subheadline)
                     }
                 }
                 ServerListSection()
@@ -51,7 +45,7 @@ private struct ServerListSection: View {
             ForEach(model.browser.servers) { server in
                 ServerRow(
                     title: server.displayName,
-                    subtitle: server.name,
+                    subtitle: nil,
                     systemImage: "desktopcomputer",
                     isSelected: model.selection == .discovered(name: server.name)
                 ) {
@@ -61,7 +55,7 @@ private struct ServerListSection: View {
             switch model.browser.state {
             case .denied:
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("MicYou needs Local Network access to find computers.")
+                    Label("Allow Local Network access so MicYou can find your computer.", systemImage: "network.slash")
                     Button("Open Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)
@@ -69,20 +63,22 @@ private struct ServerListSection: View {
                     }
                 }
             case .failed(let message):
-                Text(message).foregroundStyle(.secondary)
+                Label(message, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.secondary)
             default:
                 if model.browser.servers.isEmpty {
-                    Text("Make sure MicYou is running on your computer and both devices are on the same Wi-Fi.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Looking for computers…")
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         } header: {
-            HStack {
-                Text("Nearby Computers")
-                if model.browser.state == .searching {
-                    ProgressView().controlSize(.mini).padding(.leading, 4)
-                }
+            Text("Nearby Computers")
+        } footer: {
+            if model.browser.servers.isEmpty && model.browser.state == .searching {
+                Text("Open MicYou on your computer and make sure both devices are on the same Wi-Fi.")
             }
         }
         .disabled(model.isActive)
@@ -97,7 +93,7 @@ private struct ManualSection: View {
         @Bindable var settings = settings
         Section {
             ServerRow(
-                title: String(localized: "Enter Address"),
+                title: String(localized: "Connect by IP Address"),
                 subtitle: nil,
                 systemImage: "keyboard",
                 isSelected: model.selection == .manual
@@ -133,6 +129,10 @@ private struct ManualSection: View {
             }
         } header: {
             Text("Manual")
+        } footer: {
+            if model.selection == .manual {
+                Text("Use the IP address shown in MicYou on your computer. The default port is 8554.")
+            }
         }
         .disabled(model.isActive)
     }
@@ -174,7 +174,7 @@ private struct ControlBar: View {
             Button {
                 model.toggleConnection()
             } label: {
-                Text(model.isActive ? "Disconnect" : "Connect")
+                Text(connectTitle)
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 28)
             }
@@ -185,5 +185,13 @@ private struct ControlBar: View {
         }
         .buttonBorderShape(.capsule)
         .controlSize(.large)
+    }
+
+    private var connectTitle: LocalizedStringKey {
+        switch model.phase {
+        case .connecting, .reconnecting: "Cancel"
+        case .streaming: "Disconnect"
+        case .idle, .failed: "Connect"
+        }
     }
 }

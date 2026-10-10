@@ -14,6 +14,6 @@ struct StreamControl: ControlWidget {
             }
         }
         .displayName("MicYou")
-        .description("Connect or disconnect MicYou.")
+        .description("Start or stop streaming to your computer.")
     }
 }

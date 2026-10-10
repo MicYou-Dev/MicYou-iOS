@@ -46,6 +46,7 @@ final class AppModel {
     var selection: ServerSelection {
         didSet {
             if case .discovered(let name) = selection { settings.lastServiceName = name } else { settings.lastServiceName = nil }
+            clearError()
         }
     }
 
@@ -68,6 +69,17 @@ final class AppModel {
         switch phase {
         case .connecting, .streaming, .reconnecting: true
         case .idle, .failed: false
+        }
+    }
+
+    /// Display name of the current selection, nil when nothing usable is selected
+    var selectedName: String? {
+        switch selection {
+        case .discovered(let name):
+            return browser.servers.first { $0.name == name }?.displayName
+        case .manual:
+            let host = settings.host.trimmingCharacters(in: .whitespaces)
+            return host.isEmpty ? nil : host
         }
     }
 
@@ -328,6 +340,6 @@ enum FormatText {
         let codec = format.codec == .opus ? "Opus" : "PCM"
         let khz = Double(format.sampleRate) / 1000
         let rate = khz == khz.rounded() ? String(Int(khz)) : String(format: "%.1f", khz)
-        return "\(codec) · \(rate) kHz"
+        return "\(codec) \(rate) kHz"
     }
 }

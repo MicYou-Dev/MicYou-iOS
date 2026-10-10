@@ -6,7 +6,7 @@ import AppIntents
 
 struct StartStreamingIntent: AppIntent {
     static let title: LocalizedStringResource = "Start Streaming"
-    static let description = IntentDescription("Connects to the last used computer and starts streaming the microphone.")
+    static let description = IntentDescription("Connects to the last used computer and starts streaming your microphone.")
     // Recording can only start while the app is in the foreground
     static let openAppWhenRun = true
 
@@ -30,7 +30,7 @@ struct StopStreamingIntent: AppIntent {
 
 struct ToggleMuteIntent: AppIntent {
     static let title: LocalizedStringResource = "Toggle Mute"
-    static let description = IntentDescription("Mutes or unmutes the microphone while streaming.")
+    static let description = IntentDescription("Mutes or unmutes your microphone while streaming.")
 
     @MainActor
     func perform() async throws -> some IntentResult {
