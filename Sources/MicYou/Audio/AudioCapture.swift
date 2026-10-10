@@ -24,6 +24,23 @@ enum CaptureError: LocalizedError {
     }
 }
 
+/// Keeps gained samples below full scale: instant attack, about 50 ms release
+struct PeakLimiter {
+    private var reduction: Float = 1
+    private let ceiling: Float = 0.95
+    private let release: Float = 0.0004
+
+    mutating func process(_ x: Float) -> Float {
+        let peak = abs(x) * reduction
+        if peak > ceiling {
+            reduction = ceiling / abs(x)
+        } else {
+            reduction += (1 - reduction) * release
+        }
+        return x * reduction
+    }
+}
+
 /// Captures the microphone and delivers interleaved little-endian Int16 PCM in the requested format
 /// Thread safety: public methods are called from the main actor, the tap runs on an AVAudioEngine thread
 final class AudioCapture: @unchecked Sendable {
@@ -36,6 +53,9 @@ final class AudioCapture: @unchecked Sendable {
     private var converter: AVAudioConverter?
     private var outputFormat: AVAudioFormat?
     private var upmix = false
+    private var gain: Float = 1
+    /// Only touched on the tap thread
+    private var limiter = PeakLimiter()
     private var handler: Handler?
     private var config: CaptureConfig?
     private var observers: [NSObjectProtocol] = []
@@ -85,8 +105,9 @@ final class AudioCapture: @unchecked Sendable {
 
     private func configureSession(_ config: CaptureConfig) throws {
         let session = AVAudioSession.sharedInstance()
-        // measurement keeps the raw signal, voiceChat enables echo cancellation and noise suppression
-        let mode: AVAudioSession.Mode = config.voiceProcessing ? .voiceChat : .measurement
+        // voiceChat enables echo cancellation, noise suppression and AGC
+        // measurement would bypass the system input gain and sounds far too quiet
+        let mode: AVAudioSession.Mode = config.voiceProcessing ? .voiceChat : .default
         try session.setCategory(.playAndRecord, mode: mode, options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers])
         try? session.setPreferredSampleRate(config.sampleRate)
         try? session.setPreferredIOBufferDuration(0.01)
@@ -126,7 +147,7 @@ final class AudioCapture: @unchecked Sendable {
         // Convert at most the channels the hardware has, mono is duplicated by hand
         let convertChannels = min(config.channels, inputFormat.channelCount)
         guard
-            let converted = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: config.sampleRate,
+            let converted = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: config.sampleRate,
                                           channels: convertChannels, interleaved: true),
             let converter = AVAudioConverter(from: inputFormat, to: converted)
         else { throw CaptureError.converterUnavailable }
@@ -172,8 +193,9 @@ final class AudioCapture: @unchecked Sendable {
     }
 
     private func process(_ buffer: AVAudioPCMBuffer) {
-        let level = Self.rmsDB(buffer)
-        let (converter, format, upmix, handler) = lock.withLock { (self.converter, self.outputFormat, self.upmix, self.handler) }
+        let (converter, format, upmix, handler, gain) = lock.withLock {
+            (self.converter, self.outputFormat, self.upmix, self.handler, self.gain)
+        }
         guard let converter, let format, let handler else { return }
 
         let ratio = format.sampleRate / buffer.format.sampleRate
@@ -191,32 +213,30 @@ final class AudioCapture: @unchecked Sendable {
             inputStatus.pointee = .haveData
             return buffer
         }
-        guard status != .error, out.frameLength > 0, let samples = out.int16ChannelData?[0] else { return }
+        // Interleaved float, so channel 0 points at the whole buffer
+        guard status != .error, out.frameLength > 0, let samples = out.floatChannelData?[0] else { return }
 
         let count = Int(out.frameLength) * Int(format.channelCount)
-        var data: Data
-        if upmix {
-            data = Data(count: count * 4)
-            data.withUnsafeMutableBytes { raw in
-                let dst = raw.bindMemory(to: Int16.self)
-                for i in 0..<count {
-                    dst[2 * i] = samples[i].littleEndian
-                    dst[2 * i + 1] = samples[i].littleEndian
-                }
+        let copies = upmix ? 2 : 1
+        var data = Data(count: count * 2 * copies)
+        var sumSquares: Float = 0
+        data.withUnsafeMutableBytes { raw in
+            let dst = raw.bindMemory(to: Int16.self)
+            for i in 0..<count {
+                let y = limiter.process(samples[i] * gain)
+                sumSquares += y * y
+                let pcm = Int16(max(-32768, min(32767, (y * 32767).rounded()))).littleEndian
+                for c in 0..<copies { dst[i * copies + c] = pcm }
             }
-        } else {
-            data = Data(bytes: samples, count: count * 2)
         }
-        handler(data, level)
+        let rms = (sumSquares / Float(count)).squareRoot()
+        handler(data, rms > 0 ? max(-160, 20 * log10(rms)) : -160)
     }
 
-    static func rmsDB(_ buffer: AVAudioPCMBuffer) -> Float {
-        guard let channel = buffer.floatChannelData?[0], buffer.frameLength > 0 else { return -160 }
-        let n = Int(buffer.frameLength)
-        var sum: Float = 0
-        for i in 0..<n { sum += channel[i] * channel[i] }
-        let rms = (sum / Float(n)).squareRoot()
-        return rms > 0 ? max(-160, 20 * log10(rms)) : -160
+    /// Software input gain in dB, applied before the limiter, safe to change while running
+    func setGain(dB: Double) {
+        let linear = Float(pow(10, dB / 20))
+        lock.withLock { gain = linear }
     }
 
     // MARK: Interruptions

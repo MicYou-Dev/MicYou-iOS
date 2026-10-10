@@ -66,9 +66,26 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    VStack(alignment: .leading) {
+                        LabeledContent("Input Gain") {
+                            Text(verbatim: String(format: "%+.0f dB", settings.inputGainDB))
+                                .monospacedDigit()
+                        }
+                        Slider(
+                            value: Binding(get: { settings.inputGainDB }, set: { model.setInputGain($0.rounded()) }),
+                            in: 0...24,
+                            step: 1
+                        ) {
+                            Text("Input Gain")
+                        } minimumValueLabel: {
+                            Image(systemName: "speaker.wave.1")
+                        } maximumValueLabel: {
+                            Image(systemName: "speaker.wave.3")
+                        }
+                    }
                     Toggle("Voice Processing", isOn: $settings.voiceProcessing)
                 } footer: {
-                    Text("Uses the system echo cancellation and noise suppression. Best for calls and meetings, turn off for music or recording.")
+                    Text("Input gain applies right away, a limiter keeps loud sounds from clipping. Voice processing uses the system echo cancellation, noise suppression and automatic gain, best for calls and meetings.")
                 }
 
                 Section("General") {

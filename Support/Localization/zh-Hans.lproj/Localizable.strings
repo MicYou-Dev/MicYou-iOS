@@ -9,12 +9,12 @@
 "Channels" = "声道";
 "Choose a computer or enter its address first." = "请先选择电脑或输入地址。";
 "Codec" = "编码";
-"Connect" = "连接";
 "Connect or disconnect MicYou." = "连接或断开 MicYou";
+"Connect" = "连接";
 "Connecting…" = "正在连接…";
-"Connection" = "连接";
 "Connection Failed" = "连接失败";
 "Connection timed out. Check that MicYou is running on the computer and both devices are on the same network." = "连接超时。请确认电脑上的 MicYou 正在运行，且两台设备在同一网络。";
+"Connection" = "连接";
 "Connects to the last used computer and starts streaming the microphone." = "连接上次使用的电脑并开始传输麦克风";
 "Default Port" = "默认端口";
 "Disconnect" = "断开";
@@ -26,6 +26,8 @@
 "Forward Error Correction" = "前向纠错（FEC）";
 "General" = "通用";
 "GNU General Public License v3.0" = "GNU 通用公共许可证 v3.0";
+"Input gain applies right away, a limiter keeps loud sounds from clipping. Voice processing uses the system echo cancellation, noise suppression and automatic gain, best for calls and meetings." = "输入增益即时生效，限幅器会防止大声时爆音。人声处理使用系统的回声消除、降噪和自动增益，适合通话和会议。";
+"Input Gain" = "输入增益";
 "Input Level" = "输入电平";
 "Keep Screen On" = "保持屏幕常亮";
 "Live Activity" = "实时活动";
@@ -44,10 +46,10 @@
 "No microphone is available." = "没有可用的麦克风。";
 "Not Connected" = "未连接";
 "Open Settings" = "打开设置";
-"Opus" = "Opus";
 "Opus does not support 44.1 kHz, 48 kHz is used instead." = "Opus 不支持 44.1 kHz，将改用 48 kHz。";
 "Opus is not available on this device, streaming PCM instead." = "此设备无法使用 Opus，已改为传输 PCM。";
 "Opus needs far less bandwidth than PCM with no audible loss for voice." = "Opus 占用的带宽远低于 PCM，人声几乎听不出损失。";
+"Opus" = "Opus";
 "PCM (Uncompressed)" = "PCM（无压缩）";
 "Port" = "端口";
 "Protocol" = "协议";
@@ -62,8 +64,8 @@
 "Stereo" = "立体声";
 "Stop Streaming" = "停止传输";
 "Streaming" = "正在传输";
-"TCP + UDP" = "TCP + UDP";
 "TCP + UDP has the lowest latency. Use TCP Only on networks that drop UDP." = "TCP + UDP 延迟最低。如果网络会丢弃 UDP，请改用仅 TCP。";
+"TCP + UDP" = "TCP + UDP";
 "TCP Only" = "仅 TCP";
 "The computer closed the connection." = "电脑关闭了连接。";
 "The computer did not answer the MicYou handshake. Check the port and the desktop version." = "电脑没有响应 MicYou 握手，请检查端口和桌面端版本。";
@@ -73,7 +75,6 @@
 "Turn your iPhone into a microphone for your computer" = "把 iPhone 变成电脑的麦克风";
 "Unexpected data from the computer: %@" = "收到电脑发来的异常数据：%@";
 "Unmute" = "取消静音";
-"Uses the system echo cancellation and noise suppression. Best for calls and meetings, turn off for music or recording." = "使用系统的回声消除和降噪，适合通话和会议；录音或演奏音乐时建议关闭。";
 "Version" = "版本";
 "Voice Processing" = "人声处理";
 "…" = "…";

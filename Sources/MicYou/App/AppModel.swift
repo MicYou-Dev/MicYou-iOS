@@ -140,6 +140,12 @@ final class AppModel {
         refreshSideEffects()
     }
 
+    /// Applies immediately while streaming
+    func setInputGain(_ dB: Double) {
+        settings.inputGainDB = dB
+        capture.setGain(dB: dB)
+    }
+
     func toggleMute() {
         setMuted(!isMuted)
     }
@@ -231,6 +237,7 @@ final class AppModel {
             channels: AVAudioChannelCount(config.channels),
             voiceProcessing: settings.voiceProcessing
         )
+        capture.setGain(dB: settings.inputGainDB)
         do {
             try capture.start(captureConfig) { [weak self] pcm, level in
                 if let smoothed = sink.push(pcm, level: level) {

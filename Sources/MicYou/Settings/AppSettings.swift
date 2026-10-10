@@ -38,6 +38,8 @@ final class AppSettings {
     var sampleRate: Int { didSet { save(sampleRate, "sampleRate") } }
     var stereo: Bool { didSet { save(stereo, "stereo") } }
     var voiceProcessing: Bool { didSet { save(voiceProcessing, "voiceProcessing") } }
+    /// Software gain in dB, 0...24
+    var inputGainDB: Double { didSet { save(inputGainDB, "inputGainDB") } }
     var fecEnabled: Bool { didSet { save(fecEnabled, "fecEnabled") } }
     var autoReconnect: Bool { didSet { save(autoReconnect, "autoReconnect") } }
     var keepScreenOn: Bool { didSet { save(keepScreenOn, "keepScreenOn") } }
@@ -56,6 +58,7 @@ final class AppSettings {
         sampleRate = defaults.object(forKey: "sampleRate") as? Int ?? 48000
         stereo = defaults.object(forKey: "stereo") as? Bool ?? false
         voiceProcessing = defaults.object(forKey: "voiceProcessing") as? Bool ?? false
+        inputGainDB = defaults.object(forKey: "inputGainDB") as? Double ?? 6
         fecEnabled = defaults.object(forKey: "fecEnabled") as? Bool ?? true
         autoReconnect = defaults.object(forKey: "autoReconnect") as? Bool ?? true
         keepScreenOn = defaults.object(forKey: "keepScreenOn") as? Bool ?? false
