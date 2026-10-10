@@ -36,7 +36,7 @@ final class ServerBrowser {
     private(set) var state: State = .idle
 
     @ObservationIgnored private var browser: NWBrowser?
-    @ObservationIgnored private let log = Logger(subsystem: "com.chouchiu.micyou", category: "browser")
+    @ObservationIgnored private let log = Logger.micyou("browser")
 
     func start() {
         guard browser == nil else { return }

@@ -15,7 +15,7 @@ final class ControlChannel: @unchecked Sendable {
         case failed(StreamError)
     }
 
-    private let log = Logger(subsystem: "com.chouchiu.micyou", category: "control")
+    private let log = Logger.micyou("control")
     private let queue: DispatchQueue
     private let connection: NWConnection
     private let sessionId: Int64

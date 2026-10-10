@@ -28,7 +28,7 @@ final class StreamSession: @unchecked Sendable {
         case failed(StreamError)
     }
 
-    private let log = Logger(subsystem: "com.chouchiu.micyou", category: "session")
+    private let log = Logger.micyou("session")
     private let queue = DispatchQueue(label: "com.chouchiu.micyou.session", qos: .userInteractive)
     private let config: StreamConfig
     private let onEvent: @Sendable (Event) -> Void
@@ -54,7 +54,7 @@ final class StreamSession: @unchecked Sendable {
         while sessionId == 0 { sessionId = Int64.random(in: Int64.min...Int64.max) }
         sequencer = AudioSequencer(sessionId: sessionId, fecEnabled: config.fecEnabled && config.transport == .tcpUDP)
         format = AudioStreamFormat(sampleRate: Int32(config.sampleRate), channelCount: Int32(config.channels), codec: .pcm)
-        chunker = PCMChunker(frameBytes: config.channels * 2)
+        chunker = PCMChunker(frameBytes: format.pcmFrameBytes)
         setUpEncoder()
     }
 

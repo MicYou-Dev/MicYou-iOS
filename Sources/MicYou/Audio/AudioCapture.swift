@@ -25,30 +25,13 @@ enum CaptureError: LocalizedError {
     }
 }
 
-/// Keeps gained samples below full scale: instant attack, about 50 ms release
-struct PeakLimiter {
-    private var reduction: Float = 1
-    private let ceiling: Float = 0.95
-    private let release: Float = 0.0004
-
-    mutating func process(_ x: Float) -> Float {
-        let peak = abs(x) * reduction
-        if peak > ceiling {
-            reduction = ceiling / abs(x)
-        } else {
-            reduction += (1 - reduction) * release
-        }
-        return x * reduction
-    }
-}
-
 /// Captures the microphone and delivers interleaved little-endian Int16 PCM in the requested format
 /// Thread safety: public methods are called from the main actor, the tap runs on an AVAudioEngine thread
 final class AudioCapture: @unchecked Sendable {
     /// PCM bytes and the RMS level of the block in dBFS
     typealias Handler = @Sendable (_ pcm: Data, _ levelDB: Float) -> Void
 
-    private let log = Logger(subsystem: "com.chouchiu.micyou", category: "capture")
+    private let log = Logger.micyou("capture")
     private let engine = AVAudioEngine()
     private let lock = NSLock()
     private var converter: AVAudioConverter?

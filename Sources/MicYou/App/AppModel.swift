@@ -50,7 +50,7 @@ final class AppModel {
         }
     }
 
-    @ObservationIgnored private let log = Logger(subsystem: "com.chouchiu.micyou", category: "model")
+    @ObservationIgnored private let log = Logger.micyou("model")
     @ObservationIgnored private let capture = AudioCapture()
     @ObservationIgnored private let sink = SessionSink()
     @ObservationIgnored private let liveActivity = LiveActivityController()
@@ -61,11 +61,16 @@ final class AppModel {
     @ObservationIgnored private var hasStreamed = false
 
     init() {
-        selection = AppSettings.shared.lastServiceName.map { .discovered(name: $0) } ?? .manual
+        selection = settings.lastServiceName.map { .discovered(name: $0) } ?? .manual
         liveActivity.endStale()
         // The Live Activity shows the microphone in use, so follow headsets coming and going
-        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { AppModel.shared.refreshSideEffects() }
+        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshSideEffects() }
+        }
+        // Swiping the app away kills the process, the system keeps the activity unless it is ended first
+        // Sent while streaming because the audio background mode keeps the app running rather than suspended
+        NotificationCenter.default.addObserver(forName: UIApplication.willTerminateNotification, object: nil, queue: .main) { _ in
+            LiveActivityController.endAllBeforeExit()
         }
     }
 
@@ -82,17 +87,11 @@ final class AppModel {
         case .discovered(let name):
             return browser.servers.first { $0.name == name }?.displayName
         case .manual:
-            let host = settings.host.trimmingCharacters(in: .whitespaces)
-            return host.isEmpty ? nil : host
+            return settings.manualTarget?.host
         }
     }
 
-    var canConnect: Bool {
-        switch selection {
-        case .discovered(let name): browser.servers.contains { $0.name == name }
-        case .manual: !settings.host.trimmingCharacters(in: .whitespaces).isEmpty
-        }
-    }
+    var canConnect: Bool { selectedName != nil }
 
     // MARK: Actions
 
@@ -109,10 +108,10 @@ final class AppModel {
             phase = .failed(CaptureError.permissionDenied.localizedDescription)
             return
         }
-        guard phase == .connecting, let (endpoint, name, preferIPv4) = resolveTarget() else {
-            if phase == .connecting {
-                phase = .failed(L10n.Failure.chooseTarget)
-            }
+        // Disconnect may have been tapped while the permission prompt was up
+        guard phase == .connecting else { return }
+        guard let target = resolveTarget() else {
+            phase = .failed(L10n.Failure.chooseTarget)
             return
         }
         var sampleRate = settings.sampleRate
@@ -120,8 +119,8 @@ final class AppModel {
             sampleRate = Int(OpusEncoder.opusRate(for: Double(sampleRate)))
         }
         currentConfig = StreamConfig(
-            endpoint: endpoint,
-            preferIPv4: preferIPv4,
+            endpoint: target.endpoint,
+            preferIPv4: target.preferIPv4,
             transport: settings.transport,
             codec: settings.codec,
             sampleRate: sampleRate,
@@ -129,7 +128,7 @@ final class AppModel {
             opusBitrate: settings.opusBitrate,
             fecEnabled: settings.fecEnabled
         )
-        connectedName = name
+        connectedName = target.name
         hasStreamed = false
         refreshSideEffects()
         openSession()
@@ -183,16 +182,22 @@ final class AppModel {
 
     // MARK: Session lifecycle
 
-    private func resolveTarget() -> (NWEndpoint, String, Bool)? {
+    private struct Target {
+        var endpoint: NWEndpoint
+        var name: String
+        /// Bonjour results resolve to both families, the desktop listens on IPv4
+        var preferIPv4: Bool
+    }
+
+    private func resolveTarget() -> Target? {
         switch selection {
         case .discovered(let name):
             guard let server = browser.servers.first(where: { $0.name == name }) else { return nil }
-            return (server.endpoint, server.displayName, true)
+            return Target(endpoint: server.endpoint, name: server.displayName, preferIPv4: true)
         case .manual:
-            let host = settings.host.trimmingCharacters(in: .whitespaces)
-            guard !host.isEmpty, let port = NWEndpoint.Port(rawValue: UInt16(clamping: settings.port)) else { return nil }
-            settings.rememberHost(host)
-            return (.hostPort(host: NWEndpoint.Host(host), port: port), host, false)
+            guard let target = settings.manualTarget, let port = NWEndpoint.Port(rawValue: target.port) else { return nil }
+            settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
+            return Target(endpoint: .hostPort(host: NWEndpoint.Host(target.host), port: port), name: target.host, preferIPv4: false)
         }
     }
 
@@ -303,87 +308,20 @@ final class AppModel {
         case .reconnecting(let n): activityPhase = .reconnecting; attempt = n
         default: activityPhase = .connecting
         }
-        let input = InputText.current()
+        var detail = ""
+        if let format = activeFormat, let config = currentConfig {
+            detail = StreamText.activityDetail(format, opusBitrate: config.opusBitrate, transport: config.transport)
+        }
+        let input = AudioInputInfo.current()
         liveActivity.update(serverName: name, state: .init(
             phase: activityPhase,
             isMuted: isMuted,
             startedAt: streamingSince ?? .now,
-            detail: activityDetail,
+            detail: detail,
             input: input?.name ?? "",
             inputSymbol: input?.symbol ?? "mic.fill",
             attempt: attempt,
             maxAttempts: Self.maxReconnectAttempts
         ))
-    }
-
-    /// Codec with its bitrate or sample rate, channels and transport
-    private var activityDetail: String {
-        guard let format = activeFormat, let config = currentConfig else { return "" }
-        let codec = format.codec == .opus
-            ? L10n.Common.codecAndRate(L10n.Settings.opus, L10n.Unit.kbps(config.opusBitrate / 1000))
-            : L10n.Common.codecAndRate(L10n.Settings.pcmShort, L10n.Unit.kHz(Int(format.sampleRate)))
-        return L10n.Common.joined([
-            codec,
-            format.channelCount == 2 ? L10n.Common.stereo : L10n.Common.mono,
-            config.transport == .tcpUDP ? L10n.Activity.udp : L10n.Activity.tcp,
-        ])
-    }
-}
-
-/// Describes the active audio input for the Live Activity
-enum InputText {
-    static func current() -> (name: String, symbol: String)? {
-        guard let port = AVAudioSession.sharedInstance().currentRoute.inputs.first else { return nil }
-        switch port.portType {
-        case .builtInMic:
-            let isPad = UIDevice.current.userInterfaceIdiom == .pad
-            return (L10n.Activity.builtInInput(UIDevice.current.model), isPad ? "ipad" : "iphone")
-        case .bluetoothHFP, .bluetoothLE:
-            let name = port.portName
-            let symbol = name.contains("AirPods Pro") ? "airpodspro"
-                : name.contains("AirPods Max") ? "airpodsmax"
-                : name.contains("AirPods") ? "airpods" : "headphones"
-            return (name, symbol)
-        case .headsetMic: return (port.portName, "headphones")
-        case .usbAudio: return (port.portName, "cable.connector")
-        case .carAudio: return (port.portName, "car.fill")
-        default: return (port.portName, "mic.fill")
-        }
-    }
-}
-
-/// Hands PCM from the capture thread to the current session and throttles level updates
-final class SessionSink: @unchecked Sendable {
-    private let lock = NSLock()
-    private var session: StreamSession?
-    private var peak: Float = -160
-    private var lastPost: TimeInterval = 0
-
-    func set(_ session: StreamSession?) {
-        lock.withLock { self.session = session }
-    }
-
-    /// Returns the loudest block level about 30 times per second, the meter view smooths it per frame
-    func push(_ pcm: Data, level: Float) -> Float? {
-        let (session, value): (StreamSession?, Float?) = lock.withLock {
-            peak = max(peak, level)
-            let now = ProcessInfo.processInfo.systemUptime
-            var value: Float?
-            if now - lastPost >= 1.0 / 30 {
-                lastPost = now
-                value = peak
-                peak = -160
-            }
-            return (self.session, value)
-        }
-        session?.push(pcm)
-        return value
-    }
-}
-
-enum FormatText {
-    static func short(_ format: AudioStreamFormat) -> String {
-        let codec = format.codec == .opus ? L10n.Settings.opus : L10n.Settings.pcmShort
-        return L10n.Common.codecAndRate(codec, L10n.Unit.kHz(Int(format.sampleRate)))
     }
 }

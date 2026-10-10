@@ -13,6 +13,8 @@
 "common.settings" = "設定";
 "common.done" = "完成";
 "common.open-settings" = "打開設定";
+"common.retry" = "重試";
+"common.dismiss" = "關閉";
 "common.mono" = "單聲道";
 "common.stereo" = "立體聲";
 "common.separator" = " · ";
@@ -31,7 +33,7 @@
 "status.waiting" = "…";
 "status.muted" = "已靜音";
 "status.failed" = "連線失敗";
-"status.ready" = "準備連線到 %@";
+"status.ready" = "將連線到 %@";
 "status.duration" = "時長";
 "status.format" = "格式";
 "status.bitrate" = "位元率";
@@ -39,7 +41,7 @@
 
 "home.nearby.header" = "附近的電腦";
 "home.nearby.searching" = "正在尋找電腦…";
-"home.nearby.hint" = "請在電腦上打開 MicYou，並確認兩台裝置連接的是同一個 Wi-Fi。";
+"home.nearby.hint" = "請在電腦上打開 MicYou，並確認兩台裝置連接的是同一個 Wi-Fi。下拉可以重新尋找。";
 "home.nearby.denied" = "請允許區域網路權限，MicYou 才能找到你的電腦。";
 "home.manual.header" = "手動連線";
 "home.manual.row" = "透過 IP 位址連線";
@@ -47,7 +49,8 @@
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "連接埠";
 "home.manual.recent" = "最近使用的位址";
-"home.manual.hint" = "填寫電腦上 MicYou 顯示的 IP 位址，預設連接埠為 %@。";
+"home.manual.hint" = "填寫電腦上 MicYou 顯示的 IP 位址，預設連接埠為 %@，也可以寫成「位址:連接埠」。";
+"home.manual.invalid" = "位址或連接埠無效，連接埠範圍為 1 到 65535。";
 
 "settings.applies-next-time" = "連線和音訊設定將在下次連線時生效。";
 "settings.connection" = "連線";
@@ -69,7 +72,7 @@
 "settings.audio.footer" = "Opus 佔用的頻寬遠低於 PCM，人聲聽感幾乎沒有差別。";
 "settings.microphone" = "麥克風";
 "settings.input-gain" = "輸入增益";
-"settings.input-gain.footer" = "調整即時生效，限幅器會防止大音量時爆音。";
+"settings.input-gain.footer" = "調整後立即生效，內建限幅器可防止大音量時爆音。";
 "settings.voice-processing" = "人聲處理";
 "settings.voice-processing.footer" = "使用系統的回音消除、降噪與自動增益，適合通話和會議，傳輸音樂時建議關閉。";
 "settings.general" = "一般";
@@ -91,6 +94,8 @@
 "error.choose-target" = "請先選擇一台電腦或輸入位址。";
 "error.opus-unavailable" = "此裝置無法使用 Opus，已改為傳輸 PCM。";
 "error.unreachable" = "無法連線到電腦：%@";
+"error.refused" = "電腦拒絕了連線。請確認 MicYou 正在電腦上執行，並檢查連接埠是否正確。";
+"error.host-unreachable" = "找不到這台電腦。請檢查位址，並確認兩台裝置在同一網路中。";
 "error.timeout" = "連線逾時。請確認電腦上的 MicYou 正在執行，且兩台裝置在同一網路中。";
 "error.handshake" = "電腦沒有回應 MicYou 交握，請檢查連接埠和桌面版版本。";
 "error.heartbeat" = "與電腦失去聯繫，它可能已進入睡眠或中斷了網路。";

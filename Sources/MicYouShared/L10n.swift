@@ -32,6 +32,8 @@ public enum L10n {
         public static var settings: String { string("common.settings") }
         public static var done: String { string("common.done") }
         public static var openSettings: String { string("common.open-settings") }
+        public static var retry: String { string("common.retry") }
+        public static var dismiss: String { string("common.dismiss") }
         public static var mono: String { string("common.mono") }
         public static var stereo: String { string("common.stereo") }
 
@@ -85,6 +87,7 @@ public enum L10n {
         public static var port: String { string("home.manual.port") }
         public static var recentAddresses: String { string("home.manual.recent") }
         public static func manualHint(port: Int) -> String { format("home.manual.hint", String(port)) }
+        public static var manualInvalid: String { string("home.manual.invalid") }
     }
 
     public enum Settings {
@@ -134,6 +137,8 @@ public enum L10n {
         public static var chooseTarget: String { string("error.choose-target") }
         public static var opusUnavailable: String { string("error.opus-unavailable") }
         public static func unreachable(_ reason: String) -> String { format("error.unreachable", reason) }
+        public static var refused: String { string("error.refused") }
+        public static var hostUnreachable: String { string("error.host-unreachable") }
         public static var timeout: String { string("error.timeout") }
         public static var handshake: String { string("error.handshake") }
         public static var heartbeat: String { string("error.heartbeat") }

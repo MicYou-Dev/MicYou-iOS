@@ -13,6 +13,8 @@
 "common.settings" = "设置";
 "common.done" = "完成";
 "common.open-settings" = "打开设置";
+"common.retry" = "重试";
+"common.dismiss" = "关闭";
 "common.mono" = "单声道";
 "common.stereo" = "立体声";
 "common.separator" = " · ";
@@ -31,7 +33,7 @@
 "status.waiting" = "…";
 "status.muted" = "已静音";
 "status.failed" = "连接失败";
-"status.ready" = "准备连接到 %@";
+"status.ready" = "将连接到 %@";
 "status.duration" = "时长";
 "status.format" = "格式";
 "status.bitrate" = "码率";
@@ -39,7 +41,7 @@
 
 "home.nearby.header" = "附近的电脑";
 "home.nearby.searching" = "正在查找电脑…";
-"home.nearby.hint" = "请在电脑上打开 MicYou，并确认两台设备连接的是同一个 Wi-Fi。";
+"home.nearby.hint" = "请在电脑上打开 MicYou，并确认两台设备连接的是同一个 Wi-Fi。下拉可以重新查找。";
 "home.nearby.denied" = "请允许本地网络权限，MicYou 才能找到你的电脑。";
 "home.manual.header" = "手动连接";
 "home.manual.row" = "通过 IP 地址连接";
@@ -47,7 +49,8 @@
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "端口";
 "home.manual.recent" = "最近使用的地址";
-"home.manual.hint" = "填写电脑上 MicYou 显示的 IP 地址，默认端口为 %@。";
+"home.manual.hint" = "填写电脑上 MicYou 显示的 IP 地址，默认端口为 %@，也可以写成“地址:端口”。";
+"home.manual.invalid" = "地址或端口无效，端口范围为 1 到 65535。";
 
 "settings.applies-next-time" = "连接和音频设置将在下次连接时生效。";
 "settings.connection" = "连接";
@@ -69,7 +72,7 @@
 "settings.audio.footer" = "Opus 占用的带宽远低于 PCM，人声听感几乎没有差别。";
 "settings.microphone" = "麦克风";
 "settings.input-gain" = "输入增益";
-"settings.input-gain.footer" = "调整即时生效，限幅器会防止大音量时爆音。";
+"settings.input-gain.footer" = "调整后立即生效，内置限幅器可防止大音量时爆音。";
 "settings.voice-processing" = "人声处理";
 "settings.voice-processing.footer" = "使用系统的回声消除、降噪和自动增益，适合通话和会议，传输音乐时建议关闭。";
 "settings.general" = "通用";
@@ -91,6 +94,8 @@
 "error.choose-target" = "请先选择一台电脑或输入地址。";
 "error.opus-unavailable" = "此设备无法使用 Opus，已改为传输 PCM。";
 "error.unreachable" = "无法连接到电脑：%@";
+"error.refused" = "电脑拒绝了连接。请确认 MicYou 正在电脑上运行，并检查端口是否正确。";
+"error.host-unreachable" = "找不到这台电脑。请检查地址，并确认两台设备在同一网络中。";
 "error.timeout" = "连接超时。请确认电脑上的 MicYou 正在运行，且两台设备在同一网络中。";
 "error.handshake" = "电脑没有响应 MicYou 握手，请检查端口和桌面端版本。";
 "error.heartbeat" = "与电脑失去联系，它可能已休眠或断开了网络。";

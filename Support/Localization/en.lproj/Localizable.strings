@@ -13,6 +13,8 @@
 "common.settings" = "Settings";
 "common.done" = "Done";
 "common.open-settings" = "Open Settings";
+"common.retry" = "Try Again";
+"common.dismiss" = "Dismiss";
 "common.mono" = "Mono";
 "common.stereo" = "Stereo";
 "common.separator" = " · ";
@@ -39,15 +41,16 @@
 
 "home.nearby.header" = "Nearby Computers";
 "home.nearby.searching" = "Looking for computers…";
-"home.nearby.hint" = "Open MicYou on your computer and make sure both devices are on the same Wi-Fi.";
+"home.nearby.hint" = "Open MicYou on your computer and make sure both devices are on the same Wi-Fi. Pull down to search again.";
 "home.nearby.denied" = "Allow Local Network access so MicYou can find your computer.";
-"home.manual.header" = "Manual";
+"home.manual.header" = "Manual Connection";
 "home.manual.row" = "Connect by IP Address";
 "home.manual.address" = "Address";
 "home.manual.address-placeholder" = "192.168.1.5";
 "home.manual.port" = "Port";
 "home.manual.recent" = "Recent Addresses";
-"home.manual.hint" = "Use the IP address shown in MicYou on your computer. The default port is %@.";
+"home.manual.hint" = "Use the IP address shown in MicYou on your computer. The default port is %@, or type address:port.";
+"home.manual.invalid" = "Check the address and port. The port must be between 1 and 65535.";
 
 "settings.applies-next-time" = "Connection and audio changes apply the next time you connect.";
 "settings.connection" = "Connection";
@@ -69,7 +72,7 @@
 "settings.audio.footer" = "Opus uses far less bandwidth than PCM and sounds the same for voice.";
 "settings.microphone" = "Microphone";
 "settings.input-gain" = "Input Gain";
-"settings.input-gain.footer" = "Takes effect right away. A limiter keeps loud sounds from clipping.";
+"settings.input-gain.footer" = "Takes effect right away. A built-in limiter keeps loud sounds from clipping.";
 "settings.voice-processing" = "Voice Processing";
 "settings.voice-processing.footer" = "Uses the system echo cancellation, noise suppression and automatic gain. Good for calls and meetings, turn it off for music.";
 "settings.general" = "General";
@@ -91,6 +94,8 @@
 "error.choose-target" = "Choose a computer or enter its address first.";
 "error.opus-unavailable" = "Opus is not available on this device, streaming PCM instead.";
 "error.unreachable" = "Cannot reach the computer: %@";
+"error.refused" = "The computer refused the connection. Check that MicYou is running on it and the port is correct.";
+"error.host-unreachable" = "Cannot find the computer. Check the address and that both devices are on the same network.";
 "error.timeout" = "Connection timed out. Check that MicYou is running on the computer and both devices are on the same network.";
 "error.handshake" = "The computer did not answer the MicYou handshake. Check the port and the desktop version.";
 "error.heartbeat" = "Lost contact with the computer. It may be asleep or off the network.";

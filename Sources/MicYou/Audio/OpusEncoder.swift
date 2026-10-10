@@ -20,8 +20,6 @@ final class OpusEncoder {
     let framesPerPacket: AVAudioFrameCount
 
     private let converter: AVAudioConverter
-    private let pcmFormat: AVAudioFormat
-    private let opusFormat: AVAudioFormat
     private let input: AVAudioPCMBuffer
     private let output: AVAudioCompressedBuffer
     private var pending = Data()
@@ -61,8 +59,6 @@ final class OpusEncoder {
         }
         let maxPacket = max(converter.maximumOutputPacketSize, 1500)
         self.converter = converter
-        self.pcmFormat = pcmFormat
-        self.opusFormat = opusFormat
         self.input = input
         output = AVAudioCompressedBuffer(format: opusFormat, packetCapacity: 1, maximumPacketSize: maxPacket)
     }

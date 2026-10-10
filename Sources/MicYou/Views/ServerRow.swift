@@ -2,9 +2,10 @@
 
 import SwiftUI
 
+/// A selectable row with a trailing checkmark, like a picker in Settings
 struct ServerRow: View {
     let title: String
-    let subtitle: String?
+    var subtitle: String? = nil
     let systemImage: String
     let isSelected: Bool
     let action: () -> Void

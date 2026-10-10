@@ -8,7 +8,7 @@ import os
 /// Drives the Lock Screen and Dynamic Island activity from the app process, no App Group needed
 @MainActor
 final class LiveActivityController {
-    private let log = Logger(subsystem: "com.chouchiu.micyou", category: "activity")
+    private let log = Logger.micyou("activity")
     private var activity: Activity<StreamActivityAttributes>?
     private var lastState: StreamActivityAttributes.ContentState?
 
@@ -45,7 +45,20 @@ final class LiveActivityController {
         Task { await target.end(nil, dismissalPolicy: .immediate) }
     }
 
-    /// Clears activities left over from a previous run that was killed
+    /// Ends every activity before the process exits, for example when the app is swiped away
+    /// The main thread is blocked here, so the requests run detached and the wait is bounded
+    nonisolated static func endAllBeforeExit() {
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            for activity in Activity<StreamActivityAttributes>.activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            done.signal()
+        }
+        _ = done.wait(timeout: .now() + 2)
+    }
+
+    /// Clears activities left over from a run that ended without a termination notice, such as a crash
     func endStale() {
         for activity in Activity<StreamActivityAttributes>.activities {
             nonisolated(unsafe) let target = activity
