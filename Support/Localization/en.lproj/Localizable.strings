@@ -109,4 +109,8 @@
 "intent.mute.title" = "Toggle Mute";
 "intent.mute.description" = "Mutes or unmutes your microphone while streaming.";
 
+"activity.input.built-in" = "%@ Microphone";
+"activity.transport.udp" = "UDP";
+"activity.transport.tcp" = "TCP";
+
 "control.description" = "Start or stop streaming to your computer.";

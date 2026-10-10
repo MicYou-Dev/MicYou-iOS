@@ -155,6 +155,13 @@ public enum L10n {
         public static var muteDescription: LocalizedStringResource { resource("intent.mute.description") }
     }
 
+    public enum Activity {
+        /// For example "iPhone Microphone"
+        public static func builtInInput(_ device: String) -> String { format("activity.input.built-in", device) }
+        public static var udp: String { string("activity.transport.udp") }
+        public static var tcp: String { string("activity.transport.tcp") }
+    }
+
     public enum Control {
         public static var name: LocalizedStringResource { resource("app.name") }
         public static var description: LocalizedStringResource { resource("control.description") }

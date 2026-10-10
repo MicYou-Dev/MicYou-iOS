@@ -17,14 +17,26 @@ public struct StreamActivityAttributes: ActivityAttributes {
         public var isMuted: Bool
         /// Start of the current streaming run, drives the timer text
         public var startedAt: Date
-        /// For example "Opus 48 kHz"
+        /// For example "Opus 64 kbps · Stereo · UDP"
         public var detail: String
+        /// Name of the microphone in use, empty when unknown
+        public var input: String
+        /// SF Symbol for that microphone
+        public var inputSymbol: String
+        /// Current reconnect attempt and the limit, zero when not reconnecting
+        public var attempt: Int
+        public var maxAttempts: Int
 
-        public init(phase: Phase, isMuted: Bool, startedAt: Date, detail: String) {
+        public init(phase: Phase, isMuted: Bool, startedAt: Date, detail: String,
+                    input: String = "", inputSymbol: String = "mic.fill", attempt: Int = 0, maxAttempts: Int = 0) {
             self.phase = phase
             self.isMuted = isMuted
             self.startedAt = startedAt
             self.detail = detail
+            self.input = input
+            self.inputSymbol = inputSymbol
+            self.attempt = attempt
+            self.maxAttempts = maxAttempts
         }
     }
 

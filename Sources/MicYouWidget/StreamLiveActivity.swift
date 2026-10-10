@@ -119,20 +119,39 @@ private struct Glyph: View {
     }
 }
 
-/// Stream format while live, otherwise the status, then the two controls
+/// Microphone and stream format while live, retry progress otherwise, then the two controls
 /// The input level is left out on purpose: every update makes the system crossfade the timer
 private struct ControlRow: View {
     let state: State
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(state.phase == .streaming ? state.detail : phaseText(state))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                if state.phase == .streaming, !state.input.isEmpty {
+                    Label(state.input, systemImage: state.inputSymbol)
+                        .font(.subheadline.weight(.medium))
+                } else if state.phase != .streaming {
+                    Text(progressText)
+                        .font(.subheadline.weight(.medium))
+                }
+                if !state.detail.isEmpty {
+                    Text(state.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .frame(maxWidth: .infinity, alignment: .leading)
             ActionLinks(state: state)
         }
+    }
+
+    private var progressText: String {
+        if state.phase == .reconnecting, state.attempt > 0 {
+            return L10n.Status.reconnectingAttempt(state.attempt, of: state.maxAttempts)
+        }
+        return phaseText(state)
     }
 }
 

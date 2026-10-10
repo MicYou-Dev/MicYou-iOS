@@ -109,4 +109,8 @@
 "intent.mute.title" = "切換靜音";
 "intent.mute.description" = "傳輸時將麥克風靜音或取消靜音。";
 
+"activity.input.built-in" = "%@ 麥克風";
+"activity.transport.udp" = "UDP";
+"activity.transport.tcp" = "TCP";
+
 "control.description" = "開始或停止向電腦傳輸聲音。";

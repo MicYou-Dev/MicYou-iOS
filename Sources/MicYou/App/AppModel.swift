@@ -63,6 +63,10 @@ final class AppModel {
     init() {
         selection = AppSettings.shared.lastServiceName.map { .discovered(name: $0) } ?? .manual
         liveActivity.endStale()
+        // The Live Activity shows the microphone in use, so follow headsets coming and going
+        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { AppModel.shared.refreshSideEffects() }
+        }
     }
 
     var isActive: Bool {
@@ -292,17 +296,59 @@ final class AppModel {
             liveActivity.end()
             return
         }
-        let activityPhase: StreamActivityAttributes.Phase = switch phase {
-        case .streaming: .streaming
-        case .reconnecting: .reconnecting
-        default: .connecting
+        let activityPhase: StreamActivityAttributes.Phase
+        var attempt = 0
+        switch phase {
+        case .streaming: activityPhase = .streaming
+        case .reconnecting(let n): activityPhase = .reconnecting; attempt = n
+        default: activityPhase = .connecting
         }
+        let input = InputText.current()
         liveActivity.update(serverName: name, state: .init(
             phase: activityPhase,
             isMuted: isMuted,
             startedAt: streamingSince ?? .now,
-            detail: activeFormat.map(FormatText.short) ?? ""
+            detail: activityDetail,
+            input: input?.name ?? "",
+            inputSymbol: input?.symbol ?? "mic.fill",
+            attempt: attempt,
+            maxAttempts: Self.maxReconnectAttempts
         ))
+    }
+
+    /// Codec with its bitrate or sample rate, channels and transport
+    private var activityDetail: String {
+        guard let format = activeFormat, let config = currentConfig else { return "" }
+        let codec = format.codec == .opus
+            ? L10n.Common.codecAndRate(L10n.Settings.opus, L10n.Unit.kbps(config.opusBitrate / 1000))
+            : L10n.Common.codecAndRate(L10n.Settings.pcmShort, L10n.Unit.kHz(Int(format.sampleRate)))
+        return L10n.Common.joined([
+            codec,
+            format.channelCount == 2 ? L10n.Common.stereo : L10n.Common.mono,
+            config.transport == .tcpUDP ? L10n.Activity.udp : L10n.Activity.tcp,
+        ])
+    }
+}
+
+/// Describes the active audio input for the Live Activity
+enum InputText {
+    static func current() -> (name: String, symbol: String)? {
+        guard let port = AVAudioSession.sharedInstance().currentRoute.inputs.first else { return nil }
+        switch port.portType {
+        case .builtInMic:
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            return (L10n.Activity.builtInInput(UIDevice.current.model), isPad ? "ipad" : "iphone")
+        case .bluetoothHFP, .bluetoothLE:
+            let name = port.portName
+            let symbol = name.contains("AirPods Pro") ? "airpodspro"
+                : name.contains("AirPods Max") ? "airpodsmax"
+                : name.contains("AirPods") ? "airpods" : "headphones"
+            return (name, symbol)
+        case .headsetMic: return (port.portName, "headphones")
+        case .usbAudio: return (port.portName, "cable.connector")
+        case .carAudio: return (port.portName, "car.fill")
+        default: return (port.portName, "mic.fill")
+        }
     }
 }
 
