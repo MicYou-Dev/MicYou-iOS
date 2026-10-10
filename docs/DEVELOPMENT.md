@@ -45,6 +45,35 @@ xtool 无法运行 Xcode 的 App Intents 元数据处理器，系统可能不会
 - 名额不够时可以临时删掉 `xtool.yml` 的 `extensions` 段，只装主应用
 - 换账号后 Bundle ID 前缀会变，设备上会出现两个独立的 MicYou
 
+## 发布
+
+`.github/workflows/release.yml` 在 macOS 上用 Xcode 自带的 SDK 与固定版本的 xtool（校验 SHA-256）构建，不依赖本机的 Darwin SDK
+
+1. 确认 `main` 上的检查通过
+2. 打标签并推送，正式版 `v1.2.0`，带后缀的 `v1.2.0-beta.1` 发布为预发布
+
+```bash
+git tag -s v1.2.0 -m "MicYou 1.2.0"
+```
+
+```bash
+git push origin v1.2.0
+```
+
+- 先跑与 `check.yml` 相同的检查，再构建，最后发布到 GitHub Releases
+- `CFBundleShortVersionString` 取标签里的数字部分，`CFBundleVersion` 取提交数，只在 CI 里改，不回写仓库
+- 产物为未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 与 `SHA256SUMS.txt`
+- 构建后会检查小组件扩展仍在、二进制记录的 SDK 不低于 26（否则没有液态玻璃）、LiveContainer 包里没有扩展
+- 发布说明列出上一个 `v*` 标签以来的提交标题
+- 在 Actions 里手动运行只构建不发布，IPA 留在运行的产物里，用来提前验证构建
+- 升级 xtool 时同步改 `XTOOL_VERSION` 与 `XTOOL_SHA256`，摘要可以这样查
+
+```bash
+gh api repos/xtool-org/xtool/releases/tags/<版本> --jq '.assets[] | select(.name=="xtool.app.zip") | .digest'
+```
+
+`Package.swift` 里修正 SDK 版本的链接参数只在 Linux 上生效，macOS 的链接器会自己写入正确的 SDK 版本
+
 ## 图标
 
 `Resources/AppIcon/MicYou.icon` 是 Icon Composer 格式的液态玻璃图标，只有 macOS 上的 actool 能编译

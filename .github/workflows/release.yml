@@ -1,0 +1,164 @@
+name: Release
+# Pushing a tag such as v1.2.0 or v1.2.0-beta.1 builds unsigned IPAs on macOS and publishes them
+# Running it by hand only builds, the IPAs are kept as workflow artifacts
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  XTOOL_VERSION: "1.21.0"
+  XTOOL_SHA256: "33bb2ef12de3f2acfb5eb8385fca0de9df3a982862ec067185a59e8ae18b64e8"
+  # Liquid Glass needs the app linked against this SDK or newer
+  MIN_SDK_MAJOR: "26"
+
+jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+
+  build:
+    needs: check
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history for the build number and the release notes
+          fetch-depth: 0
+
+      - name: Select newest stable Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          SDK=$(xcrun -sdk iphoneos --show-sdk-version)
+          echo "iOS SDK $SDK"
+          if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
+            echo "::error::iOS SDK $SDK is older than $MIN_SDK_MAJOR, the app would lose Liquid Glass"
+            exit 1
+          fi
+
+      - name: Install xtool
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/xtool.app.zip" \
+            "https://github.com/xtool-org/xtool/releases/download/$XTOOL_VERSION/xtool.app.zip"
+          echo "$XTOOL_SHA256  $RUNNER_TEMP/xtool.app.zip" | shasum -a 256 -c -
+          ditto -x -k "$RUNNER_TEMP/xtool.app.zip" "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xtool.app/Contents/MacOS" >> "$GITHUB_PATH"
+
+      - name: Set version
+        id: version
+        run: |
+          PLIST=Support/App-Info.plist
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            TAG="$GITHUB_REF_NAME"
+            if ! [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-[0-9A-Za-z.]+)?$ ]]; then
+              echo "::error::Tag $TAG is not vMAJOR.MINOR.PATCH with an optional -suffix"
+              exit 1
+            fi
+            # The bundle version only takes numbers, a -beta.1 suffix stays in the release name
+            SHORT="${BASH_REMATCH[1]}"
+            VERSION="${TAG#v}"
+            PRERELEASE=$([ -n "${BASH_REMATCH[2]}" ] && echo true || echo false)
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" "$PLIST"
+          else
+            SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST")
+            VERSION="$SHORT-dev.$(git rev-parse --short HEAD)"
+            PRERELEASE=true
+          fi
+          # Grows with every commit, so a newer build always installs over an older one
+          BUILD=$(git rev-list --count HEAD)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$PLIST"
+          echo "MicYou $VERSION ($SHORT, build $BUILD)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Build IPAs
+        run: Tools/build-livecontainer.sh
+
+      - name: Verify and collect
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p dist check
+          unzip -q xtool/MicYou.ipa -d check
+          APP=check/Payload/MicYou.app
+          # The widget must survive linking, see docs/DEVELOPMENT.md
+          test -d "$APP/PlugIns/MicYouWidget.appex" || { echo "::error::Widget extension missing"; exit 1; }
+          xcrun vtool -show-build "$APP/MicYou"
+          SDK=$(xcrun vtool -show-build "$APP/MicYou" | awk '/sdk/ { print $2; exit }')
+          if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
+            echo "::error::Binary records SDK $SDK, the app would run without Liquid Glass"
+            exit 1
+          fi
+          if unzip -l xtool/MicYou-LiveContainer.ipa | grep -q 'PlugIns/'; then
+            echo "::error::LiveContainer IPA still contains extensions"
+            exit 1
+          fi
+          cp xtool/MicYou.ipa "dist/MicYou-$VERSION.ipa"
+          cp xtool/MicYou-LiveContainer.ipa "dist/MicYou-$VERSION-LiveContainer.ipa"
+          (cd dist && shasum -a 256 *.ipa > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MicYou-${{ steps.version.outputs.version }}
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: MicYou-${{ needs.build.outputs.version }}
+          path: dist
+
+      - name: Write release notes
+        run: |
+          # Commits since the previous version tag, the first release lists the whole history
+          PREVIOUS=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          RANGE=${PREVIOUS:+$PREVIOUS..}$GITHUB_REF_NAME
+          {
+            echo "## Changes"
+            echo
+            git log --no-merges --pretty='- %s' "$RANGE"
+            echo
+            echo "## Files"
+            echo
+            echo "- \`MicYou-*.ipa\` unsigned, sign and install with AltStore, SideStore, Sideloadly or xtool"
+            echo "- \`MicYou-*-LiveContainer.ipa\` without the widget extension, for LiveContainer"
+            echo "- \`SHA256SUMS.txt\` checksums of both"
+          } > notes.md
+          cat notes.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          FLAGS=()
+          [ "$PRERELEASE" = true ] && FLAGS+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --verify-tag \
+            --title "MicYou ${{ needs.build.outputs.version }}" \
+            --notes-file notes.md \
+            "${FLAGS[@]}"

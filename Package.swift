@@ -3,13 +3,17 @@
 
 import PackageDescription
 
-// lld records the deployment target as the SDK version unless told otherwise, and iOS
-// then runs the app in compatibility mode without Liquid Glass. Keep in sync with the
-// installed Darwin SDK (xtool sdk status)
+// On Linux lld records the deployment target as the SDK version unless told otherwise, and
+// iOS then runs the app in compatibility mode without Liquid Glass. Keep in sync with the
+// installed Darwin SDK (xtool sdk status). Xcode's linker on macOS gets this right by itself
+#if os(Linux)
 let sdkVersion = "27.1"
 let linkSDKVersion: [LinkerSetting] = [
     .unsafeFlags(["-Xlinker", "-platform_version", "-Xlinker", "ios", "-Xlinker", "18.0", "-Xlinker", sdkVersion]),
 ]
+#else
+let linkSDKVersion: [LinkerSetting] = []
+#endif
 
 // xtool links extensions with -e _NSExtensionMain, which leaves the SwiftUI @main widget
 // bundle unreferenced so it is dead stripped. Keep main alive, NSExtensionMain calls it

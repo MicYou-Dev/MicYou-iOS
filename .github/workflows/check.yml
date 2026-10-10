@@ -3,6 +3,8 @@ name: Check
 on:
   push:
   pull_request:
+  # Release runs the same checks before building
+  workflow_call:
 jobs:
   protocol:
     runs-on: ubuntu-latest
