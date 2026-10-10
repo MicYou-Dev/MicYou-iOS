@@ -2,6 +2,16 @@
 
 把 iPhone 变成电脑麦克风的原生 iOS 客户端，与 [MicYou](https://github.com/MicYou-Dev/MicYou) 桌面端 2.x 互通，SwiftUI 编写，用 [xtool](https://github.com/xtool-org/xtool) 在 Linux 上构建
 
+## 截图
+
+| 首页 | 传输中 | 设置 |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/home.png" width="240" alt="首页"> | <img src="docs/screenshots/streaming.png" width="240" alt="传输中"> | <img src="docs/screenshots/settings.png" width="240" alt="设置"> |
+
+| 锁屏实时活动 | 灵动岛 |
+| :---: | :---: |
+| <img src="docs/screenshots/live-activity.png" width="380" alt="锁屏实时活动"> | <img src="docs/screenshots/dynamic-island-compact.png" width="380" alt="灵动岛"><br><img src="docs/screenshots/dynamic-island-expanded.png" width="380" alt="展开的灵动岛"> |
+
 ## 功能
 
 - Bonjour 自动发现局域网内的桌面端，也可以手动输入地址，支持 `地址:端口` 写法

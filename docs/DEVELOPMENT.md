@@ -90,6 +90,8 @@ gh api repos/xtool-org/xtool/releases/tags/<版本> --jq '.assets[] | select(.na
 - 实时日志：`idevicesyslog` 或 `pymobiledevice3 syslog live`，按子系统过滤
 - 崩溃报告：`pymobiledevice3 crash ls` 与 `pymobiledevice3 crash pull`
 - 小组件不出现时重装一次应用，系统会重新加载扩展
+- 截图：`pymobiledevice3 developer dvt screenshot <文件>`，iOS 17 以上会自动走用户态隧道；README 的截图放在 `docs/screenshots`，缩到 660 宽，锁屏与灵动岛只裁出活动本身
+- 没有桌面端时可以用 `Tools/mock_receiver.py --mdns --name <电脑名>` 代替，列表里显示的就是这个名字
 
 ## 提交
 
