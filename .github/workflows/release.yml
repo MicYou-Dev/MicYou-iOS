@@ -60,7 +60,9 @@ jobs:
       - name: Set version
         id: version
         run: |
-          PLIST=Support/App-Info.plist
+          # The widget extension must carry the same version as the app
+          PLISTS=(Support/App-Info.plist Support/Widget-Info.plist)
+          set_all() { for p in "${PLISTS[@]}"; do /usr/libexec/PlistBuddy -c "Set :$1 $2" "$p"; done; }
           if [ "$GITHUB_REF_TYPE" = tag ]; then
             TAG="$GITHUB_REF_NAME"
             if ! [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-[0-9A-Za-z.]+)?$ ]]; then
@@ -71,15 +73,15 @@ jobs:
             SHORT="${BASH_REMATCH[1]}"
             VERSION="${TAG#v}"
             PRERELEASE=$([ -n "${BASH_REMATCH[2]}" ] && echo true || echo false)
-            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" "$PLIST"
+            set_all CFBundleShortVersionString "$SHORT"
           else
-            SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST")
+            SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${PLISTS[0]}")
             VERSION="$SHORT-dev.$(git rev-parse --short HEAD)"
             PRERELEASE=true
           fi
           # Grows with every commit, so a newer build always installs over an older one
           BUILD=$(git rev-list --count HEAD)
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$PLIST"
+          set_all CFBundleVersion "$BUILD"
           echo "MicYou $VERSION ($SHORT, build $BUILD)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
@@ -96,6 +98,11 @@ jobs:
           APP=check/Payload/MicYou.app
           # The widget must survive linking, see docs/DEVELOPMENT.md
           test -d "$APP/PlugIns/MicYouWidget.appex" || { echo "::error::Widget extension missing"; exit 1; }
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            A=$(/usr/libexec/PlistBuddy -c "Print :$key" "$APP/Info.plist")
+            W=$(/usr/libexec/PlistBuddy -c "Print :$key" "$APP/PlugIns/MicYouWidget.appex/Info.plist")
+            [ "$A" = "$W" ] || { echo "::error::$key differs: app $A, widget $W"; exit 1; }
+          done
           xcrun vtool -show-build "$APP/MicYou"
           SDK=$(xcrun vtool -show-build "$APP/MicYou" | awk '/sdk/ { print $2; exit }')
           if [ "${SDK%%.*}" -lt "$MIN_SDK_MAJOR" ]; then
