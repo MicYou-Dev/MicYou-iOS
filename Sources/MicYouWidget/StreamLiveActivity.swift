@@ -222,6 +222,9 @@ private struct ElapsedText: View {
             Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false)
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)
+                // The level pushes an update every second, without this each one crossfades the digits
+                .contentTransition(.identity)
+                .transaction { $0.animation = nil }
         } else {
             Text(L10n.Status.waiting)
         }
