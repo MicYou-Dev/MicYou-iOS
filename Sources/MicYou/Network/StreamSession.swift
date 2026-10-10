@@ -174,12 +174,14 @@ final class StreamSession: @unchecked Sendable {
     }
 
     static func describe(_ host: NWEndpoint.Host) -> String {
-        switch host {
+        let text = switch host {
         case .ipv4(let address): "\(address)"
         case .ipv6(let address): "\(address)"
         case .name(let name, _): name
         @unknown default: "\(host)"
         }
+        // Drop the interface scope, for example "%en0"
+        return String(text.split(separator: "%").first ?? Substring(text))
     }
 
     private func openUDP(host: NWEndpoint.Host, tcpPort: NWEndpoint.Port) {

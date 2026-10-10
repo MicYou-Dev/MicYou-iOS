@@ -3,6 +3,14 @@
 
 import PackageDescription
 
+// lld records the deployment target as the SDK version unless told otherwise, and iOS
+// then runs the app in compatibility mode without Liquid Glass. Keep in sync with the
+// installed Darwin SDK (xtool sdk status)
+let sdkVersion = "27.1"
+let linkSDKVersion: [LinkerSetting] = [
+    .unsafeFlags(["-Xlinker", "-platform_version", "-Xlinker", "ios", "-Xlinker", "18.0", "-Xlinker", sdkVersion]),
+]
+
 let package = Package(
     name: "MicYou",
     platforms: [
@@ -26,11 +34,13 @@ let package = Package(
             dependencies: [
                 "MicYouShared",
                 .product(name: "MicYouProtocol", package: "MicYouProtocol"),
-            ]
+            ],
+            linkerSettings: linkSDKVersion
         ),
         .target(
             name: "MicYouWidget",
-            dependencies: ["MicYouShared"]
+            dependencies: ["MicYouShared"],
+            linkerSettings: linkSDKVersion
         ),
     ]
 )

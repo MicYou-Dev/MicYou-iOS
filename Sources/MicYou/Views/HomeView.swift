@@ -142,6 +142,22 @@ private struct ControlBar: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        if #available(iOS 26, *) {
+            // Floating Liquid Glass controls, no bar background
+            GlassEffectContainer(spacing: 12) {
+                buttons(muteStyle: .glass, connectStyle: .glassProminent)
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+        } else {
+            buttons(muteStyle: .bordered, connectStyle: .borderedProminent)
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(.bar)
+        }
+    }
+
+    private func buttons(muteStyle: some PrimitiveButtonStyle, connectStyle: some PrimitiveButtonStyle) -> some View {
         HStack(spacing: 12) {
             Button {
                 model.toggleMute()
@@ -150,8 +166,8 @@ private struct ControlBar: View {
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 28, height: 28)
             }
-            .buttonStyle(.bordered)
-            .tint(model.isMuted ? .red : .accentColor)
+            .buttonStyle(muteStyle)
+            .tint(model.isMuted ? .red : nil)
             .accessibilityLabel(model.isMuted ? Text("Unmute") : Text("Mute"))
             .sensoryFeedback(.selection, trigger: model.isMuted)
 
@@ -162,14 +178,12 @@ private struct ControlBar: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 28)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(connectStyle)
             .tint(model.isActive ? .red : .accentColor)
             .disabled(!model.isActive && !model.canConnect)
             .sensoryFeedback(.impact, trigger: model.isActive)
         }
+        .buttonBorderShape(.capsule)
         .controlSize(.large)
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(.bar)
     }
 }
