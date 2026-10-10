@@ -12,9 +12,9 @@ let linkSDKVersion: [LinkerSetting] = [
 ]
 
 // xtool links extensions with -e _NSExtensionMain, which leaves the SwiftUI @main widget
-// bundle unreferenced so it is dead stripped. WidgetKit extensions start from main like Xcode does
+// bundle unreferenced so it is dead stripped. Keep main alive, NSExtensionMain calls it
 let widgetEntryPoint: [LinkerSetting] = [
-    .unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_main"]),
+    .unsafeFlags(["-Xlinker", "-u", "-Xlinker", "_main"]),
 ]
 
 let package = Package(
