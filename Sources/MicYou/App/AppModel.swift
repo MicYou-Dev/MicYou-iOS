@@ -356,23 +356,23 @@ enum InputText {
 final class SessionSink: @unchecked Sendable {
     private let lock = NSLock()
     private var session: StreamSession?
-    private var smoothed: Float = -160
+    private var peak: Float = -160
     private var lastPost: TimeInterval = 0
 
     func set(_ session: StreamSession?) {
         lock.withLock { self.session = session }
     }
 
-    /// Returns a level to publish about 15 times per second
+    /// Returns the loudest block level about 30 times per second, the meter view smooths it per frame
     func push(_ pcm: Data, level: Float) -> Float? {
         let (session, value): (StreamSession?, Float?) = lock.withLock {
-            // Fast attack, slow release, like a VU meter
-            smoothed = level > smoothed ? level : smoothed * 0.8 + level * 0.2
+            peak = max(peak, level)
             let now = ProcessInfo.processInfo.systemUptime
             var value: Float?
-            if now - lastPost >= 1.0 / 15 {
+            if now - lastPost >= 1.0 / 30 {
                 lastPost = now
-                value = smoothed
+                value = peak
+                peak = -160
             }
             return (self.session, value)
         }
