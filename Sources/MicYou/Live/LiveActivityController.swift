@@ -11,9 +11,6 @@ final class LiveActivityController {
     private let log = Logger(subsystem: "com.chouchiu.micyou", category: "activity")
     private var activity: Activity<StreamActivityAttributes>?
     private var lastState: StreamActivityAttributes.ContentState?
-    private var lastUpdate = Date.distantPast
-    /// Level only changes are pushed at most this often to stay within the system update budget
-    private let levelInterval: TimeInterval = 1
 
     var isAvailable: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
 
@@ -21,12 +18,7 @@ final class LiveActivityController {
         guard isAvailable else { return }
         if let activity, activity.attributes.serverName == serverName, activity.activityState == .active {
             guard state != lastState else { return }
-            if var levelOnly = lastState {
-                levelOnly.level = state.level
-                if levelOnly == state, Date().timeIntervalSince(lastUpdate) < levelInterval { return }
-            }
             lastState = state
-            lastUpdate = Date()
             // Activity is not Sendable but its methods are safe to call from any context
             nonisolated(unsafe) let target = activity
             Task { await target.update(ActivityContent(state: state, staleDate: nil)) }
@@ -40,7 +32,6 @@ final class LiveActivityController {
                 pushType: nil
             )
             lastState = state
-            lastUpdate = Date()
         } catch {
             log.error("Live Activity request failed: \(error.localizedDescription)")
         }

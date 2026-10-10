@@ -62,7 +62,7 @@ private struct LockScreenView: View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
                 Badge(state: state, size: 44)
-                TitleStack(serverName: serverName, subtitle: L10n.Common.joined([phaseText(state), state.detail]))
+                TitleStack(serverName: serverName, subtitle: phaseText(state))
                     .layoutPriority(1)
                 Spacer(minLength: 8)
                 ElapsedText(state: state)
@@ -108,83 +108,31 @@ private struct Badge: View {
     }
 }
 
-/// Compact and minimal presentation: a small meter while live, otherwise the status symbol
+/// Compact and minimal presentation
 private struct Glyph: View {
     let state: State
 
     var body: some View {
-        if state.phase == .streaming, !state.isMuted {
-            MiniMeter(level: state.level, tint: state.tint)
-        } else {
-            Image(systemName: state.symbol)
-                .fontWeight(.semibold)
-                .foregroundStyle(state.tint)
-        }
+        Image(systemName: state.symbol)
+            .fontWeight(.semibold)
+            .foregroundStyle(state.tint)
     }
 }
 
-/// Five bars shaped like a waveform, lit from the left as the level rises
-private struct MiniMeter: View {
-    let level: Double
-    let tint: Color
-    private let heights: [CGFloat] = [0.45, 0.75, 1, 0.75, 0.45]
-
-    var body: some View {
-        HStack(spacing: 2) {
-            ForEach(heights.indices, id: \.self) { index in
-                Capsule()
-                    .fill(lit(index) ? AnyShapeStyle(tint) : AnyShapeStyle(.white.opacity(0.3)))
-                    .frame(width: 3, height: 14 * heights[index])
-            }
-        }
-        .frame(height: 14)
-        .accessibilityLabel(L10n.Status.inputLevel)
-    }
-
-    private func lit(_ index: Int) -> Bool {
-        // The first bar always shows so the meter reads as live even in silence
-        index == 0 || level >= Double(index) / Double(heights.count)
-    }
-}
-
-/// Segmented level meter while streaming, status text otherwise, then the two controls
+/// Stream format while live, otherwise the status, then the two controls
+/// The input level is left out on purpose: every update makes the system crossfade the timer
 private struct ControlRow: View {
     let state: State
 
     var body: some View {
         HStack(spacing: 12) {
-            if state.phase == .streaming {
-                SegmentedMeter(level: state.level, tint: state.tint)
-            } else {
-                Text(phaseText(state))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            Text(state.phase == .streaming ? state.detail : phaseText(state))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             ActionLinks(state: state)
         }
-    }
-}
-
-/// Input level in discrete segments, updated about once a second by the app
-private struct SegmentedMeter: View {
-    let level: Double
-    let tint: Color
-    private let segments = 20
-
-    var body: some View {
-        let lit = Int((level * Double(segments)).rounded())
-        HStack(spacing: 3) {
-            ForEach(0..<segments, id: \.self) { index in
-                Capsule()
-                    .fill(index < lit ? AnyShapeStyle(tint) : AnyShapeStyle(.quaternary))
-            }
-        }
-        .frame(height: 16)
-        .frame(maxWidth: .infinity)
-        .accessibilityElement()
-        .accessibilityLabel(L10n.Status.inputLevel)
-        .accessibilityValue(Text(level, format: .percent.precision(.fractionLength(0))))
     }
 }
 
@@ -222,9 +170,6 @@ private struct ElapsedText: View {
             Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false)
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)
-                // The level pushes an update every second, without this each one crossfades the digits
-                .contentTransition(.identity)
-                .transaction { $0.animation = nil }
         } else {
             Text(L10n.Status.waiting)
         }
