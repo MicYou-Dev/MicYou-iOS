@@ -44,7 +44,7 @@ struct StreamLiveActivity: Widget {
             } minimal: {
                 StatusIcon(state: state)
             }
-            .keylineTint(state.isMuted ? .orange : .green)
+            .keylineTint(state.tint)
         }
     }
 }
@@ -56,9 +56,9 @@ private struct LockScreenView: View {
         let state = context.state
         HStack(spacing: 12) {
             StatusIcon(state: state)
-                .font(.title2)
+                .font(.title3)
                 .frame(width: 44, height: 44)
-                .background(.fill.tertiary, in: Circle())
+                .background(state.tint.opacity(0.18), in: Circle())
             VStack(alignment: .leading, spacing: 2) {
                 Text(context.attributes.serverName)
                     .font(.headline)
@@ -67,7 +67,9 @@ private struct LockScreenView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
+            .layoutPriority(1)
             Spacer()
             VStack(alignment: .trailing, spacing: 6) {
                 ElapsedText(state: state)
@@ -82,13 +84,24 @@ private struct StatusIcon: View {
     let state: StreamActivityAttributes.ContentState
 
     var body: some View {
-        switch state.phase {
-        case .streaming:
-            Image(systemName: state.isMuted ? "mic.slash.fill" : "mic.fill")
-                .foregroundStyle(state.isMuted ? .orange : .green)
-        case .connecting, .reconnecting:
-            Image(systemName: "antenna.radiowaves.left.and.right")
-                .foregroundStyle(.blue)
+        Group {
+            switch state.phase {
+            case .streaming:
+                Image(systemName: state.isMuted ? "mic.slash" : "mic")
+            case .connecting, .reconnecting:
+                Image(systemName: "antenna.radiowaves.left.and.right")
+            }
+        }
+        .fontWeight(.medium)
+        .foregroundStyle(state.tint)
+    }
+}
+
+private extension StreamActivityAttributes.ContentState {
+    var tint: Color {
+        switch phase {
+        case .streaming: isMuted ? .orange : .green
+        case .connecting, .reconnecting: .blue
         }
     }
 }
@@ -113,10 +126,12 @@ private struct ActionLinks: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            // Works like the mute toggle in the Phone app: highlighted while muted
             Link(destination: DeepLink.toggleMute.url) {
-                Image(systemName: state.isMuted ? "mic.fill" : "mic.slash.fill")
+                Image(systemName: "mic.slash.fill")
                     .frame(width: 32, height: 32)
-                    .background(.fill.secondary, in: Circle())
+                    .foregroundStyle(state.isMuted ? .black : .white)
+                    .background(state.isMuted ? Color.white : Color.white.opacity(0.2), in: Circle())
             }
             .accessibilityLabel(state.isMuted ? L10n.Common.unmute : L10n.Common.mute)
             Link(destination: DeepLink.disconnect.url) {
