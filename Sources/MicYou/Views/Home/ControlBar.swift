@@ -28,28 +28,35 @@ struct ControlBar: View {
             Button {
                 model.toggleMute()
             } label: {
+                // Mic gets its slash drawn on rather than swapped
                 Image(systemName: model.isMuted ? "mic.slash.fill" : "mic.fill")
                     .font(.title2)
-                    .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 40, height: 40)
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .replace)))
+                    .foregroundStyle(model.isMuted ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                    .frame(width: 56, height: 56)
+                    // One surface for both states, so the orange tint fades in instead of the button being replaced
+                    .glassSurface(in: .circle, tint: model.isMuted ? .orange : nil, fallback: .fill.secondary)
+                    .contentShape(.circle)
             }
-            .glassButtonStyle(prominent: model.isMuted)
-            .buttonBorderShape(.circle)
-            .tint(model.isMuted ? .orange : nil)
+            .buttonStyle(.surface)
             .accessibilityLabel(model.isMuted ? L10n.Common.unmute : L10n.Common.mute)
+            .accessibilityAddTraits(model.isMuted ? .isSelected : [])
             .sensoryFeedback(.selection, trigger: model.isMuted)
+            .animation(Motion.state, value: model.isMuted)
 
             Button(role: .destructive) {
                 model.disconnect()
             } label: {
                 Text(model.phase == .streaming ? L10n.Common.disconnect : L10n.Common.cancel)
                     .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 40)
+                    .contentTransition(.opacity)
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    .glassSurface(in: .capsule, fallback: Color.red.opacity(0.15))
+                    .contentShape(.capsule)
             }
-            .glassButtonStyle()
-            .buttonBorderShape(.capsule)
-            .tint(.red)
+            .buttonStyle(.surface)
+            .animation(Motion.state, value: model.phase == .streaming)
         }
-        .controlSize(.large)
     }
 }

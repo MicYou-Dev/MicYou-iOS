@@ -26,13 +26,18 @@ enum CaptureError: LocalizedError {
 }
 
 /// Captures the microphone and delivers interleaved little-endian Int16 PCM in the requested format
-/// Thread safety: public methods are called from the main actor, the tap runs on an AVAudioEngine thread
+/// Thread safety: session and engine work runs on a private serial queue, the tap on an AVAudioEngine thread,
+/// and the two share the converter, gain and handler under a lock
 final class AudioCapture: @unchecked Sendable {
     /// PCM bytes and the RMS level of the block in dBFS
     typealias Handler = @Sendable (_ pcm: Data, _ levelDB: Float) -> Void
 
     private let log = Logger.micyou("capture")
     private let engine = AVAudioEngine()
+    /// Activating the session and starting the engine block for a round trip to the audio server,
+    /// often longer than an animation frame, so none of it runs on the main thread
+    private let queue = DispatchQueue(label: "com.chouchiu.micyou.capture", qos: .userInitiated)
+    private let notificationQueue = OperationQueue()
     private let lock = NSLock()
     private var converter: AVAudioConverter?
     private var outputFormat: AVAudioFormat?
@@ -41,13 +46,17 @@ final class AudioCapture: @unchecked Sendable {
     /// Only touched on the tap thread
     private var limiter = PeakLimiter()
     private var handler: Handler?
+    // Only touched on queue
     private var config: CaptureConfig?
     private var observers: [NSObjectProtocol] = []
     private var pendingRestart: DispatchWorkItem?
     private var lastRestart: Date?
-    private(set) var isRunning = false
+    private var isRunning = false
 
-    init() {}
+    init() {
+        notificationQueue.underlyingQueue = queue
+        notificationQueue.maxConcurrentOperationCount = 1
+    }
 
     deinit {
         observers.forEach(NotificationCenter.default.removeObserver)
@@ -57,8 +66,29 @@ final class AudioCapture: @unchecked Sendable {
         await AVAudioApplication.requestRecordPermission()
     }
 
-    func start(_ config: CaptureConfig, handler: @escaping Handler) throws {
-        stop()
+    /// Resumes once the engine runs, calls are applied in order with stop
+    func start(_ config: CaptureConfig, handler: @escaping Handler) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            queue.async {
+                do {
+                    try self.startOnQueue(config, handler: handler)
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    /// Returns at once, the engine stops on the capture queue after any start that is still running
+    func stop() {
+        queue.async { self.stopOnQueue() }
+    }
+
+    // MARK: Lifecycle, always on queue
+
+    private func startOnQueue(_ config: CaptureConfig, handler: @escaping Handler) throws {
+        stopOnQueue()
         guard AVAudioApplication.shared.recordPermission == .granted else { throw CaptureError.permissionDenied }
         self.config = config
         lock.withLock { self.handler = handler }
@@ -68,7 +98,7 @@ final class AudioCapture: @unchecked Sendable {
         isRunning = true
     }
 
-    func stop() {
+    private func stopOnQueue() {
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
         pendingRestart?.cancel()
@@ -78,7 +108,8 @@ final class AudioCapture: @unchecked Sendable {
             handler = nil
             converter = nil
         }
-        if isRunning {
+        // Also after a start that failed halfway, the session may already be active
+        if config != nil {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
         isRunning = false
@@ -158,7 +189,7 @@ final class AudioCapture: @unchecked Sendable {
         pendingRestart?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.restart() }
         pendingRestart = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+        queue.asyncAfter(deadline: .now() + 0.3, execute: work)
     }
 
     private func restart() {
@@ -228,16 +259,16 @@ final class AudioCapture: @unchecked Sendable {
     private func observeSession() {
         let center = NotificationCenter.default
         let session = AVAudioSession.sharedInstance()
-        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: .main) { [weak self] note in
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: notificationQueue) { [weak self] note in
             guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
                   AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
             self?.scheduleRestart()
         })
-        observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: .main) { [weak self] _ in
+        observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: notificationQueue) { [weak self] _ in
             self?.scheduleRestart()
         })
         // Fires when the input hardware changes, for example a headset is plugged in
-        observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+        observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: notificationQueue) { [weak self] _ in
             self?.scheduleRestart()
         })
     }

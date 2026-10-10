@@ -18,8 +18,9 @@ struct SessionView: View {
             levelSlot
             if let notice = model.notice {
                 NoticeCard(text: notice, kind: .info) {
-                    withAnimation { model.notice = nil }
+                    withAnimation(Motion.state) { model.notice = nil }
                 }
+                .adaptiveTransition(.notice)
             }
             StreamStats()
                 .opacity(model.phase == .streaming ? 1 : 0.5)
@@ -28,8 +29,9 @@ struct SessionView: View {
                 .background(.card, in: .rect(cornerRadius: 16))
             Spacer(minLength: 0)
         }
-        .animation(.smooth, value: model.phase)
-        .animation(.smooth, value: model.isMuted)
+        .animation(Motion.state, value: model.phase)
+        .animation(Motion.state, value: model.isMuted)
+        .animation(Motion.state, value: model.notice)
     }
 
     @ViewBuilder
@@ -37,6 +39,7 @@ struct SessionView: View {
         if let name = model.connectedName {
             Label {
                 Text(L10n.Common.joined([name, model.remoteAddress == name ? "" : model.remoteAddress ?? ""]))
+                    .contentTransition(.opacity)
             } icon: {
                 Image(systemName: "desktopcomputer")
             }
@@ -88,23 +91,29 @@ struct StatusPill: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            if isWaiting {
-                ProgressView()
-                    .controlSize(.mini)
-                    .tint(tint)
-            } else {
-                Circle()
-                    .fill(tint)
-                    .frame(width: 8, height: 8)
+            Group {
+                if isWaiting {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .tint(tint)
+                } else {
+                    Circle()
+                        .fill(tint)
+                        .frame(width: 8, height: 8)
+                }
             }
+            .transition(.scale(scale: 0.5).combined(with: .opacity))
+            // Rolls the attempt count instead of fading the whole label
             Text(title)
-                .contentTransition(.opacity)
+                .contentTransition(.numericText())
         }
         .font(.subheadline.weight(.semibold))
         .padding(.horizontal, 14)
         .frame(minHeight: 36)
         .glassSurface(in: .capsule, interactive: false, fallback: tint.opacity(0.15))
-        .animation(.smooth, value: tint)
+        // The capsule resizes with the label, both animate together
+        .adaptiveAnimation(value: title)
+        .animation(Motion.state, value: tint)
         .accessibilityElement(children: .combine)
     }
 
@@ -132,19 +141,20 @@ struct StatusPill: View {
 private struct ElapsedTime: View {
     let since: Date?
     let isLive: Bool
+    /// Follows Dynamic Type, the minimum scale factor still fits long sessions on one line
+    @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 76
 
     var body: some View {
-        Group {
-            if let since {
-                // Not Text(timerInterval:), which may claim more width than it shows
-                TimelineView(.periodic(from: since, by: 1)) { context in
-                    Text(Self.elapsed(from: since, to: context.date))
-                }
-            } else {
-                Text(Self.elapsed(from: .now, to: .now))
-            }
+        // One view for every state, so starting the clock does not swap views
+        // Ticks on the second boundaries of the stream, not of the moment the view appeared
+        TimelineView(.periodic(from: since ?? .now, by: 1)) { context in
+            let text = Self.elapsed(from: since ?? context.date, to: context.date)
+            // Not Text(timerInterval:), which may claim more width than it shows
+            Text(text)
+                .contentTransition(.numericText(countsDown: false))
+                .adaptiveAnimation(.smooth(duration: 0.35), value: text)
         }
-        .font(.system(size: 76, weight: .medium))
+        .font(.system(size: size, weight: .medium))
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.5)
@@ -163,13 +173,24 @@ private struct ElapsedTime: View {
 /// One bar per reconnect attempt, filled up to the current one
 private struct ReconnectProgress: View {
     let attempt: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 8) {
             ForEach(1...AppModel.maxReconnectAttempts, id: \.self) { index in
-                Capsule()
+                let bar = Capsule()
                     .fill(index <= attempt ? AnyShapeStyle(.blue) : AnyShapeStyle(.fill.tertiary))
                     .frame(height: 6)
+                // The current attempt breathes, so the long waits between retries do not look frozen
+                if index == attempt && !reduceMotion {
+                    bar.phaseAnimator([1, 0.35]) { content, opacity in
+                        content.opacity(opacity)
+                    } animation: { _ in
+                        .easeInOut(duration: 0.8)
+                    }
+                } else {
+                    bar
+                }
             }
         }
         .frame(maxWidth: 264)
@@ -188,7 +209,7 @@ private struct StreamStats: View {
         Grid(horizontalSpacing: 8, verticalSpacing: 8) {
             GridRow {
                 StatTile(label: L10n.Status.formatLabel, value: format)
-                StatTile(label: L10n.Status.bitrate, value: L10n.Unit.kbps(model.throughput / 1000))
+                StatTile(label: L10n.Status.bitrate, value: L10n.Unit.kbps(model.throughput / 1000), isNumeric: true)
             }
             GridRow {
                 StatTile(label: L10n.Status.transport, value: transport)
@@ -199,37 +220,33 @@ private struct StreamStats: View {
 
     /// What the computer accepted once streaming, what was asked for before that
     private var format: String {
-        if let format = model.activeFormat {
-            return L10n.Common.joined([StreamText.codecAndRate(format), format.channelCount == 2 ? L10n.Common.stereo : ""])
-        }
-        guard let config = model.streamConfig else { return "" }
-        let codec = config.codec == .opus ? L10n.Settings.opus : L10n.Settings.pcmShort
-        return L10n.Common.joined([
-            L10n.Common.codecAndRate(codec, L10n.Unit.kHz(config.sampleRate)),
-            config.channels == 2 ? L10n.Common.stereo : "",
-        ])
+        guard let format = model.activeFormat ?? model.streamConfig?.requestedFormat else { return "" }
+        return StreamText.format(format)
     }
 
     private var transport: String {
         guard let config = model.streamConfig else { return "" }
-        switch config.transport {
-        case .tcpUDP: return L10n.Common.joined([L10n.Activity.udp, config.fecEnabled ? L10n.Status.fec : ""])
-        case .tcp: return L10n.Settings.tcpOnly
-        }
+        return StreamText.transport(config.transport, fec: config.fecEnabled)
     }
 }
 
 private struct StatTile: View {
     let label: String
     let value: String
+    /// Rolls the digits of values that update every second
+    var isNumeric = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(value)
+            // A placeholder keeps the tile height while the value is not known yet
+            Text(value.isEmpty ? L10n.Status.waiting : value)
                 .font(.subheadline.weight(.semibold))
+                .foregroundStyle(value.isEmpty ? .tertiary : .primary)
+                .contentTransition(isNumeric ? .numericText() : .opacity)
+                .adaptiveAnimation(value: value)
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -239,32 +256,5 @@ private struct StatTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.card, in: .rect(cornerRadius: 14))
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// Software gain slider, applies immediately, shared with the settings screen
-struct InputGainControl: View {
-    @Environment(AppModel.self) private var model
-    @Environment(AppSettings.self) private var settings
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            LabeledContent(L10n.Settings.inputGain) {
-                Text(L10n.Unit.signedDB(settings.inputGainDB))
-                    .monospacedDigit()
-            }
-            Slider(
-                value: Binding(get: { settings.inputGainDB }, set: { model.setInputGain($0.rounded()) }),
-                in: AppSettings.inputGainRange,
-                step: 1
-            ) {
-                Text(L10n.Settings.inputGain)
-            } minimumValueLabel: {
-                Image(systemName: "speaker.wave.1")
-            } maximumValueLabel: {
-                Image(systemName: "speaker.wave.3")
-            }
-            .foregroundStyle(.secondary)
-        }
     }
 }

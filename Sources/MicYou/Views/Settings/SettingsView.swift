@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @State private var presetTaps = 0
 
     var body: some View {
         @Bindable var settings = settings
@@ -23,10 +24,12 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         ForEach(StreamPreset.allCases) { preset in
                             PresetCard(preset: preset, isSelected: settings.matchingPreset == preset) {
-                                withAnimation { settings.apply(preset) }
+                                presetTaps += 1
+                                withAnimation(Motion.state) { settings.apply(preset) }
                             }
                         }
                     }
+                    .sensoryFeedback(.selection, trigger: presetTaps)
                     // Inset so the cards sit inside the section's rounded corners instead of being clipped by them
                     .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
                 } header: {
@@ -37,8 +40,7 @@ struct SettingsView: View {
 
                 Section {
                     SegmentedRow(title: L10n.Settings.transport, selection: $settings.transport) {
-                        Text(L10n.Settings.tcpUDP).tag(TransportMode.tcpUDP)
-                        Text(L10n.Settings.tcpOnly).tag(TransportMode.tcp)
+                        ForEach(TransportMode.allCases) { Text($0.title).tag($0) }
                     }
                     // Disabled rather than removed, so switching presets does not make the list jump
                     Toggle(L10n.Settings.fec, isOn: $settings.fecEnabled)
@@ -52,8 +54,7 @@ struct SettingsView: View {
 
                 Section {
                     SegmentedRow(title: L10n.Settings.codec, selection: $settings.codec) {
-                        Text(L10n.Settings.opus).tag(CodecChoice.opus)
-                        Text(L10n.Settings.pcm).tag(CodecChoice.pcm)
+                        ForEach(CodecChoice.allCases) { Text($0.title).tag($0) }
                     }
                     SegmentedRow(title: L10n.Settings.bitrate, selection: $settings.opusBitrate) {
                         ForEach(AppSettings.opusBitrates, id: \.self) { rate in
@@ -148,12 +149,12 @@ private struct PresetCard: View {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(title)
+                Text(preset.title)
                     .font(.headline)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(preset.transport == .tcpUDP ? L10n.Settings.tcpUDP : L10n.Settings.tcpOnly)
+                    Text(preset.transport.title)
                     Text(codec)
                 }
                 .font(.caption)
@@ -167,7 +168,7 @@ private struct PresetCard: View {
             .glassSurface(in: Self.shape, tint: isSelected ? .accentColor : nil, fallback: .fill.tertiary)
             .contentShape(Self.shape)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.surface)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
@@ -175,18 +176,8 @@ private struct PresetCard: View {
     /// Concentric with the section around it, which the row insets by 8 points
     private static let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
-    private var title: String {
-        switch preset {
-        case .lowLatency: L10n.Settings.presetLowLatency
-        case .stable: L10n.Settings.presetStable
-        case .lossless: L10n.Settings.presetLossless
-        }
-    }
-
     private var codec: String {
-        switch preset.codec {
-        case .opus: L10n.Common.codecAndRate(L10n.Settings.opus, L10n.Unit.kbps(preset.opusBitrate / 1000))
-        case .pcm: L10n.Common.codecAndRate(L10n.Settings.pcmShort, L10n.Unit.kHz(preset.sampleRate))
-        }
+        let detail = preset.codec == .opus ? L10n.Unit.kbps(preset.opusBitrate / 1000) : L10n.Unit.kHz(preset.sampleRate)
+        return L10n.Common.codecAndRate(preset.codec.shortName, detail)
     }
 }

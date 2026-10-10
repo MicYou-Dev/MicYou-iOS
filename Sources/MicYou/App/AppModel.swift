@@ -61,6 +61,8 @@ final class AppModel {
     @ObservationIgnored private var currentConfig: StreamConfig?
     @ObservationIgnored private var reconnectTask: Task<Void, Never>?
     @ObservationIgnored private var hasStreamed = false
+    /// Set while capture is running or starting, a stale start that fails later is ignored
+    @ObservationIgnored private var captureToken: UUID?
 
     init() {
         selection = settings.lastServiceName.map { .discovered(name: $0) } ?? .manual
@@ -119,20 +121,7 @@ final class AppModel {
             phase = .failed(L10n.Failure.chooseTarget)
             return
         }
-        var sampleRate = settings.sampleRate
-        if settings.codec == .opus {
-            sampleRate = Int(OpusEncoder.opusRate(for: Double(sampleRate)))
-        }
-        currentConfig = StreamConfig(
-            endpoint: target.endpoint,
-            preferIPv4: target.preferIPv4,
-            transport: settings.transport,
-            codec: settings.codec,
-            sampleRate: sampleRate,
-            channels: settings.stereo ? 2 : 1,
-            opusBitrate: settings.opusBitrate,
-            fecEnabled: settings.fecEnabled
-        )
+        currentConfig = settings.streamConfig(endpoint: target.endpoint, preferIPv4: target.preferIPv4)
         connectedName = target.name
         hasStreamed = false
         refreshSideEffects()
@@ -143,6 +132,7 @@ final class AppModel {
         reconnectTask?.cancel()
         reconnectTask = nil
         tearDownSession()
+        captureToken = nil
         capture.stop()
         phase = .idle
         streamingSince = nil
@@ -172,7 +162,7 @@ final class AppModel {
 
     func handle(_ link: DeepLink) {
         switch link {
-        case .connect: if !isActive { Task { await connect() } }
+        case .connect: Task { await connect() }
         case .disconnect: disconnect()
         case .toggle: toggleConnection()
         case .mute: setMuted(true)
@@ -190,7 +180,6 @@ final class AppModel {
     private struct Target {
         var endpoint: NWEndpoint
         var name: String
-        /// Bonjour results resolve to both families, the desktop listens on IPv4
         var preferIPv4: Bool
     }
 
@@ -200,9 +189,9 @@ final class AppModel {
             guard let server = browser.servers.first(where: { $0.name == name }) else { return nil }
             return Target(endpoint: server.endpoint, name: server.displayName, preferIPv4: true)
         case .manual:
-            guard let target = settings.manualTarget, let port = NWEndpoint.Port(rawValue: target.port) else { return nil }
+            guard let address = settings.manualTarget, let port = NWEndpoint.Port(rawValue: address.port) else { return nil }
             settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
-            return Target(endpoint: .hostPort(host: NWEndpoint.Host(target.host), port: port), name: target.host, preferIPv4: false)
+            return Target(endpoint: .hostPort(host: NWEndpoint.Host(address.host), port: port), name: address.host, preferIPv4: false)
         }
     }
 
@@ -256,7 +245,9 @@ final class AppModel {
     }
 
     private func startCaptureIfNeeded(_ config: StreamConfig) {
-        guard !capture.isRunning else { return }
+        guard captureToken == nil else { return }
+        let token = UUID()
+        captureToken = token
         let sink = self.sink
         let captureConfig = CaptureConfig(
             sampleRate: Double(config.sampleRate),
@@ -264,17 +255,24 @@ final class AppModel {
             voiceProcessing: settings.voiceProcessing
         )
         capture.setGain(dB: settings.inputGainDB)
-        do {
-            try capture.start(captureConfig) { [weak self] pcm, level in
-                if let smoothed = sink.push(pcm, level: level) {
-                    Task { @MainActor in
-                        if self?.isActive == true { self?.levelDB = smoothed }
-                    }
+        let handler: AudioCapture.Handler = { [weak self] pcm, level in
+            if let smoothed = sink.push(pcm, level: level) {
+                Task { @MainActor in
+                    if self?.isActive == true { self?.levelDB = smoothed }
                 }
             }
-        } catch {
-            disconnect()
-            phase = .failed(error.localizedDescription)
+        }
+        // Starts on the capture queue, the main thread stays free for the connect animation
+        let capture = self.capture
+        Task { [weak self] in
+            do {
+                try await capture.start(captureConfig, handler: handler)
+            } catch {
+                // Disconnected or restarted while the start was pending
+                guard let self, captureToken == token else { return }
+                disconnect()
+                phase = .failed(error.localizedDescription)
+            }
         }
     }
 

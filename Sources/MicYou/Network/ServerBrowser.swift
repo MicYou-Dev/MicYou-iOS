@@ -45,8 +45,9 @@ final class ServerBrowser {
         let parameters = NWParameters()
         parameters.includePeerToPeer = false
         let browser = NWBrowser(for: .bonjour(type: MicYouWire.bonjourServiceType, domain: nil), using: parameters)
+        // Started on the main queue, so handlers apply in order without hopping through tasks
         browser.stateUpdateHandler = { [weak self] state in
-            Task { @MainActor in self?.update(state) }
+            MainActor.assumeIsolated { self?.update(state) }
         }
         browser.browseResultsChangedHandler = { [weak self] results, _ in
             let servers = results.compactMap { result -> DiscoveredServer? in
@@ -54,7 +55,7 @@ final class ServerBrowser {
                 return DiscoveredServer(name: name, endpoint: result.endpoint)
             }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-            Task { @MainActor in self?.servers = servers }
+            MainActor.assumeIsolated { self?.servers = servers }
         }
         browser.start(queue: .main)
         self.browser = browser

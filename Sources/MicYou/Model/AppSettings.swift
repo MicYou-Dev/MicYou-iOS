@@ -2,29 +2,8 @@
 
 import Foundation
 import MicYouProtocol
+import Network
 import Observation
-
-enum TransportMode: String, CaseIterable, Identifiable, Sendable {
-    /// Control over TCP, audio over UDP, the desktop default
-    case tcpUDP
-    /// Everything over the TCP connection
-    case tcp
-
-    var id: Self { self }
-}
-
-enum CodecChoice: String, CaseIterable, Identifiable, Sendable {
-    case opus
-    case pcm
-
-    var id: Self { self }
-}
-
-/// A computer entered by hand
-struct ManualTarget: Equatable {
-    var host: String
-    var port: UInt16
-}
 
 /// Persistent user preferences, read when a stream starts
 @MainActor @Observable
@@ -34,7 +13,6 @@ final class AppSettings {
     static let sampleRates = [48000, 44100, 16000]
     static let opusBitrates = [32000, 64000, 96000, 128000]
     static let inputGainRange = 0.0...24.0
-    static let portRange = 1...65535
     static let recentHostLimit = 5
 
     private enum Key: String {
@@ -82,29 +60,10 @@ final class AppSettings {
         lastServiceName = load(.lastServiceName)
     }
 
-    /// The manual fields as a target, nil while they are empty or invalid
+    /// The manual fields as an address, nil while they are empty or invalid
     /// A port typed into the address field, as in "192.168.1.5:8554" or "[fe80::1]:8554", wins over the port field
-    var manualTarget: ManualTarget? {
-        let text = host.trimmingCharacters(in: .whitespacesAndNewlines)
-        var name = text
-        var port = self.port
-        if text.hasPrefix("["), let close = text.firstIndex(of: "]") {
-            name = String(text[text.index(after: text.startIndex)..<close])
-            let rest = text[text.index(after: close)...]
-            if rest.hasPrefix(":") {
-                guard let typed = Int(rest.dropFirst()) else { return nil }
-                port = typed
-            } else if !rest.isEmpty {
-                return nil
-            }
-        } else if text.count(where: { $0 == ":" }) == 1, let colon = text.firstIndex(of: ":") {
-            // More than one colon is a bare IPv6 address
-            guard let typed = Int(text[text.index(after: colon)...]) else { return nil }
-            name = String(text[..<colon])
-            port = typed
-        }
-        guard !name.isEmpty, Self.portRange.contains(port) else { return nil }
-        return ManualTarget(host: name, port: UInt16(port))
+    var manualTarget: ServerAddress? {
+        ServerAddress(parsing: host, defaultPort: port)
     }
 
     /// True when something is typed but cannot be used, for an inline hint
@@ -123,35 +82,31 @@ final class AppSettings {
     }
 }
 
-/// One tap combinations of the connection and audio settings, channels and FEC stay as they are
-enum StreamPreset: CaseIterable, Identifiable {
-    case lowLatency
-    case stable
-    case lossless
-
-    var id: Self { self }
-
-    var transport: TransportMode {
-        self == .stable ? .tcp : .tcpUDP
-    }
-
-    var codec: CodecChoice {
-        self == .lossless ? .pcm : .opus
-    }
-
-    var opusBitrate: Int {
-        self == .stable ? 96000 : 64000
-    }
-
-    var sampleRate: Int { 48000 }
-}
-
 extension AppSettings {
     func apply(_ preset: StreamPreset) {
         transport = preset.transport
         codec = preset.codec
         if preset.codec == .opus { opusBitrate = preset.opusBitrate }
         sampleRate = preset.sampleRate
+    }
+
+    /// Rate actually sent, Opus maps 44.1 kHz to 48 kHz
+    var streamSampleRate: Int {
+        codec.streamRate(forCaptureRate: sampleRate)
+    }
+
+    /// Freezes the current choices for one stream
+    func streamConfig(endpoint: NWEndpoint, preferIPv4: Bool) -> StreamConfig {
+        StreamConfig(
+            endpoint: endpoint,
+            preferIPv4: preferIPv4,
+            transport: transport,
+            codec: codec,
+            sampleRate: streamSampleRate,
+            channels: stereo ? 2 : 1,
+            opusBitrate: opusBitrate,
+            fecEnabled: fecEnabled
+        )
     }
 
     /// The preset the current settings match, nil once something was changed by hand

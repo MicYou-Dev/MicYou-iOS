@@ -14,12 +14,14 @@ struct IdleView: View {
             TargetCard(action: openPicker)
             if case .failed(let message) = model.phase {
                 NoticeCard(title: L10n.Status.failed, text: message, kind: .error) {
-                    withAnimation { model.clearError() }
+                    withAnimation(Motion.state) { model.clearError() }
                 }
+                .adaptiveTransition(.notice)
             } else if let notice = model.notice {
                 NoticeCard(text: notice, kind: .info) {
-                    withAnimation { model.notice = nil }
+                    withAnimation(Motion.state) { model.notice = nil }
                 }
+                .adaptiveTransition(.notice)
             }
             Spacer(minLength: 16)
             VStack(spacing: 24) {
@@ -35,8 +37,9 @@ struct IdleView: View {
             Spacer(minLength: 16)
             FormatSummary(action: openSettings)
         }
-        .animation(.smooth, value: model.phase)
-        .animation(.smooth, value: model.canConnect)
+        .animation(Motion.state, value: model.phase)
+        .animation(Motion.state, value: model.canConnect)
+        .animation(Motion.state, value: model.notice)
     }
 
     private var isFailed: Bool {
@@ -65,13 +68,15 @@ private struct HeroButton: View {
     /// Tinted when it connects, plain glass when it only opens the picker
     let isProminent: Bool
     let action: () -> Void
+    /// Grows with Dynamic Type so the title keeps room, capped to stay on screen
+    @ScaledMetric(relativeTo: .title3) private var diameter: CGFloat = 184
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 10) {
                 Image(systemName: systemImage)
                     .font(.system(size: 40, weight: .medium))
-                    .contentTransition(.symbolEffect(.replace))
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .replace)))
                 Text(title)
                     .contentTransition(.opacity)
                     .font(.title3.weight(.semibold))
@@ -80,12 +85,12 @@ private struct HeroButton: View {
                     .multilineTextAlignment(.center)
             }
             .padding(20)
-            .frame(width: 184, height: 184)
+            .frame(width: min(diameter, 260), height: min(diameter, 260))
             .foregroundStyle(isProminent ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
             .glassSurface(in: .circle, tint: isProminent ? .accentColor : nil)
             .contentShape(.circle)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.surface)
     }
 }
 
@@ -129,8 +134,12 @@ private struct TargetCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassSurface(in: .rect(cornerRadius: 22, style: .continuous))
             .contentShape(.rect(cornerRadius: 22))
+            // Bonjour results arrive outside any transaction, fade the line instead of snapping
+            .contentTransition(.opacity)
+            .adaptiveAnimation(value: subtitle)
+            .adaptiveAnimation(value: title)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.surface)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.canConnect ? L10n.Status.ready(title) : title)
         .accessibilityValue(subtitle ?? "")
@@ -183,7 +192,7 @@ private struct FormatSummary: View {
                 HStack(spacing: 0) {
                     tile(codec, codecDetail)
                     Divider()
-                    tile(L10n.Unit.kHz(sampleRate), settings.stereo ? L10n.Common.stereo : L10n.Common.mono)
+                    tile(L10n.Unit.kHz(sampleRate), StreamText.channels(settings.stereo ? 2 : 1))
                     Divider()
                     tile(transport, transportDetail)
                 }
@@ -193,7 +202,7 @@ private struct FormatSummary: View {
                 .glassSurface(in: .rect(cornerRadius: 22, style: .continuous))
                 .contentShape(.rect(cornerRadius: 22))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.surface)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(L10n.Home.formatHeader)
             .accessibilityValue(L10n.Common.joined([codec, codecDetail, L10n.Unit.kHz(sampleRate), transport, transportDetail]))
@@ -217,14 +226,9 @@ private struct FormatSummary: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Opus has no 44.1 kHz mode and is sent at 48 kHz instead
-    private var sampleRate: Int {
-        settings.codec == .opus ? Int(OpusEncoder.opusRate(for: Double(settings.sampleRate))) : settings.sampleRate
-    }
+    private var sampleRate: Int { settings.streamSampleRate }
 
-    private var codec: String {
-        settings.codec == .opus ? L10n.Settings.opus : L10n.Settings.pcmShort
-    }
+    private var codec: String { settings.codec.shortName }
 
     /// PCM shows its raw 16 bit rate so the bandwidth difference is visible
     private var codecDetail: String {
@@ -232,14 +236,12 @@ private struct FormatSummary: View {
         return L10n.Unit.kbps(bitrate / 1000)
     }
 
-    private var transport: String {
-        settings.transport == .tcpUDP ? L10n.Activity.udp : L10n.Activity.tcp
-    }
+    private var transport: String { settings.transport.shortName }
 
     private var transportDetail: String {
         switch settings.transport {
-        case .tcpUDP: settings.fecEnabled ? L10n.Status.fec : L10n.Settings.tcpUDP
-        case .tcp: L10n.Settings.tcpOnly
+        case .tcpUDP: settings.fecEnabled ? L10n.Status.fec : settings.transport.title
+        case .tcp: settings.transport.title
         }
     }
 }

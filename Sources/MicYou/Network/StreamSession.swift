@@ -7,17 +7,6 @@ import MicYouProtocol
 import Network
 import os
 
-struct StreamConfig: Sendable {
-    var endpoint: NWEndpoint
-    var preferIPv4: Bool
-    var transport: TransportMode
-    var codec: CodecChoice
-    var sampleRate: Int
-    var channels: Int
-    var opusBitrate: Int
-    var fecEnabled: Bool
-}
-
 final class StreamSession: @unchecked Sendable {
     enum Event: Sendable {
         case streaming(remote: String?, format: AudioStreamFormat)
@@ -53,13 +42,16 @@ final class StreamSession: @unchecked Sendable {
         var sessionId: Int64 = 0
         while sessionId == 0 { sessionId = Int64.random(in: Int64.min...Int64.max) }
         sequencer = AudioSequencer(sessionId: sessionId, fecEnabled: config.fecEnabled && config.transport == .tcpUDP)
-        format = AudioStreamFormat(sampleRate: Int32(config.sampleRate), channelCount: Int32(config.channels), codec: .pcm)
+        // PCM until the Opus encoder is known to work
+        format = config.requestedFormat
+        format.codec = .pcm
         chunker = PCMChunker(frameBytes: format.pcmFrameBytes)
-        setUpEncoder()
     }
 
     func start() {
         queue.async { [self] in
+            // Loading the system Opus encoder takes a moment, keep it off the main thread
+            setUpEncoder()
             let channel = ControlChannel(
                 endpoint: config.endpoint, preferIPv4: config.preferIPv4,
                 sessionId: sequencer.sessionId, initialMute: muted, queue: queue
@@ -101,11 +93,14 @@ final class StreamSession: @unchecked Sendable {
 
     private func setUpEncoder() {
         guard config.codec == .opus else { return }
-        // The owner already picked an Opus compatible capture rate
-        let rate = Double(config.sampleRate)
+        // StreamConfig already carries an Opus compatible rate
         do {
-            opus = try OpusEncoder(sampleRate: rate, channels: AVAudioChannelCount(config.channels), bitrate: config.opusBitrate)
-            format = AudioStreamFormat(sampleRate: Int32(rate), channelCount: Int32(config.channels), codec: .opus)
+            opus = try OpusEncoder(
+                sampleRate: Double(config.sampleRate),
+                channels: AVAudioChannelCount(config.channels),
+                bitrate: config.opusBitrate
+            )
+            format.codec = .opus
         } catch {
             log.error("Opus encoder unavailable, using PCM: \(String(describing: error))")
             onEvent(.codecFallback)

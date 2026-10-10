@@ -21,6 +21,10 @@ struct ServerPickerView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
+            // Bonjour results arrive outside any transaction, slide rows in and out instead of popping
+            .adaptiveAnimation(value: model.browser.servers)
+            .adaptiveAnimation(value: model.browser.state)
+            .adaptiveAnimation(value: model.selection)
             .refreshable {
                 model.browser.restart()
                 // Hold the spinner briefly so the pull reads as a fresh search

@@ -79,16 +79,19 @@ xtool 的已知坑、图标编译与调试方法见 [docs/DEVELOPMENT.md](docs/D
 ## 目录
 
 ```text
-Packages/MicYouProtocol   协议编解码、分帧、FEC，纯 Foundation，可在 Linux 测试
+Packages/MicYouProtocol   协议编解码、分帧、FEC、地址解析，纯 Foundation，可在 Linux 测试
   Proto/network.proto     上游协议定义原文
 Sources/MicYou            应用本体
   App/                    入口、全局状态 AppModel、采集到会话的桥接
+  Model/                  持久化设置、传输与编码选项、预设、StreamConfig
   Audio/                  麦克风采集、限幅器、Opus 编码
   Network/                Bonjour 发现、TCP 控制通道、UDP 音频与会话
   Live/                   实时活动驱动与当前麦克风信息
   Intents/                快捷指令
-  Settings/               持久化设置
-  Views/                  界面
+  Views/Home              主屏：待机、会话、电平表、底部控制条
+  Views/Picker            选择电脑
+  Views/Settings          设置与关于
+  Views/Common            玻璃样式、提示卡片、增益滑块、格式文案
 Sources/MicYouShared      应用与小组件共用：文案 L10n、URL、实时活动定义
 Sources/MicYouWidget      实时活动、灵动岛与控制中心按钮
 Support/                  Info.plist 与三语本地化表
