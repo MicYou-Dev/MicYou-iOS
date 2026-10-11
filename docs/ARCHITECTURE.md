@@ -67,6 +67,12 @@ idle -> connecting -> streaming <-> reconnecting(n)
 - 实时活动里不放音量条。因为每次更新内容都会让系统对 `Text(timerInterval:)` 计时器做一次淡入淡出，高频刷新会导致计时器一直闪烁。计时交由系统原生的 `timerInterval` 自己走。
 - 用户在后台多任务里划掉 App 时，进程会直接退出，但锁屏实时活动默认会留在桌面上。因此应用在收到 `willTerminateNotification` 时会同步等待结束请求发出（最多等 2 秒）；如果遇到崩溃没来得及清理，下次启动时会由 `endStale()` 收尾。
 
+## 检查更新
+
+- `UpdateChecker` 与安卓端、桌面端一样从 GitHub Releases 获取最新版本：先请求 `releases/latest` API，失败或被限流（每个 IP 每小时 60 次）时改为对 `github.com/.../releases/latest` 发 `HEAD` 请求，从跳转后的地址里解析标签。
+- 版本比较、响应解析和“每天最多一次”的间隔放在 `MicYouCore` 的 `AppUpdate.swift`，可在 Linux 上测试；`Protocol-2.0.0-1` 这类非应用版本的标签会被忽略。
+- 开启“自动检查更新”（默认开启）时，App 回到前台会按间隔检查；发现新版本后首页空闲时显示提示卡片，关闭后同一版本不再提示。侧载的 App 无法自行安装更新，所以只打开对应的发布页。
+
 ## 动效
 
 - 动画时长与曲线统一放在 `Views/Common/Motion.swift` 的 `Motion` 中（如 `swap`、`notice`、`bottomBar`），不在各个视图里手写 `.smooth` 或时长。
