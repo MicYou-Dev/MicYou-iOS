@@ -12,9 +12,6 @@ enum OpusEncoderError: Error {
 /// Encodes interleaved Int16 PCM into raw 20 ms Opus packets with the system Opus encoder
 /// Not thread safe, owned by the stream queue
 final class OpusEncoder {
-    /// Opus only runs at these rates, the desktop decoder accepts the same set
-    static let supportedRates: [Double] = [48000, 24000, 16000, 12000, 8000]
-
     let sampleRate: Double
     let channels: AVAudioChannelCount
     let framesPerPacket: AVAudioFrameCount
@@ -24,11 +21,7 @@ final class OpusEncoder {
     private let output: AVAudioCompressedBuffer
     private var pending = Data()
 
-    /// Keeps a supported capture rate and sends anything else at 48 kHz, so 44.1 kHz maps to 48 kHz like on Android
-    static func opusRate(for captureRate: Double) -> Double {
-        supportedRates.contains(captureRate) ? captureRate : 48000
-    }
-
+    /// `sampleRate` must be one of OpusRates.supported, StreamConfig already carries one
     init(sampleRate: Double, channels: AVAudioChannelCount, bitrate: Int) throws {
         self.sampleRate = sampleRate
         self.channels = channels

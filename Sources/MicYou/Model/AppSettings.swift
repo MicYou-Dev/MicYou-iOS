@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import Foundation
+import MicYouCore
 import MicYouProtocol
 import Network
 import Observation
@@ -111,11 +112,9 @@ extension AppSettings {
         codec.streamRate(forCaptureRate: sampleRate)
     }
 
-    /// Freezes the current choices for one stream
-    func streamConfig(endpoint: NWEndpoint, preferIPv4: Bool) -> StreamConfig {
-        StreamConfig(
-            endpoint: endpoint,
-            preferIPv4: preferIPv4,
+    /// The current audio and transport choices
+    var streamOptions: StreamOptions {
+        StreamOptions(
             transport: transport,
             codec: codec,
             sampleRate: streamSampleRate,
@@ -125,11 +124,13 @@ extension AppSettings {
         )
     }
 
+    /// Freezes the current choices for one stream
+    func streamConfig(endpoint: NWEndpoint, preferIPv4: Bool) -> StreamConfig {
+        StreamConfig(endpoint: endpoint, preferIPv4: preferIPv4, options: streamOptions)
+    }
+
     /// The preset the current settings match, nil once something was changed by hand
     var matchingPreset: StreamPreset? {
-        StreamPreset.allCases.first { preset in
-            transport == preset.transport && codec == preset.codec && sampleRate == preset.sampleRate
-                && (codec == .pcm || opusBitrate == preset.opusBitrate)
-        }
+        StreamPreset.matching(transport: transport, codec: codec, sampleRate: sampleRate, opusBitrate: opusBitrate)
     }
 }

@@ -2,6 +2,7 @@
 
 import AVFoundation
 import Foundation
+import MicYouCore
 import UIKit
 
 /// Facts about the app, device and settings that help with a bug report

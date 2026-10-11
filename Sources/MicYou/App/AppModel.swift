@@ -2,6 +2,7 @@
 
 import AVFoundation
 import Foundation
+import MicYouCore
 import MicYouProtocol
 import MicYouShared
 import Network
@@ -36,7 +37,8 @@ enum ServerSelection: Hashable {
 @MainActor @Observable
 final class AppModel {
     static let shared = AppModel()
-    static let maxReconnectAttempts = 6
+    static let reconnectPolicy = ReconnectPolicy.standard
+    static var maxReconnectAttempts: Int { reconnectPolicy.maxAttempts }
 
     let settings = AppSettings.shared
     let browser = ServerBrowser()
@@ -322,7 +324,8 @@ final class AppModel {
 
     private func scheduleReconnectOrFail(_ error: StreamError) {
         let attempt: Int = if case .reconnecting(let n) = phase { n + 1 } else { 1 }
-        guard settings.autoReconnect, hasStreamed, error.isTransient, attempt <= Self.maxReconnectAttempts else {
+        let policy = Self.reconnectPolicy
+        guard policy.shouldRetry(attempt: attempt, enabled: settings.autoReconnect, hasStreamed: hasStreamed, errorIsTransient: error.isTransient) else {
             disconnect()
             phase = .failed(error.localizedDescription)
             return
@@ -331,7 +334,7 @@ final class AppModel {
         phase = .reconnecting(attempt: attempt)
         throughput = 0
         refreshSideEffects()
-        let delay = min(pow(2, Double(attempt - 1)), 15)
+        let delay = policy.delay(beforeAttempt: attempt)
         reconnectTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self, case .reconnecting = self.phase else { return }

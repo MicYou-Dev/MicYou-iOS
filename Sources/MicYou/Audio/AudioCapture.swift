@@ -2,6 +2,7 @@
 
 @preconcurrency import AVFoundation
 import Foundation
+import MicYouCore
 import MicYouShared
 import os
 
@@ -53,8 +54,10 @@ final class AudioCapture: @unchecked Sendable {
     private var outputFormat: AVAudioFormat?
     private var upmix = false
     private var gain: Float = 1
-    /// Only touched on the tap thread
-    private var limiter = PeakLimiter()
+    // Only touched on the tap thread
+    private var processor = SampleProcessor()
+    /// Reused while the format and block size stay the same
+    private var converted: AVAudioPCMBuffer?
     private var handler: Handler?
     // Only touched on queue
     private var config: CaptureConfig?
@@ -265,7 +268,7 @@ final class AudioCapture: @unchecked Sendable {
 
         let ratio = format.sampleRate / buffer.format.sampleRate
         let capacity = AVAudioFrameCount((Double(buffer.frameLength) * ratio).rounded(.up)) + 64
-        guard let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
+        guard let out = outputBuffer(format: format, capacity: capacity) else { return }
 
         var error: NSError?
         let status = converter.convert(to: out, feeding: buffer, error: &error)
@@ -273,25 +276,23 @@ final class AudioCapture: @unchecked Sendable {
         guard status != .error, out.frameLength > 0, let samples = out.floatChannelData?[0] else { return }
 
         let count = Int(out.frameLength) * Int(format.channelCount)
-        let copies = upmix ? 2 : 1
-        var data = Data(count: count * 2 * copies)
-        var sumSquares: Float = 0
-        data.withUnsafeMutableBytes { raw in
-            let dst = raw.bindMemory(to: Int16.self)
-            for i in 0..<count {
-                let y = limiter.process(samples[i] * gain)
-                sumSquares += y * y
-                let pcm = Int16(max(-32768, min(32767, (y * 32767).rounded()))).littleEndian
-                for c in 0..<copies { dst[i * copies + c] = pcm }
-            }
+        let result = processor.process(UnsafeBufferPointer(start: samples, count: count), gain: gain, duplicate: upmix)
+        handler(result.pcm, result.levelDB)
+    }
+
+    /// A converter output buffer, allocated again only when the format changes or a block is larger than before
+    private func outputBuffer(format: AVAudioFormat, capacity: AVAudioFrameCount) -> AVAudioPCMBuffer? {
+        if let converted, converted.format == format, converted.frameCapacity >= capacity {
+            converted.frameLength = 0
+            return converted
         }
-        let rms = (sumSquares / Float(count)).squareRoot()
-        handler(data, rms > 0 ? max(-160, 20 * log10(rms)) : -160)
+        converted = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity)
+        return converted
     }
 
     /// Software input gain in dB, applied before the limiter, safe to change while running
     func setGain(dB: Double) {
-        let linear = Float(pow(10, dB / 20))
+        let linear = SampleProcessor.linearGain(dB: dB)
         lock.withLock { gain = linear }
     }
 

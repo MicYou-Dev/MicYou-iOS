@@ -31,6 +31,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "Packages/MicYouProtocol"),
+        .package(path: "Packages/MicYouCore"),
     ],
     targets: [
         .target(
@@ -41,6 +42,7 @@ let package = Package(
             dependencies: [
                 "MicYouShared",
                 .product(name: "MicYouProtocol", package: "MicYouProtocol"),
+                .product(name: "MicYouCore", package: "MicYouCore"),
             ],
             linkerSettings: linkSDKVersion
         ),

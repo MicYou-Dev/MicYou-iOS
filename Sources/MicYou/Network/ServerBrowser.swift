@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import Foundation
+import MicYouCore
 import MicYouProtocol
 import Network
 import Observation
@@ -15,12 +16,8 @@ struct DiscoveredServer: Identifiable, Hashable, Sendable {
 
     var displayName: String { Self.displayName(for: name) }
 
-    /// The host name inside the instance name, the desktop registers "MicYou (<hostname>)"
     static func displayName(for name: String) -> String {
-        if name.hasPrefix("MicYou ("), name.hasSuffix(")") {
-            return String(name.dropFirst("MicYou (".count).dropLast())
-        }
-        return name
+        ServiceName.displayName(name)
     }
 
     /// A Bonjour endpoint for an instance name, resolved when a connection starts

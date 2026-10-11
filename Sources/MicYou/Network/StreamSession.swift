@@ -3,6 +3,7 @@
 
 import AVFoundation
 import Foundation
+import MicYouCore
 import MicYouProtocol
 import Network
 import os
@@ -41,7 +42,7 @@ final class StreamSession: @unchecked Sendable {
         self.onEvent = onEvent
         var sessionId: Int64 = 0
         while sessionId == 0 { sessionId = Int64.random(in: Int64.min...Int64.max) }
-        sequencer = AudioSequencer(sessionId: sessionId, fecEnabled: config.fecEnabled && config.transport == .tcpUDP)
+        sequencer = AudioSequencer(sessionId: sessionId, fecEnabled: config.usesFEC)
         // PCM until the Opus encoder is known to work
         format = config.requestedFormat
         format.codec = .pcm
