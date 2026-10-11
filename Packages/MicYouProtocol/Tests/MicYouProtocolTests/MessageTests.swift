@@ -86,6 +86,16 @@ private func hex(_ s: String) -> Data {
         #expect(decoded.connect?.platform == "ios")
     }
 
+    @Test func statsFromDesktop() throws {
+        let decoded = try MessageWrapper(serialized: hex("420e080c150000c03f1d0000803e202a"))
+        let stats = try #require(decoded.stats)
+        #expect(stats.rttMs == 12)
+        #expect(stats.jitterMs == 1.5)
+        #expect(stats.packetLoss == 0.25)
+        #expect(stats.latencyMs == 42)
+        #expect(decoded.serialized() == hex("420e080c150000c03f1d0000803e202a"))
+    }
+
     @Test func absentMuteValueIsNil() throws {
         let decoded = try MessageWrapper(serialized: hex("1a00"))
         #expect(decoded.mute != nil)

@@ -27,10 +27,12 @@ enum CaptureStatus: Equatable {
     case resumeFailed
 }
 
-/// Where to connect: a Bonjour result or a typed address
+/// Where to connect: a Bonjour result, a typed address or the USB cable
 enum ServerSelection: Hashable {
     case discovered(name: String)
     case manual
+    /// The desktop in USB mode connects through usbmuxd
+    case usb
 }
 
 /// App wide state, also used by intents and deep links
@@ -48,6 +50,8 @@ final class AppModel {
     /// Smoothed input level in dBFS
     private(set) var levelDB: Float = -160
     private(set) var throughput = 0
+    /// Link quality reported by the desktop, nil until it sends some, older desktops never do
+    private(set) var linkStats: StatsMessage?
     private(set) var remoteAddress: String?
     private(set) var activeFormat: AudioStreamFormat?
     private(set) var streamingSince: Date?
@@ -64,6 +68,7 @@ final class AppModel {
     var selection: ServerSelection {
         didSet {
             if case .discovered(let name) = selection { settings.lastServiceName = name } else { settings.lastServiceName = nil }
+            settings.usbSelected = selection == .usb
             clearError()
         }
     }
@@ -89,7 +94,7 @@ final class AppModel {
     private var captureVoiceProcessing: Bool?
 
     init() {
-        selection = settings.lastServiceName.map { .discovered(name: $0) } ?? .manual
+        selection = settings.usbSelected ? .usb : settings.lastServiceName.map { .discovered(name: $0) } ?? .manual
         liveActivity.endStale()
         // The Live Activity shows the microphone in use, so follow headsets coming and going
         NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
@@ -122,6 +127,8 @@ final class AppModel {
             return DiscoveredServer.displayName(for: name)
         case .manual:
             return settings.manualTarget?.host
+        case .usb:
+            return L10n.Home.usbName
         }
     }
 
@@ -174,7 +181,7 @@ final class AppModel {
     var hasPendingChanges: Bool {
         guard isActive, let config = currentConfig else { return false }
         let voiceProcessingChanged = captureVoiceProcessing.map { $0 != settings.voiceProcessing } ?? false
-        return config.options.differs(from: settings.streamOptions) || voiceProcessingChanged
+        return config.options.differs(from: settings.streamOptions(for: config.link)) || voiceProcessingChanged
     }
 
     private func begin() async {
@@ -192,8 +199,12 @@ final class AppModel {
             phase = .failed(L10n.Failure.chooseTarget)
             return
         }
-        let config = settings.streamConfig(endpoint: target.endpoint, preferIPv4: target.preferIPv4)
-        let kind = if case .discovered = selection { "nearby computer" } else { "address" }
+        let config = settings.streamConfig(link: target.link)
+        let kind = switch selection {
+        case .discovered: "nearby computer"
+        case .manual: "address"
+        case .usb: "USB"
+        }
         log.info("Connecting to \(kind, privacy: .public) \(target.name): \(config.options.summary, privacy: .public)")
         currentConfig = config
         connectedName = target.name
@@ -215,6 +226,7 @@ final class AppModel {
         activeFormat = nil
         remoteAddress = nil
         throughput = 0
+        linkStats = nil
         levelDB = -160
         captureStatus = .running
     }
@@ -325,9 +337,8 @@ final class AppModel {
     // MARK: Session lifecycle
 
     private struct Target {
-        var endpoint: NWEndpoint
+        var link: StreamLink
         var name: String
-        var preferIPv4: Bool
     }
 
     private func resolveTarget() -> Target? {
@@ -335,11 +346,16 @@ final class AppModel {
         case .discovered(let name):
             // Right after launch, for example from Shortcuts, the search has not found the computer yet
             let endpoint = browser.servers.first { $0.name == name }?.endpoint ?? DiscoveredServer.endpoint(for: name)
-            return Target(endpoint: endpoint, name: DiscoveredServer.displayName(for: name), preferIPv4: true)
+            return Target(link: .network(endpoint, preferIPv4: true), name: DiscoveredServer.displayName(for: name))
         case .manual:
             guard let address = settings.manualTarget, let port = NWEndpoint.Port(rawValue: address.port) else { return nil }
             settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
-            return Target(endpoint: .hostPort(host: NWEndpoint.Host(address.host), port: port), name: address.host, preferIPv4: false)
+            let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(address.host), port: port)
+            return Target(link: .network(endpoint, preferIPv4: false), name: address.host)
+        case .usb:
+            // The desktop connects to the port it serves on, the same one the manual fields use
+            guard let port = NWEndpoint.Port(rawValue: UInt16(clamping: settings.port)), port.rawValue != 0 else { return nil }
+            return Target(link: .usb(port: port), name: L10n.Home.usbName)
         }
     }
 
@@ -386,6 +402,8 @@ final class AppModel {
             }
         case .throughput(let bits):
             throughput = bits
+        case .linkStats(let stats):
+            linkStats = stats
         case .codecFallback:
             notice = L10n.Failure.opusUnavailable
             activeFormat?.codec = .pcm
@@ -461,6 +479,7 @@ final class AppModel {
         // Capture keeps running so the app stays alive in the background while retrying
         phase = .reconnecting(attempt: attempt)
         throughput = 0
+        linkStats = nil
         refreshSideEffects()
         let delay = policy.delay(beforeAttempt: attempt)
         log.notice("Reconnecting in \(Int(delay)) s, attempt \(attempt) of \(policy.maxAttempts)")

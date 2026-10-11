@@ -14,6 +14,8 @@ final class StreamSession: @unchecked Sendable {
         case remoteMute(Bool)
         /// Payload bits per second over the last second
         case throughput(Int)
+        /// Link quality as the desktop measures it, from desktops that send it
+        case linkStats(StatsMessage)
         case codecFallback
         case failed(StreamError)
     }
@@ -54,8 +56,7 @@ final class StreamSession: @unchecked Sendable {
             // Loading the system Opus encoder takes a moment, keep it off the main thread
             setUpEncoder()
             let channel = ControlChannel(
-                endpoint: config.endpoint, preferIPv4: config.preferIPv4,
-                sessionId: sequencer.sessionId, initialMute: muted, queue: queue
+                link: config.link, sessionId: sequencer.sessionId, initialMute: muted, queue: queue
             ) { [weak self] event in self?.handle(event) }
             control = channel
             channel.start()
@@ -164,6 +165,8 @@ final class StreamSession: @unchecked Sendable {
                 if value { resetPipeline() }
             }
             onEvent(.remoteMute(value))
+        case .stats(let stats):
+            onEvent(.linkStats(stats))
         case .failed(let error):
             finish(error)
         }

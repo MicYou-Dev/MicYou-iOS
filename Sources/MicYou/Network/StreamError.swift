@@ -19,6 +19,8 @@ enum StreamError: LocalizedError, Equatable {
     case protocolError(String)
     case noPeerAddress
     case udpFailed
+    /// The desktop never connected through usbmuxd
+    case usbTimeout
 
     var errorDescription: String? {
         switch self {
@@ -34,6 +36,7 @@ enum StreamError: LocalizedError, Equatable {
         case .protocolError(let detail): L10n.Failure.unexpectedData(detail)
         case .noPeerAddress: L10n.Failure.noPeerAddress
         case .udpFailed: L10n.Failure.udpFailed
+        case .usbTimeout: L10n.Failure.usbTimeout
         }
     }
 

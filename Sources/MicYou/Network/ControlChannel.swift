@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// TCP control connection: handshake, connect, heartbeat and mute sync
+// TCP control connection: handshake, connect, heartbeat, mute sync and link stats
 // Behaviour follows the Android sender in MicYou-Dev/MicYou (AudioEngine.kt)
+// Over USB the roles of the TCP connection flip: usbmuxd only lets the computer connect,
+// so the phone listens on loopback and runs the same client protocol once the desktop is in
 
 import Foundation
 import MicYouProtocol
@@ -9,15 +11,18 @@ import os
 
 final class ControlChannel: @unchecked Sendable {
     enum Event: Sendable {
-        /// Handshake done, carries the resolved peer address and port for the UDP channel
+        /// Handshake done, carries the resolved peer address and port for the UDP channel, nil over USB
         case ready(remote: NWEndpoint?)
         case remoteMute(Bool)
+        case stats(StatsMessage)
         case failed(StreamError)
     }
 
     private let log = Logger.micyou("control")
     private let queue: DispatchQueue
-    private let connection: NWConnection
+    private let link: StreamLink
+    private var connection: NWConnection?
+    private var listener: NWListener?
     private let sessionId: Int64
     private let initialMute: Bool
     private let onEvent: @Sendable (Event) -> Void
@@ -32,29 +37,27 @@ final class ControlChannel: @unchecked Sendable {
     private var inFlight = 0
     private static let maxAudioBacklog = 128 * 1024
 
-    init(endpoint: NWEndpoint, preferIPv4: Bool, sessionId: Int64, initialMute: Bool,
+    /// The desktop polls usbmuxd every second, so a longer wait means it is not in USB mode
+    private static let usbWaitTimeout: TimeInterval = 15
+
+    init(link: StreamLink, sessionId: Int64, initialMute: Bool,
          queue: DispatchQueue, onEvent: @escaping @Sendable (Event) -> Void) {
-        let tcp = NWProtocolTCP.Options()
-        tcp.noDelay = true
-        tcp.enableKeepalive = true
-        tcp.keepaliveIdle = 5
-        tcp.connectionTimeout = 10
-        let parameters = NWParameters(tls: nil, tcp: tcp)
-        if preferIPv4, let ip = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options {
-            ip.version = .v4
-        }
-        parameters.serviceClass = .interactiveVoice
-        connection = NWConnection(to: endpoint, using: parameters)
+        self.link = link
         self.queue = queue
         self.sessionId = sessionId
         self.initialMute = initialMute
         self.onEvent = onEvent
     }
 
+    /// Called on the session queue, like everything below
     func start() {
-        connection.stateUpdateHandler = { [weak self] state in self?.handle(state) }
-        connection.start(queue: queue)
-        arm(timeout: 12, error: .connectTimeout)
+        switch link {
+        case .network(let endpoint, let preferIPv4):
+            adopt(NWConnection(to: endpoint, using: Self.parameters(preferIPv4: preferIPv4)))
+            arm(timeout: 12, error: .connectTimeout)
+        case .usb(let port):
+            listen(on: port)
+        }
     }
 
     func cancel() {
@@ -73,6 +76,59 @@ final class ControlChannel: @unchecked Sendable {
 
     // MARK: Private, always on queue
 
+    private static func parameters(preferIPv4: Bool) -> NWParameters {
+        let tcp = NWProtocolTCP.Options()
+        tcp.noDelay = true
+        tcp.enableKeepalive = true
+        tcp.keepaliveIdle = 5
+        tcp.connectionTimeout = 10
+        let parameters = NWParameters(tls: nil, tcp: tcp)
+        if preferIPv4, let ip = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options {
+            ip.version = .v4
+        }
+        parameters.serviceClass = .interactiveVoice
+        return parameters
+    }
+
+    private func adopt(_ connection: NWConnection) {
+        self.connection = connection
+        connection.stateUpdateHandler = { [weak self] state in self?.handle(state) }
+        connection.start(queue: queue)
+    }
+
+    /// usbmuxd delivers the desktop's connection on loopback, nothing on the network can reach this port
+    private func listen(on port: NWEndpoint.Port) {
+        let parameters = Self.parameters(preferIPv4: true)
+        parameters.requiredInterfaceType = .loopback
+        parameters.allowLocalEndpointReuse = true
+        let listener: NWListener
+        do {
+            listener = try NWListener(using: parameters, on: port)
+        } catch {
+            return finish((error as? NWError).map(StreamError.from) ?? .unreachable(error.localizedDescription))
+        }
+        listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
+        listener.stateUpdateHandler = { [weak self] state in
+            switch state {
+            case .ready: self?.log.info("Waiting for the computer over USB on port \(port.rawValue)")
+            case .failed(let error): self?.finish(.from(error))
+            default: break
+            }
+        }
+        listener.start(queue: queue)
+        self.listener = listener
+        arm(timeout: Self.usbWaitTimeout, error: .usbTimeout)
+    }
+
+    private func accept(_ incoming: NWConnection) {
+        guard connection == nil, !isFinished else { return incoming.cancel() }
+        log.info("Computer connected over USB")
+        // One desktop per session, a reconnect listens again
+        listener?.cancel()
+        listener = nil
+        adopt(incoming)
+    }
+
     private func handle(_ state: NWConnection.State) {
         switch state {
         case .ready:
@@ -89,6 +145,7 @@ final class ControlChannel: @unchecked Sendable {
     }
 
     private func beginHandshake() {
+        guard let connection else { return }
         log.info("TCP connected, sending handshake")
         arm(timeout: MicYouWire.handshakeTimeout, error: .handshakeFailed)
         connection.send(content: MicYouWire.handshakeClient, completion: .contentProcessed { [weak self] error in
@@ -114,13 +171,14 @@ final class ControlChannel: @unchecked Sendable {
         lastPing = .now()
         startWatchdog()
         receiveLoop()
-        let remote = connection.currentPath?.remoteEndpoint
+        // Over USB the peer is usbmuxd on loopback, not an address worth showing or sending UDP to
+        let remote = link.isUSB ? nil : connection?.currentPath?.remoteEndpoint
         log.info("Handshake complete, session \(self.sessionId)")
         onEvent(.ready(remote: remote))
     }
 
     private func receiveLoop() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, isComplete, error in
+        connection?.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, isComplete, error in
             guard let self, !self.isFinished else { return }
             if let data {
                 self.decoder.append(data)
@@ -146,10 +204,13 @@ final class ControlChannel: @unchecked Sendable {
         if let mute = message.mute {
             onEvent(.remoteMute(mute.isMuted ?? false))
         }
+        if let stats = message.stats {
+            onEvent(.stats(stats))
+        }
     }
 
     private func write(_ frame: Data) {
-        guard !isFinished else { return }
+        guard !isFinished, let connection else { return }
         inFlight += frame.count
         connection.send(content: frame, completion: .contentProcessed { [weak self] error in
             guard let self else { return }
@@ -185,8 +246,10 @@ final class ControlChannel: @unchecked Sendable {
         isReady = false
         timeout?.cancel()
         watchdog?.cancel()
-        connection.stateUpdateHandler = nil
-        connection.cancel()
+        listener?.cancel()
+        listener = nil
+        connection?.stateUpdateHandler = nil
+        connection?.cancel()
         if let error {
             log.error("Control connection failed: \(String(describing: error), privacy: .public)")
             onEvent(.failed(error))

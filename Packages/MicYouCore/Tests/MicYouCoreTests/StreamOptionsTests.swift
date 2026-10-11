@@ -57,6 +57,15 @@ import Testing
         #expect(!options(transport: .tcp, fec: true).usesFEC)
     }
 
+    @Test func usbAlwaysSendsAudioOverTCP() {
+        let usb = options(transport: .tcpUDP, fec: true).overUSB
+        #expect(usb.transport == .tcp)
+        #expect(!usb.usesFEC)
+        #expect(usb.summary == "Opus 64 kbps, 48000 Hz mono, TCP only")
+        // Switching transport in settings changes nothing a USB stream would use
+        #expect(!options(transport: .tcpUDP).overUSB.differs(from: options(transport: .tcp).overUSB))
+    }
+
     @Test func changesThatCannotTakeEffectAreIgnored() {
         #expect(!options(codec: .pcm, bitrate: 64000).differs(from: options(codec: .pcm, bitrate: 128000)))
         #expect(!options(transport: .tcp, fec: true).differs(from: options(transport: .tcp, fec: false)))

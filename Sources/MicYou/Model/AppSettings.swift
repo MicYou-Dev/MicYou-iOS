@@ -18,7 +18,8 @@ final class AppSettings {
 
     private enum Key: String {
         case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB, input
-        case fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
+        case fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, usbSelected
+        case welcomeShown, tourShown
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -46,6 +47,8 @@ final class AppSettings {
     var recentHosts: [String] { didSet { save(recentHosts, .recentHosts) } }
     /// Bonjour instance name of the last server picked from the list
     var lastServiceName: String? { didSet { save(lastServiceName, .lastServiceName) } }
+    /// The USB cable was picked last, it wins over lastServiceName
+    var usbSelected: Bool { didSet { save(usbSelected, .usbSelected) } }
     /// The welcome sheet appears once, on the first launch
     var welcomeShown: Bool { didSet { save(welcomeShown, .welcomeShown) } }
     /// The spotlight tour of the home screen follows the welcome sheet, also once
@@ -72,6 +75,7 @@ final class AppSettings {
         liveActivity = load(.liveActivity) ?? true
         recentHosts = load(.recentHosts) ?? []
         lastServiceName = load(.lastServiceName)
+        usbSelected = load(.usbSelected) ?? false
         // Anyone who connected before this sheet existed has already found their way
         // Read again rather than through the properties, which are not all set yet
         let hosts: [String] = load(.recentHosts) ?? []
@@ -121,7 +125,7 @@ extension AppSettings {
         codec.streamRate(forCaptureRate: sampleRate)
     }
 
-    /// The current audio and transport choices
+    /// The current audio and transport choices for a network stream
     var streamOptions: StreamOptions {
         StreamOptions(
             transport: transport,
@@ -133,9 +137,14 @@ extension AppSettings {
         )
     }
 
+    /// The choices a stream over `link` actually uses
+    func streamOptions(for link: StreamLink) -> StreamOptions {
+        link.isUSB ? streamOptions.overUSB : streamOptions
+    }
+
     /// Freezes the current choices for one stream
-    func streamConfig(endpoint: NWEndpoint, preferIPv4: Bool) -> StreamConfig {
-        StreamConfig(endpoint: endpoint, preferIPv4: preferIPv4, options: streamOptions)
+    func streamConfig(link: StreamLink) -> StreamConfig {
+        StreamConfig(link: link, options: streamOptions(for: link))
     }
 
     /// The preset the current settings match, nil once something was changed by hand

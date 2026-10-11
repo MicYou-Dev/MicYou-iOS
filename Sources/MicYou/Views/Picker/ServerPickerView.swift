@@ -4,7 +4,7 @@ import MicYouProtocol
 import MicYouShared
 import SwiftUI
 
-/// Sheet for picking a nearby computer or typing an address
+/// Sheet for picking a nearby computer, the USB cable or typing an address
 struct ServerPickerView: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
@@ -15,6 +15,9 @@ struct ServerPickerView: View {
         NavigationStack {
             List {
                 NearbySection {
+                    dismiss()
+                }
+                USBSection {
                     dismiss()
                 }
                 ManualSection(focus: $focus) {
@@ -114,6 +117,42 @@ private struct NearbySection: View {
             if model.browser.servers.isEmpty && model.browser.state == .searching {
                 Text(L10n.Home.searchHint)
             }
+        }
+    }
+}
+
+private struct USBSection: View {
+    @Environment(AppModel.self) private var model
+    let picked: () -> Void
+
+    var body: some View {
+        Section {
+            Button {
+                model.selection = .usb
+                picked()
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "cable.connector")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28)
+                    Text(L10n.Home.usbName)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    if model.selection == .usb {
+                        Image(systemName: "checkmark")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tint)
+                    }
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(model.selection == .usb ? .isSelected : [])
+        } header: {
+            Text(L10n.Home.usbHeader)
+        } footer: {
+            Text(L10n.Home.usbHint)
         }
     }
 }

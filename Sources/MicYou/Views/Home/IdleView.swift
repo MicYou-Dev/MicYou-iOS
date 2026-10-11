@@ -181,11 +181,18 @@ private struct TargetCard: View {
                 }
             }
         }
+        Toggle(isOn: Binding(get: { model.selection == .usb }, set: { _ in model.selection = .usb })) {
+            Label(L10n.Home.usbName, systemImage: "cable.connector")
+        }
         Button(L10n.Home.chooseComputer, systemImage: "ellipsis.circle", action: action)
     }
 
     private var symbol: String {
-        model.selection == .manual ? "network" : "desktopcomputer"
+        switch model.selection {
+        case .discovered: "desktopcomputer"
+        case .manual: "network"
+        case .usb: "cable.connector"
+        }
     }
 
     private var title: String {
@@ -195,6 +202,8 @@ private struct TargetCard: View {
             return DiscoveredServer.displayName(for: name)
         case .manual:
             return settings.manualTarget?.host ?? L10n.Home.noTarget
+        case .usb:
+            return L10n.Home.usbName
         }
     }
 
@@ -205,12 +214,15 @@ private struct TargetCard: View {
         case .manual:
             guard let target = settings.manualTarget else { return nil }
             return L10n.Common.joined([L10n.Home.manualHeader, "\(L10n.Home.port) \(target.port)"])
+        case .usb:
+            return L10n.Home.usbSubtitle
         }
     }
 }
 
 /// Codec, sample rate and transport for the next stream, tapping it opens the settings
 private struct FormatSummary: View {
+    @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
     let action: () -> Void
 
@@ -274,10 +286,14 @@ private struct FormatSummary: View {
         return L10n.Unit.kbps(bitrate / 1000)
     }
 
-    private var transport: String { settings.transport.shortName }
+    /// USB only carries TCP, whatever the transport setting says
+    private var transport: String {
+        model.selection == .usb ? TransportMode.tcp.shortName : settings.transport.shortName
+    }
 
     private var transportDetail: String {
-        switch settings.transport {
+        if model.selection == .usb { return L10n.Home.usbName }
+        return switch settings.transport {
         case .tcpUDP: settings.fecEnabled ? L10n.Status.fec : settings.transport.title
         case .tcp: settings.transport.title
         }

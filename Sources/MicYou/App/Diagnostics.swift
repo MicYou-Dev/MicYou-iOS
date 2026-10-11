@@ -27,6 +27,7 @@ enum Diagnostics {
         let selection = switch model.selection {
         case .discovered: "Bonjour"
         case .manual: "manual address"
+        case .usb: "USB"
         }
         // The port type rather than the port name, Bluetooth names often carry the owner's name
         let input = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none"

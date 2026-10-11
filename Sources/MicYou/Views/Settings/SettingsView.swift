@@ -132,7 +132,10 @@ struct SettingsView: View {
 
 extension SettingsView {
     private var transportHint: SettingHint {
-        switch settings.transport {
+        if model.selection == .usb {
+            return SettingHint(text: L10n.Settings.transportUSBHint, systemImage: "cable.connector")
+        }
+        return switch settings.transport {
         case .tcpUDP: SettingHint(text: L10n.Settings.tcpUDPHint, systemImage: "bolt.fill")
         case .tcp: SettingHint(text: L10n.Settings.tcpOnlyHint, systemImage: "checkmark.shield.fill")
         }

@@ -94,6 +94,13 @@ public struct StreamOptions: Equatable, Sendable {
     /// FEC only exists for UDP audio
     public var usesFEC: Bool { fecEnabled && transport == .tcpUDP }
 
+    /// usbmuxd only carries the TCP connection, so audio rides on it too
+    public var overUSB: StreamOptions {
+        var options = self
+        options.transport = .tcp
+        return options
+    }
+
     /// The format asked for, the session falls back to PCM when Opus is unavailable
     public var requestedFormat: AudioStreamFormat {
         AudioStreamFormat(sampleRate: Int32(sampleRate), channelCount: Int32(channels), codec: codec.wire)

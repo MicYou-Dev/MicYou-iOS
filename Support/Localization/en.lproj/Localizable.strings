@@ -25,6 +25,7 @@
 "unit.khz" = "%@ kHz";
 "unit.db" = "%lld dB";
 "unit.db-signed" = "%+.0f dB";
+"unit.ms" = "%lld ms";
 
 "status.connecting" = "Connecting…";
 "status.reconnecting" = "Reconnecting…";
@@ -42,6 +43,8 @@
 "status.input-level" = "Input Level";
 "status.transport" = "Transport";
 "status.fec" = "FEC";
+"status.round-trip" = "Round Trip";
+"status.packet-loss" = "Packet Loss";
 "status.muted-detail" = "Audio is muted while the connection stays open.";
 "status.push-to-talk-detail" = "Push to Talk is on. Hold the button below to talk.";
 "status.reconnect-detail" = "The microphone stays active and streaming will resume once reconnected.";
@@ -62,6 +65,10 @@
 "home.manual.hint" = "Enter the IP address shown in MicYou on your computer (default port %@). You can also enter address:port.";
 "home.manual.invalid" = "Invalid address or port. The port must be between 1 and 65535.";
 "home.manual.use" = "Use This Address";
+"home.usb.header" = "Wired";
+"home.usb.name" = "USB Cable";
+"home.usb.subtitle" = "USB mode on the computer";
+"home.usb.hint" = "Plug in the cable, start MicYou on the computer in USB mode, then tap Connect. Windows also needs iTunes installed.";
 "home.target.label" = "Connect to";
 "home.target.none" = "No Computer Selected";
 "home.target.change" = "Change";
@@ -82,6 +89,7 @@
 "settings.transport.tcp" = "TCP Only";
 "settings.transport.tcp-udp.hint" = "Lowest latency. If audio drops out, try TCP Only.";
 "settings.transport.tcp.hint" = "Never drops audio, with slightly more delay. Good on weak Wi-Fi.";
+"settings.transport.usb-hint" = "USB connections always use TCP, this choice applies to Wi-Fi.";
 "settings.fec" = "Forward Error Correction";
 "settings.fec.detail" = "Sends about 8% more data to recover lost packets.";
 "settings.fec.detail-tcp" = "Only needed with TCP + UDP.";
@@ -207,6 +215,7 @@
 "error.unexpected-data" = "Unexpected data from the computer: %@";
 "error.no-peer-address" = "Could not determine the computer's IP address for UDP. Switch to TCP Only in Settings.";
 "error.udp" = "Sending audio over UDP keeps failing. Switch to TCP Only in Settings.";
+"error.usb-timeout" = "The computer did not connect over USB. Check the cable and make sure MicYou on the computer is started in USB mode. Windows also needs iTunes.";
 "error.mic-denied" = "Microphone access is denied. Enable it in Settings.";
 "error.no-mic" = "No available microphone detected.";
 "error.format-unsupported" = "This audio format is not supported.";

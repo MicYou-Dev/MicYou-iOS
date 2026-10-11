@@ -159,6 +159,36 @@ public struct AudioPacketMessageOrdered: ProtoMessage {
     }
 }
 
+/// Link quality measured by the desktop, sent once a second while connected
+public struct StatsMessage: ProtoMessage {
+    /// Smoothed ping/pong round trip, 0 until the desktop has seen a pong
+    public var rttMs: Int32 = 0
+    public var jitterMs: Float = 0
+    /// Fraction of audio packets lost, 0 to 1
+    public var packetLoss: Float = 0
+    /// The desktop's end-to-end estimate: its receive buffer plus the round trip
+    public var latencyMs: Int32 = 0
+
+    public init() {}
+
+    public func encode(into w: inout ProtoWriter) {
+        w.writeInt32(1, rttMs)
+        w.writeFloat(2, jitterMs)
+        w.writeFloat(3, packetLoss)
+        w.writeInt32(4, latencyMs)
+    }
+
+    public mutating func decodeField(_ field: Int, _ type: WireType, _ r: inout ProtoReader) throws {
+        switch (field, type) {
+        case (1, .varint): rttMs = try r.readInt32()
+        case (2, .fixed32): jitterMs = try r.readFloat()
+        case (3, .fixed32): packetLoss = try r.readFloat()
+        case (4, .varint): latencyMs = try r.readInt32()
+        default: try r.skip(type)
+        }
+    }
+}
+
 public struct MessageWrapper: ProtoMessage {
     public var audioPacket: AudioPacketMessageOrdered?
     public var connect: ConnectMessage?
@@ -166,6 +196,8 @@ public struct MessageWrapper: ProtoMessage {
     public var ping: TimestampMessage?
     public var pong: TimestampMessage?
     // Field 7 (pluginMessage) is not used by this client and is skipped on decode
+    /// Desktop to phone only
+    public var stats: StatsMessage?
 
     public init() {}
 
@@ -205,6 +237,7 @@ public struct MessageWrapper: ProtoMessage {
         if let mute { w.writeMessage(3, mute.serialized()) }
         if let ping { w.writeMessage(5, ping.serialized()) }
         if let pong { w.writeMessage(6, pong.serialized()) }
+        if let stats { w.writeMessage(8, stats.serialized()) }
     }
 
     public mutating func decodeField(_ field: Int, _ type: WireType, _ r: inout ProtoReader) throws {
@@ -215,6 +248,7 @@ public struct MessageWrapper: ProtoMessage {
         case 3: mute = try MuteMessage(serialized: r.readLengthDelimited())
         case 5: ping = try TimestampMessage(serialized: r.readLengthDelimited())
         case 6: pong = try TimestampMessage(serialized: r.readLengthDelimited())
+        case 8: stats = try StatsMessage(serialized: r.readLengthDelimited())
         default: try r.skip(type)
         }
     }

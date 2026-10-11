@@ -25,6 +25,7 @@
 "unit.khz" = "%@ kHz";
 "unit.db" = "%lld dB";
 "unit.db-signed" = "%+.0f dB";
+"unit.ms" = "%lld ms";
 
 "status.connecting" = "正在連線…";
 "status.reconnecting" = "正在重新連線…";
@@ -42,6 +43,8 @@
 "status.input-level" = "輸入音量";
 "status.transport" = "傳輸";
 "status.fec" = "糾錯";
+"status.round-trip" = "往返延遲";
+"status.packet-loss" = "丟包率";
 "status.muted-detail" = "已暫停向電腦傳送聲音，連線仍保持開啟。";
 "status.push-to-talk-detail" = "已開啟按住說話，按住下方按鈕即可說話。";
 "status.reconnect-detail" = "麥克風保持開啟，重新連線後將自動恢復傳輸。";
@@ -62,6 +65,10 @@
 "home.manual.hint" = "輸入電腦端 MicYou 顯示的 IP 位址（預設連接埠為 %@），也支援直接輸入「位址:連接埠」。";
 "home.manual.invalid" = "位址或連接埠無效，連接埠範圍為 1 到 65535。";
 "home.manual.use" = "使用此位址";
+"home.usb.header" = "有線連線";
+"home.usb.name" = "USB 傳輸線";
+"home.usb.subtitle" = "電腦端選擇 USB 模式";
+"home.usb.hint" = "接上傳輸線，在電腦端 MicYou 選擇 USB 模式並開始，再點「連線」。Windows 還需要安裝 iTunes。";
 "home.target.label" = "將連線到";
 "home.target.none" = "未選擇電腦";
 "home.target.change" = "更換";
@@ -82,6 +89,7 @@
 "settings.transport.tcp" = "僅 TCP";
 "settings.transport.tcp-udp.hint" = "延遲最低。聲音斷斷續續時可改用「僅 TCP」。";
 "settings.transport.tcp.hint" = "不會遺失聲音，延遲稍高，適合訊號較弱的 Wi-Fi。";
+"settings.transport.usb-hint" = "透過 USB 連線時一律使用 TCP，此項只影響 Wi-Fi 連線。";
 "settings.fec" = "前向錯誤修正";
 "settings.fec.detail" = "多傳送約 8% 的資料，用於補回遺失的封包。";
 "settings.fec.detail-tcp" = "僅在 TCP + UDP 下需要。";
@@ -207,6 +215,7 @@
 "error.unexpected-data" = "收到電腦傳來的異常資料：%@";
 "error.no-peer-address" = "無法取得電腦的 UDP 傳送位址，請在設定中改用「僅 TCP」。";
 "error.udp" = "UDP 音訊傳送持續失敗，請在設定中改用「僅 TCP」。";
+"error.usb-timeout" = "電腦沒有透過 USB 連線。請檢查傳輸線，並確認電腦端 MicYou 已在 USB 模式下開始；Windows 還需要安裝 iTunes。";
 "error.mic-denied" = "未取得麥克風權限，請在系統設定中開啟。";
 "error.no-mic" = "未偵測到可用的麥克風。";
 "error.format-unsupported" = "不支援此音訊格式。";

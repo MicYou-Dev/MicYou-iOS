@@ -55,6 +55,7 @@ public enum L10n {
         }
         public static func dB(_ value: Int) -> String { format("unit.db", value) }
         public static func signedDB(_ value: Double) -> String { format("unit.db-signed", value) }
+        public static func ms(_ value: Int) -> String { format("unit.ms", value) }
     }
 
     public enum Status {
@@ -78,6 +79,8 @@ public enum L10n {
         public static var transport: String { string("status.transport") }
         /// Short form of forward error correction for the stats tile
         public static var fec: String { string("status.fec") }
+        public static var roundTrip: String { string("status.round-trip") }
+        public static var packetLoss: String { string("status.packet-loss") }
         public static var mutedDetail: String { string("status.muted-detail") }
         public static var pushToTalkDetail: String { string("status.push-to-talk-detail") }
         public static var reconnectDetail: String { string("status.reconnect-detail") }
@@ -100,6 +103,10 @@ public enum L10n {
         public static func manualHint(port: Int) -> String { format("home.manual.hint", String(port)) }
         public static var manualInvalid: String { string("home.manual.invalid") }
         public static var useAddress: String { string("home.manual.use") }
+        public static var usbHeader: String { string("home.usb.header") }
+        public static var usbName: String { string("home.usb.name") }
+        public static var usbSubtitle: String { string("home.usb.subtitle") }
+        public static var usbHint: String { string("home.usb.hint") }
         public static var targetLabel: String { string("home.target.label") }
         public static var noTarget: String { string("home.target.none") }
         public static var change: String { string("home.target.change") }
@@ -122,6 +129,7 @@ public enum L10n {
         public static var tcpOnly: String { string("settings.transport.tcp") }
         public static var tcpUDPHint: String { string("settings.transport.tcp-udp.hint") }
         public static var tcpOnlyHint: String { string("settings.transport.tcp.hint") }
+        public static var transportUSBHint: String { string("settings.transport.usb-hint") }
         public static var fec: String { string("settings.fec") }
         public static var fecDetail: String { string("settings.fec.detail") }
         public static var fecDetailTCP: String { string("settings.fec.detail-tcp") }
@@ -258,6 +266,7 @@ public enum L10n {
         public static func unexpectedData(_ detail: String) -> String { format("error.unexpected-data", detail) }
         public static var noPeerAddress: String { string("error.no-peer-address") }
         public static var udpFailed: String { string("error.udp") }
+        public static var usbTimeout: String { string("error.usb-timeout") }
         public static var micDenied: String { string("error.mic-denied") }
         public static var noMicrophone: String { string("error.no-mic") }
         public static var formatUnsupported: String { string("error.format-unsupported") }

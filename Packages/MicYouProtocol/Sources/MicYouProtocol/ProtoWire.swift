@@ -57,6 +57,12 @@ public struct ProtoWriter: Sendable {
         writeVarint(value ? 1 : 0)
     }
 
+    public mutating func writeFloat(_ field: Int, _ value: Float) {
+        guard value != 0 else { return }
+        writeTag(field, .fixed32)
+        withUnsafeBytes(of: value.bitPattern.littleEndian) { bytes.append(contentsOf: $0) }
+    }
+
     public mutating func writeBytes(_ field: Int, _ value: Data) {
         guard !value.isEmpty else { return }
         writeLengthDelimited(field, value)
@@ -126,6 +132,13 @@ public struct ProtoReader {
 
     public mutating func readBool() throws -> Bool {
         try readVarint() != 0
+    }
+
+    public mutating func readFloat() throws -> Float {
+        guard bytes.count - index >= 4 else { throw ProtoError.truncated }
+        let bits = (0..<4).reduce(UInt32(0)) { $0 | UInt32(bytes[index + $1]) << (8 * $1) }
+        index += 4
+        return Float(bitPattern: bits)
     }
 
     public mutating func readLengthDelimited() throws -> Data {

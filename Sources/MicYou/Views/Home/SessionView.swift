@@ -44,7 +44,7 @@ struct SessionView: View {
                 Text(L10n.Common.joined([name, model.remoteAddress == name ? "" : model.remoteAddress ?? ""]))
                     .contentTransition(.opacity)
             } icon: {
-                Image(systemName: "desktopcomputer")
+                Image(systemName: model.streamConfig?.link.isUSB == true ? "cable.connector" : "desktopcomputer")
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -237,7 +237,7 @@ private struct ReconnectProgress: View {
     }
 }
 
-/// Format, bitrate, transport and microphone of the stream, shown from the start of a connection
+/// Format, bitrate, transport, microphone and link quality of the stream, shown from the start of a connection
 private struct StreamStats: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
@@ -266,6 +266,15 @@ private struct StreamStats: View {
                 .buttonStyle(.plain)
                 .task { model.refreshInputOptions() }
             }
+            // Desktops that measure the link report it once a second, older ones never do
+            if let stats = model.linkStats {
+                GridRow {
+                    StatTile(label: L10n.Status.roundTrip, value: L10n.Unit.ms(Int(stats.rttMs)), isNumeric: true)
+                    StatTile(label: L10n.Status.packetLoss,
+                             value: Double(stats.packetLoss).formatted(.percent.precision(.fractionLength(1))), isNumeric: true)
+                }
+                .transition(.opacity)
+            }
             // System microphone modes only apply to voice processing input
             // Only Control Center can change them, the tile explains where
             if model.isVoiceProcessingActive {
@@ -290,6 +299,7 @@ private struct StreamStats: View {
                 .transition(.opacity)
             }
         }
+        .adaptiveAnimation(value: model.linkStats == nil)
         .trackingMicrophoneMode($micMode, while: model.isVoiceProcessingActive)
     }
 
