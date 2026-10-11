@@ -19,7 +19,7 @@ final class AppSettings {
     private enum Key: String {
         case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB, input
         case fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, usbSelected
-        case welcomeShown, tourShown
+        case welcomeShown, tourShown, autoCheckUpdates, lastUpdateCheck, dismissedUpdate
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -53,6 +53,11 @@ final class AppSettings {
     var welcomeShown: Bool { didSet { save(welcomeShown, .welcomeShown) } }
     /// The spotlight tour of the home screen follows the welcome sheet, also once
     var tourShown: Bool { didSet { save(tourShown, .tourShown) } }
+    /// Look for a new release when the app opens, at most once a day
+    var autoCheckUpdates: Bool { didSet { save(autoCheckUpdates, .autoCheckUpdates) } }
+    var lastUpdateCheck: Date? { didSet { save(lastUpdateCheck, .lastUpdateCheck) } }
+    /// The version whose home screen notice was closed, a newer one shows again
+    var dismissedUpdate: String? { didSet { save(dismissedUpdate, .dismissedUpdate) } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -82,6 +87,9 @@ final class AppSettings {
         let service: String? = load(.lastServiceName)
         welcomeShown = load(.welcomeShown) ?? (!hosts.isEmpty || service != nil)
         tourShown = load(.tourShown) ?? (!hosts.isEmpty || service != nil)
+        autoCheckUpdates = load(.autoCheckUpdates) ?? true
+        lastUpdateCheck = load(.lastUpdateCheck)
+        dismissedUpdate = load(.dismissedUpdate)
     }
 
     /// The manual fields as an address, nil while they are empty or invalid

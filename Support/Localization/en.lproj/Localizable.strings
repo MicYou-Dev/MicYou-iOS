@@ -76,6 +76,9 @@
 "home.hint" = "Tap to start streaming. You can lock the screen or switch apps afterwards.";
 "home.format" = "Format";
 "home.format.adjust" = "Adjust";
+"home.update.title" = "Version %@ Is Available";
+"home.update.text" = "Download the new IPA and sideload it the same way as before.";
+"home.update.view" = "View";
 
 "settings.applies-next-time" = "Connection and audio settings take effect the next time you connect.";
 "settings.reconnect-to-apply" = "Reconnect Now to Apply";
@@ -158,6 +161,15 @@
 "about.desktop" = "MicYou Desktop";
 "about.source-code" = "Source Code";
 "about.releases" = "Check for Updates";
+"about.updates" = "Updates";
+"about.updates.current" = "Current version %@";
+"about.updates.checking" = "Checking";
+"about.updates.latest" = "You have the latest version";
+"about.updates.failed" = "Could not reach GitHub, try again later";
+"about.updates.download" = "Download Version %@";
+"about.updates.auto" = "Check Automatically";
+"about.updates.auto.detail" = "Looks for a new release when MicYou opens, at most once a day.";
+"about.updates.footer" = "Updates come from GitHub Releases. Sideload the new IPA the same way you installed this one.";
 "about.acknowledgements" = "Licenses and Acknowledgements";
 "about.license" = "GNU General Public License v3.0";
 "about.notice" = "Copyright Notice";

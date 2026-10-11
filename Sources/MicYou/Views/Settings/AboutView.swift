@@ -42,6 +42,7 @@ enum ProjectLinks {
 struct AboutView: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
+    @Environment(\.openURL) private var openURL
     @State private var copies = 0
     @State private var copied = false
     @State private var isExportingLogs = false
@@ -52,6 +53,8 @@ struct AboutView: View {
                 AboutHeader()
             }
             .listRowBackground(Color.clear)
+
+            updatesSection
 
             Section {
                 LabeledContent(L10n.About.protocolLabel, value: L10n.About.protocolValue)
@@ -164,11 +167,6 @@ struct AboutView: View {
                     systemImage: "chevron.left.forwardslash.chevron.right", color: Color(white: 0.25),
                     url: ProjectLinks.repository
                 )
-                LinkRow(
-                    title: L10n.About.releases, detail: "GitHub Releases",
-                    systemImage: "arrow.down.circle.fill", color: .green,
-                    url: ProjectLinks.releases
-                )
             }
 
             Section {
@@ -191,6 +189,54 @@ struct AboutView: View {
     }
 
     private var diagnostics: String { Diagnostics.report(model: model) }
+
+    private var updatesSection: some View {
+        @Bindable var settings = settings
+        let updates = model.updates
+        return Section {
+            Button {
+                if case .available(let release) = updates.state { openURL(release.page) } else { updates.check() }
+            } label: {
+                HStack {
+                    RowLabel(title: updateTitle, detail: updateDetail, systemImage: "arrow.down.circle.fill", color: .green)
+                    Spacer(minLength: 8)
+                    if updates.state == .checking {
+                        ProgressView()
+                    } else if case .available = updates.state {
+                        Image(systemName: "arrow.up.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .contentShape(.rect)
+            }
+            .disabled(updates.state == .checking)
+            .animation(Motion.state, value: updates.state)
+            Toggle(isOn: $settings.autoCheckUpdates) {
+                Text(L10n.About.autoCheckUpdates)
+                Text(L10n.About.autoCheckUpdatesDetail)
+            }
+        } header: {
+            Text(L10n.About.updates)
+        } footer: {
+            Text(L10n.About.updatesFooter)
+        }
+    }
+
+    private var updateTitle: String {
+        if case .available(let release) = model.updates.state { return L10n.About.downloadVersion(release.version.description) }
+        return L10n.About.releases
+    }
+
+    private var updateDetail: String {
+        switch model.updates.state {
+        case .idle, .available: L10n.About.currentVersion(Diagnostics.version)
+        case .checking: L10n.About.checkingUpdates
+        case .upToDate: L10n.About.upToDate
+        case .failed: L10n.About.updateCheckFailed
+        }
+    }
 
     /// Reads the logs in the background and shares the file once it is written, the page stays responsive meanwhile
     private func exportLogs() {

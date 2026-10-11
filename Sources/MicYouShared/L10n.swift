@@ -114,6 +114,9 @@ public enum L10n {
         public static var hint: String { string("home.hint") }
         public static var formatHeader: String { string("home.format") }
         public static var adjust: String { string("home.format.adjust") }
+        public static func updateTitle(_ version: String) -> String { format("home.update.title", version) }
+        public static var updateText: String { string("home.update.text") }
+        public static var viewUpdate: String { string("home.update.view") }
     }
 
     public enum Settings {
@@ -200,6 +203,15 @@ public enum L10n {
         public static var desktop: String { string("about.desktop") }
         public static var sourceCode: String { string("about.source-code") }
         public static var releases: String { string("about.releases") }
+        public static var updates: String { string("about.updates") }
+        public static func currentVersion(_ version: String) -> String { format("about.updates.current", version) }
+        public static var checkingUpdates: String { string("about.updates.checking") }
+        public static var upToDate: String { string("about.updates.latest") }
+        public static var updateCheckFailed: String { string("about.updates.failed") }
+        public static func downloadVersion(_ version: String) -> String { format("about.updates.download", version) }
+        public static var autoCheckUpdates: String { string("about.updates.auto") }
+        public static var autoCheckUpdatesDetail: String { string("about.updates.auto.detail") }
+        public static var updatesFooter: String { string("about.updates.footer") }
         public static var acknowledgements: String { string("about.acknowledgements") }
         public static var license: String { string("about.license") }
         public static var notice: String { string("about.notice") }

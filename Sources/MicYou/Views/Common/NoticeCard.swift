@@ -3,13 +3,15 @@
 import MicYouShared
 import SwiftUI
 
-/// A dismissible message, for errors and one-off notices such as the Opus fallback
+/// A dismissible message, for errors and one-off notices such as the Opus fallback or a new release
 struct NoticeCard: View {
     enum Kind { case info, error }
 
     var title: String?
     let text: String
     let kind: Kind
+    /// A follow-up such as opening the release page
+    var action: (title: String, perform: () -> Void)?
     let dismiss: () -> Void
 
     var body: some View {
@@ -26,6 +28,13 @@ struct NoticeCard: View {
                 Text(text)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if let action {
+                    Button(action.title, action: action.perform)
+                        .buttonStyle(.borderless)
+                        .fontWeight(.semibold)
+                        .tint(tint)
+                        .padding(.top, 2)
+                }
             }
             .font(.subheadline)
             .frame(maxWidth: .infinity, alignment: .leading)

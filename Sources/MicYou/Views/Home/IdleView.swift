@@ -7,6 +7,7 @@ import SwiftUI
 /// The computer to use, the connect button and the format that will be sent
 struct IdleView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
     let openPicker: () -> Void
     let openSettings: () -> Void
 
@@ -22,6 +23,14 @@ struct IdleView: View {
             } else if let notice = model.notice {
                 NoticeCard(text: notice, kind: .info) {
                     withAnimation(Motion.state) { model.notice = nil }
+                }
+                .adaptiveTransition(.notice)
+            } else if let release = model.updates.notice {
+                NoticeCard(
+                    title: L10n.Home.updateTitle(release.version.description), text: L10n.Home.updateText, kind: .info,
+                    action: (L10n.Home.viewUpdate, { openURL(release.page) })
+                ) {
+                    withAnimation(Motion.state) { model.updates.dismissNotice() }
                 }
                 .adaptiveTransition(.notice)
             }
@@ -43,6 +52,7 @@ struct IdleView: View {
         .animation(Motion.state, value: model.phase)
         .animation(Motion.state, value: model.canConnect)
         .animation(Motion.state, value: model.notice)
+        .animation(Motion.state, value: model.updates.notice)
     }
 
     private var isFailed: Bool {

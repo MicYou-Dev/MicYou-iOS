@@ -44,6 +44,7 @@ final class AppModel {
 
     let settings = AppSettings.shared
     let browser = ServerBrowser()
+    let updates = UpdateChecker(settings: AppSettings.shared)
 
     private(set) var phase: ConnectionPhase = .idle
     private(set) var isMuted = false
@@ -244,6 +245,7 @@ final class AppModel {
         // A running interruption is left alone, a call still holds the microphone and ends it by itself
         if captureStatus == .resumeFailed { resumeCapture() }
         connectOnLaunchIfNeeded()
+        updates.checkIfDue()
     }
 
     private func connectOnLaunchIfNeeded() {

@@ -76,6 +76,9 @@
 "home.hint" = "轻点开始传输，连接后可锁屏或切到后台运行。";
 "home.format" = "传输格式";
 "home.format.adjust" = "调整";
+"home.update.title" = "发现新版本 %@";
+"home.update.text" = "下载新的 IPA 后，按原来的方式重新侧载即可更新。";
+"home.update.view" = "查看";
 
 "settings.applies-next-time" = "连接和音频设置将在下次连接时生效。";
 "settings.reconnect-to-apply" = "立即重连以应用";
@@ -158,6 +161,15 @@
 "about.desktop" = "MicYou 桌面端";
 "about.source-code" = "源代码";
 "about.releases" = "检查更新";
+"about.updates" = "更新";
+"about.updates.current" = "当前版本 %@";
+"about.updates.checking" = "正在检查";
+"about.updates.latest" = "已是最新版本";
+"about.updates.failed" = "无法连接 GitHub，请稍后再试";
+"about.updates.download" = "下载 %@ 版本";
+"about.updates.auto" = "自动检查更新";
+"about.updates.auto.detail" = "打开 MicYou 时检查新版本，每天最多一次。";
+"about.updates.footer" = "新版本从 GitHub Releases 下载，按安装当前版本的方式重新侧载即可。";
 "about.acknowledgements" = "开源许可与致谢";
 "about.license" = "GNU 通用公共许可证 v3.0";
 "about.notice" = "版权声明";
