@@ -103,7 +103,7 @@ final class StreamSession: @unchecked Sendable {
             )
             format.codec = .opus
         } catch {
-            log.error("Opus encoder unavailable, using PCM: \(String(describing: error))")
+            log.error("Opus encoder unavailable, falling back to PCM: \(String(describing: error), privacy: .public)")
             onEvent(.codecFallback)
         }
     }
@@ -113,7 +113,7 @@ final class StreamSession: @unchecked Sendable {
             do {
                 return try opus.encode(pcm)
             } catch {
-                log.error("Opus encode failed, switching to PCM: \(String(describing: error))")
+                log.error("Opus encoding failed, falling back to PCM: \(String(describing: error), privacy: .public)")
                 self.opus = nil
                 format.codec = .pcm
                 sequencer.resetFEC()
@@ -190,7 +190,7 @@ final class StreamSession: @unchecked Sendable {
         }
         connection.start(queue: queue)
         udp = connection
-        log.info("UDP audio to \(String(describing: host)):\(port.rawValue)")
+        log.info("Sending audio over UDP to \(String(describing: host)):\(port.rawValue)")
     }
 
     private func startStats() {

@@ -99,6 +99,13 @@ public struct StreamOptions: Equatable, Sendable {
         AudioStreamFormat(sampleRate: Int32(sampleRate), channelCount: Int32(channels), codec: codec.wire)
     }
 
+    /// For logs and reports, always English: "Opus 64 kbps, 48000 Hz mono, UDP with FEC"
+    public var summary: String {
+        let codec = codec == .opus ? "Opus \(opusBitrate / 1000) kbps" : "PCM"
+        let transport = transport == .tcp ? "TCP only" : usesFEC ? "UDP with FEC" : "UDP"
+        return "\(codec), \(sampleRate) Hz \(channels == 2 ? "stereo" : "mono"), \(transport)"
+    }
+
     /// Whether a running stream would look different with `other`, choices that cannot take effect do not count
     public func differs(from other: StreamOptions) -> Bool {
         transport != other.transport || codec != other.codec || sampleRate != other.sampleRate

@@ -36,6 +36,14 @@ import Testing
         #expect(value.requestedFormat == AudioStreamFormat(sampleRate: 48000, channelCount: 2, codec: .pcm))
     }
 
+    @Test func summaries() {
+        #expect(options().summary == "Opus 64 kbps, 48000 Hz mono, UDP with FEC")
+        #expect(options(codec: .pcm, transport: .tcp).summary == "PCM, 48000 Hz mono, TCP only")
+        var stereo = options(fec: false)
+        stereo.channels = 2
+        #expect(stereo.summary == "Opus 64 kbps, 48000 Hz stereo, UDP")
+    }
+
     @Test func fecOnlyCountsOverUDP() {
         #expect(options(transport: .tcpUDP, fec: true).usesFEC)
         #expect(!options(transport: .tcp, fec: true).usesFEC)
@@ -83,6 +91,11 @@ import Testing
     ])
     func roundTrips(_ preference: InputPreference) {
         #expect(InputPreference(storageValue: preference.storageValue) == preference)
+    }
+
+    @Test func anonymizedHidesTheUID() {
+        #expect(InputPreference.external(uid: "USB:1234").anonymized == "external")
+        #expect(InputPreference.builtIn(.front).anonymized == "builtIn.front")
     }
 
     @Test(arguments: ["", "nonsense", "builtIn.left", "external."])

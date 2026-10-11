@@ -26,6 +26,12 @@ public enum InputPreference: Hashable, Sendable {
         }
     }
 
+    /// For logs and reports, without the UID of an external device, which can identify it
+    public var anonymized: String {
+        if case .external = self { return "external" }
+        return storageValue
+    }
+
     public init(storageValue: String) {
         if storageValue == "builtIn" {
             self = .builtIn(nil)

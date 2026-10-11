@@ -127,6 +127,9 @@
 "about.copy-diagnostics" = "拷貝診斷資訊";
 "about.copy-diagnostics.detail" = "求助或回報問題時可一併貼上";
 "about.copied" = "已拷貝";
+"about.export-logs" = "匯出日誌";
+"about.preparing-logs" = "正在準備日誌…";
+"about.export-logs.detail" = "本次開啟以來的日誌，可附在問題回報中";
 "about.feedback.footer" = "將在 GitHub 上建立公開的 Issue，並自動填入 App 版本、系統版本、裝置機型及目前設定，不包含 IP 位址等個人隱私資訊。";
 "about.community" = "社群";
 "about.qq" = "QQ 群組";

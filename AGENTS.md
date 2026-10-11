@@ -74,7 +74,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 - Animation durations and curves come from `Motion` in `Views/Common/Motion.swift`; appear and disappear with `adaptiveTransition` / `adaptiveAnimation` (they respect Reduce Motion)
 - Stateful glass buttons use `glassSurface` and only change `tint`; do not switch between two `buttonStyle`s, and do not use filter transitions such as `blurReplace` on glass views
 - The Live Activity only updates when state, mute, microphone or format changes, and has no level meter (frequent updates make `Text(timerInterval:)` flicker)
-- Logging uses `Logger` from `Log.swift`, subsystem `com.chouchiu.micyou`, categories `model` / `capture` / `session` / `control` / `browser` / `activity`
+- Logging uses `Logger` from `Log.swift`, subsystem `com.chouchiu.micyou`, categories `model` / `capture` / `session` / `control` / `browser` / `activity`; messages are English sentences without a trailing period, details after a colon, errors as `String(describing:)` with `privacy: .public`, addresses and device names left private. The About page exports them as `YYYY/MM/DD HH:MM:SS.mmm [LEVEL] module: message` through `LogFormatter` in `MicYouCore`
 - Every source file starts with `// SPDX-License-Identifier: GPL-3.0-or-later`; code comments are in English with no trailing period
 - Commit messages in English, `<type>: <description>`, types `feat` / `fix` / `refactor` / `style` / `docs` / `chore`
 

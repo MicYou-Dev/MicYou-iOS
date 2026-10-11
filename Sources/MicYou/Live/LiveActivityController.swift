@@ -66,7 +66,7 @@ final class LiveActivityController {
             activity = box.value
             if let lastState, lastState != requested { Self.push(lastState, to: box.value) }
         case .failure(let error):
-            log.error("Live Activity request failed: \(error.localizedDescription)")
+            log.error("Live Activity request failed: \(String(describing: error), privacy: .public)")
             guard !Task.isCancelled else { return }
             // The next update tries again
             serverName = nil

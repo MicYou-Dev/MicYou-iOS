@@ -84,7 +84,7 @@ final class ServerBrowser {
         case .ready, .setup:
             state = .searching
         case .waiting(let error), .failed(let error):
-            log.error("Browser: \(error.localizedDescription)")
+            log.error("Browsing failed: \(String(describing: error), privacy: .public)")
             switch error {
             case .dns(-65570 /* kDNSServiceErr_PolicyDenied */):
                 state = .denied

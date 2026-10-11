@@ -127,7 +127,7 @@ final class AudioCapture: @unchecked Sendable {
             do {
                 try AVAudioSession.sharedInstance().setPreferredInputOrientation(orientation)
             } catch {
-                self.log.notice("Stereo orientation unavailable: \(error.localizedDescription, privacy: .public)")
+                self.log.notice("Setting the stereo orientation failed: \(String(describing: error), privacy: .public)")
             }
         }
     }
@@ -169,6 +169,7 @@ final class AudioCapture: @unchecked Sendable {
     }
 
     private func stopOnQueue() {
+        if isRunning { log.info("Capture stopped") }
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
         pendingRestart?.cancel()
@@ -225,7 +226,7 @@ final class AudioCapture: @unchecked Sendable {
                 }
             }
         } catch {
-            log.notice("Input selection failed: \(error.localizedDescription, privacy: .public)")
+            log.notice("Selecting the input failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -238,11 +239,16 @@ final class AudioCapture: @unchecked Sendable {
             if let chosen { try port.setPreferredDataSource(chosen) }
             return
         }
-        let supportsStereo = { (source: AVAudioSessionDataSourceDescription) in source.supportedPolarPatterns?.contains(.stereo) == true }
-        // The chosen position keeps priority, stereo only when it can record it
-        guard let source = chosen.map({ supportsStereo($0) ? $0 : nil }) ?? sources.first(where: supportsStereo) else {
+        // The chosen position keeps priority, stereo only when it can record it, otherwise any data source that can
+        let candidates = chosen.map { [$0] } ?? sources
+        guard let source = candidates.first(where: { $0.supportedPolarPatterns?.contains(.stereo) == true }) else {
             if let chosen { try port.setPreferredDataSource(chosen) }
-            log.notice("Stereo capture unavailable on this microphone")
+            // What the hardware offers in this mode, voice processing for one may leave out the stereo pattern
+            let offered = sources.map { source in
+                "\(source.dataSourceName) [\((source.supportedPolarPatterns ?? []).map(\.rawValue).joined(separator: ", "))]"
+            }
+            let place = position.map { " at the \($0.rawValue)" } ?? ""
+            log.notice("No stereo data source\(place, privacy: .public), recording mono: mode \(session.mode.rawValue, privacy: .public), sources \(offered.joined(separator: "; "), privacy: .public)")
             return
         }
         do {
@@ -250,8 +256,9 @@ final class AudioCapture: @unchecked Sendable {
             try port.setPreferredDataSource(source)
             try session.setPreferredInputNumberOfChannels(min(2, session.maximumInputNumberOfChannels))
             try session.setPreferredInputOrientation(config.stereoOrientation)
+            log.info("Recording stereo from the \(source.dataSourceName, privacy: .public) data source")
         } catch {
-            log.notice("Stereo capture unavailable: \(error.localizedDescription, privacy: .public)")
+            log.notice("Setting up stereo failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -287,7 +294,9 @@ final class AudioCapture: @unchecked Sendable {
         }
         engine.prepare()
         try engine.start()
-        log.info("Capture started: \(inputFormat.sampleRate) Hz x\(inputFormat.channelCount) -> \(config.sampleRate) Hz x\(config.channels)")
+        // The port type rather than the port name, Bluetooth names often carry the owner's name
+        let port = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none"
+        log.info("Capture started: \(port, privacy: .public) at \(Int(inputFormat.sampleRate)) Hz x\(inputFormat.channelCount), sending \(Int(config.sampleRate)) Hz x\(config.channels)")
     }
 
     /// Coalesces bursts of notifications and ignores the ones our own restart causes
@@ -321,7 +330,7 @@ final class AudioCapture: @unchecked Sendable {
             }
         } catch {
             // Starting to record from the background is not allowed, the app tries again once it is opened
-            log.error("Capture restart failed: \(error.localizedDescription, privacy: .public)")
+            log.error("Restarting capture failed: \(String(describing: error), privacy: .public)")
             isInterrupted = true
             onEvent?(.resumeFailed)
         }

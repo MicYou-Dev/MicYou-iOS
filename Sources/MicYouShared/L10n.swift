@@ -169,6 +169,9 @@ public enum L10n {
         public static var copyDiagnostics: String { string("about.copy-diagnostics") }
         public static var copyDiagnosticsDetail: String { string("about.copy-diagnostics.detail") }
         public static var copied: String { string("about.copied") }
+        public static var exportLogs: String { string("about.export-logs") }
+        public static var preparingLogs: String { string("about.preparing-logs") }
+        public static var exportLogsDetail: String { string("about.export-logs.detail") }
         public static var feedbackFooter: String { string("about.feedback.footer") }
         public static var community: String { string("about.community") }
         public static var qqGroup: String { string("about.qq") }

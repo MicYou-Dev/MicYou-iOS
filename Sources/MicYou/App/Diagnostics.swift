@@ -35,9 +35,9 @@ enum Diagnostics {
             "\(device.systemName) \(device.systemVersion), \(machine)",
             "Language: \(Locale.preferredLanguages.first ?? "?")",
             "Connection: \(selection), \(phase(model.phase))\(model.captureStatus == .running ? "" : ", microphone interrupted")",
-            "Transport: \(transport), FEC \(onOff(settings.fecEnabled)), auto reconnect \(onOff(settings.autoReconnect))",
+            "Transport: \(transport), FEC \(onOff(settings.fecEnabled)), auto reconnect \(onOff(settings.autoReconnect)), connect on open \(onOff(settings.autoConnect))",
             "Audio: \(codec), \(settings.sampleRate) Hz, \(settings.stereo ? "stereo" : "mono")",
-            "Microphone: \(input), gain +\(Int(settings.inputGainDB)) dB, voice processing \(onOff(settings.voiceProcessing))",
+            "Microphone: \(input), choice \(settings.input.anonymized), gain +\(Int(settings.inputGainDB)) dB, voice processing \(onOff(settings.voiceProcessing)), push to talk \(onOff(settings.pushToTalk))",
         ]
         if case .failed(let message) = model.phase {
             lines.append("Last error: \(message)")

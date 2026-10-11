@@ -127,6 +127,9 @@
 "about.copy-diagnostics" = "拷贝诊断信息";
 "about.copy-diagnostics.detail" = "求助或反馈问题时可一并粘贴";
 "about.copied" = "已拷贝";
+"about.export-logs" = "导出日志";
+"about.preparing-logs" = "正在准备日志…";
+"about.export-logs.detail" = "本次打开以来的日志，可附在问题反馈中";
 "about.feedback.footer" = "将在 GitHub 上创建公开的 Issue，并自动填入应用版本、系统版本、设备型号及当前设置，不包含 IP 地址等个人隐私信息。";
 "about.community" = "社区";
 "about.qq" = "QQ 群";

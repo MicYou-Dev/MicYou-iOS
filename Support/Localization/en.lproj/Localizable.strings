@@ -127,6 +127,9 @@
 "about.copy-diagnostics" = "Copy Diagnostic Info";
 "about.copy-diagnostics.detail" = "Paste when asking for help or reporting issues";
 "about.copied" = "Copied";
+"about.export-logs" = "Export Logs";
+"about.preparing-logs" = "Preparing Logs…";
+"about.export-logs.detail" = "Since MicYou was opened, attach to a report";
 "about.feedback.footer" = "Opens a public GitHub issue prefilled with the app version, iOS version, device model, and current settings. IP addresses and personal information are never included.";
 "about.community" = "Community";
 "about.qq" = "QQ Group";

@@ -89,7 +89,7 @@ final class ControlChannel: @unchecked Sendable {
     }
 
     private func beginHandshake() {
-        log.info("TCP ready, sending handshake")
+        log.info("TCP connected, sending handshake")
         arm(timeout: MicYouWire.handshakeTimeout, error: .handshakeFailed)
         connection.send(content: MicYouWire.handshakeClient, completion: .contentProcessed { [weak self] error in
             if let error { self?.finish(.from(error)) }
@@ -115,7 +115,7 @@ final class ControlChannel: @unchecked Sendable {
         startWatchdog()
         receiveLoop()
         let remote = connection.currentPath?.remoteEndpoint
-        log.info("Handshake done, session \(self.sessionId)")
+        log.info("Handshake complete, session \(self.sessionId)")
         onEvent(.ready(remote: remote))
     }
 
@@ -188,7 +188,7 @@ final class ControlChannel: @unchecked Sendable {
         connection.stateUpdateHandler = nil
         connection.cancel()
         if let error {
-            log.error("Control channel failed: \(error.localizedDescription)")
+            log.error("Control connection failed: \(String(describing: error), privacy: .public)")
             onEvent(.failed(error))
         }
     }

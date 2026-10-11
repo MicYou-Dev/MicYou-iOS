@@ -145,6 +145,7 @@ final class AppModel {
     }
 
     func disconnect() {
+        if isActive { log.info("Disconnected") }
         stopStream()
         phase = .idle
         isDimmed = false
@@ -159,6 +160,7 @@ final class AppModel {
     /// Starts over with the current settings, the session screen and the Live Activity stay up meanwhile
     func restart() {
         guard isActive else { return }
+        log.info("Restarting with the current settings")
         stopStream()
         phase = .connecting
         refreshSideEffects()
@@ -190,7 +192,10 @@ final class AppModel {
             phase = .failed(L10n.Failure.chooseTarget)
             return
         }
-        currentConfig = settings.streamConfig(endpoint: target.endpoint, preferIPv4: target.preferIPv4)
+        let config = settings.streamConfig(endpoint: target.endpoint, preferIPv4: target.preferIPv4)
+        let kind = if case .discovered = selection { "nearby computer" } else { "address" }
+        log.info("Connecting to \(kind, privacy: .public) \(target.name): \(config.options.summary, privacy: .public)")
+        currentConfig = config
         connectedName = target.name
         hasStreamed = false
         refreshSideEffects()
@@ -245,6 +250,7 @@ final class AppModel {
 
     func setMuted(_ value: Bool) {
         guard isMuted != value else { return }
+        log.info("\(value ? "Muted" : "Unmuted", privacy: .public)")
         isMuted = value
         session?.setMuted(value, notifyPeer: true)
         refreshSideEffects()
@@ -258,6 +264,7 @@ final class AppModel {
 
     /// Applies immediately while streaming
     func setInput(_ preference: InputPreference) {
+        log.info("Input set to \(preference.anonymized, privacy: .public)")
         settings.input = preference
         capture.setInput(preference)
     }
@@ -360,6 +367,9 @@ final class AppModel {
         guard session != nil, token == sessionToken else { return }
         switch event {
         case .streaming(let remote, let format):
+            let codec = format.codec == .opus ? "Opus" : "PCM"
+            let reconnected = if case .reconnecting = phase { true } else { false }
+            log.info("\(reconnected ? "Reconnected" : "Streaming", privacy: .public), sending \(codec, privacy: .public) \(format.sampleRate) Hz x\(format.channelCount)")
             reconnectTask = nil
             hasStreamed = true
             remoteAddress = remote
@@ -370,6 +380,7 @@ final class AppModel {
             refreshSideEffects()
         case .remoteMute(let value):
             if isMuted != value {
+                log.info("\(value ? "Muted" : "Unmuted", privacy: .public) by the computer")
                 isMuted = value
                 refreshSideEffects()
             }
@@ -379,7 +390,7 @@ final class AppModel {
             notice = L10n.Failure.opusUnavailable
             activeFormat?.codec = .pcm
         case .failed(let error):
-            log.error("Session failed: \(error.localizedDescription)")
+            log.error("Session failed: \(String(describing: error), privacy: .public)")
             tearDownSession()
             scheduleReconnectOrFail(error)
         }
@@ -442,6 +453,7 @@ final class AppModel {
         let attempt: Int = if case .reconnecting(let n) = phase { n + 1 } else { 1 }
         let policy = Self.reconnectPolicy
         guard policy.shouldRetry(attempt: attempt, enabled: settings.autoReconnect, hasStreamed: hasStreamed, errorIsTransient: error.isTransient) else {
+            log.notice("Not reconnecting, auto reconnect \(self.settings.autoReconnect ? "on" : "off", privacy: .public), attempt \(attempt)")
             disconnect()
             phase = .failed(error.localizedDescription)
             return
@@ -451,6 +463,7 @@ final class AppModel {
         throughput = 0
         refreshSideEffects()
         let delay = policy.delay(beforeAttempt: attempt)
+        log.notice("Reconnecting in \(Int(delay)) s, attempt \(attempt) of \(policy.maxAttempts)")
         reconnectTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self, case .reconnecting = self.phase else { return }

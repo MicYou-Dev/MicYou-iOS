@@ -44,6 +44,7 @@ struct AboutView: View {
     @Environment(AppSettings.self) private var settings
     @State private var copies = 0
     @State private var copied = false
+    @State private var isExportingLogs = false
 
     var body: some View {
         Form {
@@ -104,6 +105,20 @@ struct AboutView: View {
                     try? await Task.sleep(for: .seconds(2))
                     withAnimation(Motion.state) { copied = false }
                 }
+                Button(action: exportLogs) {
+                    HStack {
+                        RowLabel(
+                            title: isExportingLogs ? L10n.About.preparingLogs : L10n.About.exportLogs,
+                            detail: L10n.About.exportLogsDetail,
+                            systemImage: "doc.text.fill", color: .brown
+                        )
+                        Spacer(minLength: 8)
+                        if isExportingLogs {
+                            ProgressView()
+                        }
+                    }
+                }
+                .disabled(isExportingLogs)
             } header: {
                 Text(L10n.About.feedback)
             } footer: {
@@ -176,6 +191,19 @@ struct AboutView: View {
     }
 
     private var diagnostics: String { Diagnostics.report(model: model) }
+
+    /// Reads the logs in the background and shares the file once it is written, the page stays responsive meanwhile
+    private func exportLogs() {
+        isExportingLogs = true
+        let header = diagnostics
+        Task {
+            let result = await Task.detached(priority: .userInitiated) {
+                Result { try LogExport.write(header: header) }
+            }.value
+            isExportingLogs = false
+            if case .success(let url) = result { ShareSheet.present([url]) }
+        }
+    }
 }
 
 /// Icon, name and version at the top of the page, long press copies the version
