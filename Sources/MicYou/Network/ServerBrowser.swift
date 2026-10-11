@@ -31,6 +31,8 @@ final class ServerBrowser {
         case idle
         case searching
         case denied
+        /// The host app does not declare `_micyou._tcp` in NSBonjourServices, as inside LiveContainer
+        case unavailable
         case failed(String)
     }
 
@@ -80,9 +82,12 @@ final class ServerBrowser {
             state = .searching
         case .waiting(let error), .failed(let error):
             log.error("Browser: \(error.localizedDescription)")
-            if case .dns(let code) = error, code == -65570 /* kDNSServiceErr_PolicyDenied */ {
+            switch error {
+            case .dns(-65570 /* kDNSServiceErr_PolicyDenied */):
                 state = .denied
-            } else {
+            case .dns(-65555 /* kDNSServiceErr_NoAuth */):
+                state = .unavailable
+            default:
                 state = .failed(error.localizedDescription)
             }
         case .cancelled:

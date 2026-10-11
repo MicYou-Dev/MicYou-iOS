@@ -7,6 +7,7 @@ import SwiftUI
 /// Sheet for picking a nearby computer or typing an address
 struct ServerPickerView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focus: ManualField?
 
@@ -25,6 +26,10 @@ struct ServerPickerView: View {
             .adaptiveAnimation(value: model.browser.servers)
             .adaptiveAnimation(value: model.browser.state)
             .adaptiveAnimation(value: model.selection)
+            // Without Bonjour the address is the only way in, start there instead of leaving a grey placeholder
+            .onChange(of: model.browser.state, initial: true) { _, state in
+                if state == .unavailable && settings.host.isEmpty { focus = .address }
+            }
             .refreshable {
                 model.browser.restart()
                 // Hold the spinner briefly so the pull reads as a fresh search
@@ -87,6 +92,9 @@ private struct NearbySection: View {
                         }
                     }
                 }
+            case .unavailable:
+                Label(L10n.Home.browsingUnavailable, systemImage: "network.slash")
+                    .foregroundStyle(.secondary)
             case .failed(let message):
                 Label(message, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.secondary)

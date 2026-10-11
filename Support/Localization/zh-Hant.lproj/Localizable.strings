@@ -45,10 +45,11 @@
 "home.nearby.searching" = "正在尋找電腦…";
 "home.nearby.hint" = "請在電腦上打開 MicYou，並確認兩台裝置連接的是同一個 Wi-Fi。下拉可以重新尋找。";
 "home.nearby.denied" = "請允許區域網路權限，MicYou 才能找到你的電腦。";
+"home.nearby.unavailable" = "目前的環境不允許尋找附近的電腦（例如在 LiveContainer 中執行），請在下方手動輸入電腦的 IP 位址。";
 "home.nearby.more" = "正在尋找更多電腦…";
 "home.manual.header" = "手動連線";
 "home.manual.address" = "位址";
-"home.manual.address-placeholder" = "192.168.1.5";
+"home.manual.address-placeholder" = "例如 192.168.1.5";
 "home.manual.port" = "連接埠";
 "home.manual.recent" = "最近使用的位址";
 "home.manual.hint" = "填寫電腦上 MicYou 顯示的 IP 位址，預設連接埠為 %@，也可以寫成「位址:連接埠」。";

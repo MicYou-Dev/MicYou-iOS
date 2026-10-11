@@ -45,10 +45,11 @@
 "home.nearby.searching" = "正在查找电脑…";
 "home.nearby.hint" = "请在电脑上打开 MicYou，并确认两台设备连接的是同一个 Wi-Fi。下拉可以重新查找。";
 "home.nearby.denied" = "请允许本地网络权限，MicYou 才能找到你的电脑。";
+"home.nearby.unavailable" = "当前环境不允许查找附近的电脑（例如在 LiveContainer 中运行），请在下方手动输入电脑的 IP 地址。";
 "home.nearby.more" = "正在查找更多电脑…";
 "home.manual.header" = "手动连接";
 "home.manual.address" = "地址";
-"home.manual.address-placeholder" = "192.168.1.5";
+"home.manual.address-placeholder" = "例如 192.168.1.5";
 "home.manual.port" = "端口";
 "home.manual.recent" = "最近使用的地址";
 "home.manual.hint" = "填写电脑上 MicYou 显示的 IP 地址，默认端口为 %@，也可以写成“地址:端口”。";

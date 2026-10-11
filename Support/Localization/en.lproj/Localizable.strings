@@ -45,10 +45,11 @@
 "home.nearby.searching" = "Looking for computers…";
 "home.nearby.hint" = "Open MicYou on your computer and make sure both devices are on the same Wi-Fi. Pull down to search again.";
 "home.nearby.denied" = "Allow Local Network access so MicYou can find your computer.";
+"home.nearby.unavailable" = "Searching for nearby computers is blocked here, for example inside LiveContainer. Enter the computer's IP address below.";
 "home.nearby.more" = "Looking for more computers…";
 "home.manual.header" = "Manual Connection";
 "home.manual.address" = "Address";
-"home.manual.address-placeholder" = "192.168.1.5";
+"home.manual.address-placeholder" = "e.g. 192.168.1.5";
 "home.manual.port" = "Port";
 "home.manual.recent" = "Recent Addresses";
 "home.manual.hint" = "Use the IP address shown in MicYou on your computer. The default port is %@, or type address:port.";

@@ -83,6 +83,7 @@ public enum L10n {
         public static var searching: String { string("home.nearby.searching") }
         public static var searchHint: String { string("home.nearby.hint") }
         public static var localNetworkDenied: String { string("home.nearby.denied") }
+        public static var browsingUnavailable: String { string("home.nearby.unavailable") }
         public static var searchingMore: String { string("home.nearby.more") }
         public static var manualHeader: String { string("home.manual.header") }
         public static var address: String { string("home.manual.address") }
