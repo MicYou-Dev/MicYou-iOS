@@ -97,15 +97,45 @@
 "settings.general.footer" = "Live Activity shows the connection and mute controls on the Lock Screen and in the Dynamic Island.";
 
 "about.title" = "About";
-"about.version" = "Version";
-"about.version.value" = "%1$@ (%2$@)";
+"about.version.value" = "Version %1$@ (%2$@)";
+"about.tagline" = "Use your iPhone as a microphone for your computer";
+"about.copy" = "Copy";
 "about.protocol" = "Protocol";
 "about.protocol.value" = "MicYou 2.x";
 "about.default-port" = "Default Port";
+"about.feedback" = "Feedback";
+"about.report-bug" = "Report a Problem";
+"about.request-feature" = "Suggest a Feature";
+"about.copy-diagnostics" = "Copy Diagnostic Info";
+"about.copy-diagnostics.detail" = "Paste it when asking for help in the group";
+"about.copied" = "Copied";
+"about.feedback.footer" = "Reports open a public issue on GitHub with the app version, iOS version, device model and current settings filled in. Addresses and other personal information are never included.";
+"about.community" = "Community";
+"about.qq" = "QQ Group";
+"about.telegram" = "Telegram Channel";
+"about.discussions" = "Discussions";
+"about.website" = "Website";
+"about.project" = "Project";
+"about.quick-start" = "Quick Start Guide";
 "about.desktop" = "MicYou Desktop";
 "about.source-code" = "Source Code";
+"about.releases" = "Check for Updates";
+"about.acknowledgements" = "Licenses and Acknowledgements";
 "about.license" = "GNU General Public License v3.0";
+"about.notice" = "Copyright Notice";
 "about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
+
+"credits.license" = "License";
+"credits.thanks" = "Acknowledgements";
+"credits.footer" = "MicYou for iOS does not depend on any third party code. Opus encoding is provided by iOS.";
+"credits.micyou.author" = "LanRhyme and contributors";
+"credits.micyou.role" = "The protocol and client behaviour are ported from its Android app.";
+"credits.micyou-ios.author" = "MicYou contributors";
+"credits.micyou-ios.role" = "Its wording and settings layout were used as a reference.";
+"credits.icon.name" = "Liquid Glass Icon";
+"credits.icon.role" = "The app icon comes from MicYou pull request #350.";
+"credits.micwisp.role" = "Consulted for the iOS audio session setup, no code was copied.";
+"credits.xtool.role" = "Builds and signs the app on Linux.";
 
 "error.choose-target" = "Choose a computer or enter its address first.";
 "error.opus-unavailable" = "Opus is not available on this device, streaming PCM instead.";

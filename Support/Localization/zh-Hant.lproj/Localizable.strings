@@ -97,15 +97,45 @@
 "settings.general.footer" = "即時動態會在鎖定畫面和動態島上顯示連線狀態與靜音控制。";
 
 "about.title" = "關於";
-"about.version" = "版本";
-"about.version.value" = "%1$@（%2$@）";
+"about.version.value" = "版本 %1$@（%2$@）";
+"about.tagline" = "把 iPhone 變成電腦的麥克風";
+"about.copy" = "拷貝";
 "about.protocol" = "協定";
 "about.protocol.value" = "MicYou 2.x";
 "about.default-port" = "預設連接埠";
+"about.feedback" = "意見回饋";
+"about.report-bug" = "回報問題";
+"about.request-feature" = "功能建議";
+"about.copy-diagnostics" = "拷貝診斷資訊";
+"about.copy-diagnostics.detail" = "在群組求助時一併貼上";
+"about.copied" = "已拷貝";
+"about.feedback.footer" = "回報會在 GitHub 上建立一則公開的問題，並自動填入 App 版本、系統版本、機型和目前設定，不會包含位址等個人資訊。";
+"about.community" = "社群";
+"about.qq" = "QQ 群組";
+"about.telegram" = "Telegram 頻道";
+"about.discussions" = "討論區";
+"about.website" = "官方網站";
+"about.project" = "專案";
+"about.quick-start" = "快速入門指南";
 "about.desktop" = "MicYou 桌面版";
 "about.source-code" = "原始碼";
+"about.releases" = "檢查更新";
+"about.acknowledgements" = "開源授權與致謝";
 "about.license" = "GNU 通用公眾授權條款 v3.0";
+"about.notice" = "版權聲明";
 "about.footer" = "MicYou iOS 版是以 GPL 3.0 或更新版本發佈的自由軟體，協定實作移植自 LanRhyme 及貢獻者開發的 MicYou。";
+
+"credits.license" = "授權";
+"credits.thanks" = "致謝";
+"credits.footer" = "MicYou iOS 版不依賴任何第三方程式庫，Opus 編碼由系統提供。";
+"credits.micyou.author" = "LanRhyme 及貢獻者";
+"credits.micyou.role" = "協定與用戶端行為移植自它的 Android 版。";
+"credits.micyou-ios.author" = "MicYou 貢獻者";
+"credits.micyou-ios.role" = "介面文案與設定版面參考了它。";
+"credits.icon.name" = "液態玻璃圖示";
+"credits.icon.role" = "App 圖示來自 MicYou 的 #350 拉取請求。";
+"credits.micwisp.role" = "參考了它的 iOS 音訊工作階段設定，沒有複製程式碼。";
+"credits.xtool.role" = "用於在 Linux 上建置與簽署 App。";
 
 "error.choose-target" = "請先選擇一台電腦或輸入位址。";
 "error.opus-unavailable" = "此裝置無法使用 Opus，已改為傳輸 PCM。";

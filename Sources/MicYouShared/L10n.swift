@@ -139,15 +139,47 @@ public enum L10n {
 
     public enum About {
         public static var title: String { string("about.title") }
-        public static var version: String { string("about.version") }
         public static func versionValue(_ short: String, build: String) -> String { format("about.version.value", short, build) }
+        public static var tagline: String { string("about.tagline") }
+        public static var copy: String { string("about.copy") }
         public static var protocolLabel: String { string("about.protocol") }
         public static var protocolValue: String { string("about.protocol.value") }
         public static var defaultPort: String { string("about.default-port") }
+        public static var feedback: String { string("about.feedback") }
+        public static var reportBug: String { string("about.report-bug") }
+        public static var requestFeature: String { string("about.request-feature") }
+        public static var copyDiagnostics: String { string("about.copy-diagnostics") }
+        public static var copyDiagnosticsDetail: String { string("about.copy-diagnostics.detail") }
+        public static var copied: String { string("about.copied") }
+        public static var feedbackFooter: String { string("about.feedback.footer") }
+        public static var community: String { string("about.community") }
+        public static var qqGroup: String { string("about.qq") }
+        public static var telegram: String { string("about.telegram") }
+        public static var discussions: String { string("about.discussions") }
+        public static var website: String { string("about.website") }
+        public static var project: String { string("about.project") }
+        public static var quickStart: String { string("about.quick-start") }
         public static var desktop: String { string("about.desktop") }
         public static var sourceCode: String { string("about.source-code") }
+        public static var releases: String { string("about.releases") }
+        public static var acknowledgements: String { string("about.acknowledgements") }
         public static var license: String { string("about.license") }
+        public static var notice: String { string("about.notice") }
         public static var footer: String { string("about.footer") }
+    }
+
+    public enum Credits {
+        public static var license: String { string("credits.license") }
+        public static var thanks: String { string("credits.thanks") }
+        public static var footer: String { string("credits.footer") }
+        public static var micyouAuthor: String { string("credits.micyou.author") }
+        public static var micyouRole: String { string("credits.micyou.role") }
+        public static var micyouIOSAuthor: String { string("credits.micyou-ios.author") }
+        public static var micyouIOSRole: String { string("credits.micyou-ios.role") }
+        public static var iconName: String { string("credits.icon.name") }
+        public static var iconRole: String { string("credits.icon.role") }
+        public static var micwispRole: String { string("credits.micwisp.role") }
+        public static var xtoolRole: String { string("credits.xtool.role") }
     }
 
     public enum Failure {
