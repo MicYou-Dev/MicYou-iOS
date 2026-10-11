@@ -86,10 +86,16 @@ struct SettingsView: View {
                 } header: {
                     Text(L10n.Settings.audio)
                 } footer: {
-                    if settings.codec == .opus && settings.sampleRate == 44100 {
-                        Text(L10n.Settings.opusNo44Footer)
-                    } else {
-                        Text(L10n.Settings.audioFooter)
+                    VStack(alignment: .leading, spacing: 6) {
+                        if settings.codec == .opus && settings.sampleRate == 44100 {
+                            Text(L10n.Settings.opusNo44Footer)
+                        } else {
+                            Text(L10n.Settings.audioFooter)
+                        }
+                        // The voice chat mode offers no stereo polar pattern, capture duplicates mono instead
+                        if settings.stereo && settings.voiceProcessing {
+                            Text(L10n.Settings.stereoVoiceProcessingFooter)
+                        }
                     }
                 }
 

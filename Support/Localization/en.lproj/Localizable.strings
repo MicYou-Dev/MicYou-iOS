@@ -96,6 +96,7 @@
 "settings.channels" = "Channels";
 "settings.audio.footer-opus-44" = "Opus does not support 44.1 kHz; 48 kHz will be used instead.";
 "settings.audio.footer" = "Opus uses far less bandwidth than PCM and is well suited for voice; PCM sends uncompressed raw audio.";
+"settings.audio.footer-stereo-voice-processing" = "Voice Processing records in mono, so with it on, Stereo sends the same sound on both channels.";
 "settings.microphone" = "Microphone";
 "settings.input" = "Input";
 "settings.input-gain" = "Input Gain";

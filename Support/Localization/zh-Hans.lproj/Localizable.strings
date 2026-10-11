@@ -96,6 +96,7 @@
 "settings.channels" = "声道";
 "settings.audio.footer-opus-44" = "Opus 不支持 44.1 kHz，将自动改用 48 kHz。";
 "settings.audio.footer" = "Opus 占用的带宽远低于 PCM，适合日常语音传输；PCM 不经压缩，可保留原始音频数据。";
+"settings.audio.footer-stereo-voice-processing" = "人声处理只能录制单声道，开启时选择立体声会把同一路声音同时发送到左右声道。";
 "settings.microphone" = "麦克风";
 "settings.input" = "输入设备";
 "settings.input-gain" = "输入增益";

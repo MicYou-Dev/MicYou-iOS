@@ -7,6 +7,7 @@
 | `xtool dev build` | 编译并输出到 `xtool/MicYou.app` |
 | `xtool dev run` | 编译、签名并安装到已连接的设备 |
 | `swift test --package-path Packages/MicYouProtocol` | 运行协议库测试（可在 Linux 上直接跑） |
+| `swift test --package-path Packages/MicYouCore` | 运行核心逻辑测试（可在 Linux 上直接跑） |
 | `Tools/check-strings.py` | 检查三语文案的键名与格式占位符是否一致、有无缺失或未使用的键 |
 | `Tools/build-livecontainer.sh` | 生成去掉小组件扩展的 IPA，供 LiveContainer 使用 |
 | `python3 Tools/mock_receiver.py --mdns` | 在本机模拟桌面端接收，加 `--help` 查看全部参数 |

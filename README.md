@@ -24,11 +24,13 @@
 - 通过 Bonjour 自动搜索局域网内的电脑，也可以手动输入 IP（支持 `地址:端口` 格式）并保存常用地址。
 - 默认使用 TCP + UDP 传输，延迟最低；网络不稳时可切换为纯 TCP，或开启 UDP 前向纠错（每 12 包附加 1 个 XOR 校验包）。
 - 支持 Opus（系统编码器）和 16 位 PCM 编码，可选 48 / 44.1 / 16 kHz 采样率、单声道或立体声。内置“低延迟”“稳定”“无损”三档预设，可以一键切换。
-- 支持 0 到 +24 dB 的软件输入增益，内置防爆音限幅器；可按需开启系统人声处理（回声消除、降噪、自动增益）。
-- 与电脑端双向同步静音状态。断线后支持自动重连（最多 6 次），重连期间后台录音不会中断。
+- 支持 0 到 +24 dB 的软件输入增益，内置防爆音限幅器；可按需开启系统人声处理（回声消除、降噪、自动增益）；开启后可在控制中心切换系统麦克风模式（如语音突显），App 内会显示当前模式。
+- 可选择输入设备：底部、前置、后置麦克风，或耳机、USB、蓝牙麦克风，传输中也能直接切换。
+- 与电脑端双向同步静音状态，也可开启“按住说话”。断线后支持自动重连（最多 6 次），重连期间后台录音不会中断；通话等占用麦克风结束后会自动恢复。
+- 可设置打开 App 时自动连接；传输时可切换到黑屏模式，屏幕保持常亮但几乎不耗电。
 - 支持锁屏与后台持续传输，可在锁屏实时活动和灵动岛查看连接状态、当前麦克风与音频格式，并直接静音或断开。
 - 支持控制中心按钮、快捷指令和 `micyou://` URL。
-- 首次启动配有欢迎页与首页操作引导，并提供官网快速开始与常见问题入口（可在“关于”页重新查看）。
+- 首次启动配有欢迎页与首页操作引导，并提供官网快速开始与常见问题入口（可在“关于”页重新查看）。“关于”页可导出本次运行的日志，方便反馈问题。
 - 提供简体中文、繁体中文和英文界面。
 
 ## 截图
@@ -103,6 +105,7 @@
 - 音频采集基于 `AVAudioEngine`，重采样与系统 Opus 编码使用 `AVAudioConverter`，自带峰值限幅器。
 - 网络层基于 `Network.framework`（`NWBrowser` 负责 Bonjour 发现，TCP 走控制信令，UDP 发音频）。
 - `MicYouProtocol` 只依赖 Foundation，包含 protobuf 编解码、数据分帧和 XOR 前向纠错，可以直接在 Linux 上跑测试。
+- `MicYouCore` 放不依赖 Apple 框架的应用逻辑（预设、重连策略、采样处理、电平表动态等），同样可以在 Linux 上测试。
 
 配置好 Swift 6 和 xtool（`xtool setup`）后，常用命令如下：
 
@@ -110,8 +113,9 @@
 # 编译、签名并安装到手机
 xtool dev run
 
-# 运行协议库测试（支持 Linux）
+# 运行协议库与核心逻辑测试（支持 Linux）
 swift test --package-path Packages/MicYouProtocol
+swift test --package-path Packages/MicYouCore
 
 # 检查简/繁/英三语本地化表
 Tools/check-strings.py
@@ -131,12 +135,13 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5
 ```text
 Packages/MicYouProtocol   协议编解码、分帧、FEC、地址解析（纯 Foundation）
   Proto/network.proto     上游 protobuf 协议定义
+Packages/MicYouCore       与系统框架无关的应用逻辑：选项与预设、重连策略、采样处理、电平表、输入偏好
 Sources/MicYou            主应用源码
   App/                    入口、全局状态 AppModel、采集与会话桥接
   Model/                  持久化设置、传输与编码选项、预设、StreamConfig
-  Audio/                  麦克风采集、限幅器、Opus 编码
+  Audio/                  麦克风采集与输入选择、Opus 编码
   Network/                Bonjour 发现、TCP 控制通道、UDP 音频与会话
-  Live/                   实时活动驱动与当前麦克风信息
+  Live/                   实时活动驱动、当前麦克风信息与可选输入
   Intents/                快捷指令
   Views/Home              主界面：待机、传输中、电平表、底部控制栏
   Views/Picker            选择电脑与手动连接

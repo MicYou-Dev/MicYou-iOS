@@ -28,6 +28,7 @@ Detailed docs (in Chinese): `docs/ARCHITECTURE.md` (modules, threading, state ma
 xtool dev build                                         # build to xtool/MicYou.app (needs a Darwin SDK, see xtool setup)
 xtool dev run                                           # build, sign and install on the connected device
 swift test --package-path Packages/MicYouProtocol       # protocol library tests, run directly on Linux
+swift test --package-path Packages/MicYouCore           # app logic tests (presets, reconnect, samples, meter), also on Linux
 swift test --package-path Packages/MicYouProtocol --filter Framing/tcpHeaderIsBigEndian   # single test
 Tools/check-strings.py                                  # localization keys, format specifiers and unused keys across all three languages
 Tools/build-livecontainer.sh                            # release IPA plus a LiveContainer IPA without the widget
@@ -35,24 +36,27 @@ Tools/verify-ipa.sh                                     # checks the extension i
 python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver, saves received PCM as WAV
 ```
 
-- Only `MicYouProtocol` (pure Foundation) can be tested on Linux; the app and widget depend on iOS frameworks and have no unit tests
+- Only `MicYouProtocol` and `MicYouCore` (pure Foundation) can be tested on Linux; the app and widget depend on iOS frameworks and have no unit tests, so logic that needs no Apple framework belongs in `MicYouCore`
 - Tests use Swift Testing (`@Suite` / `@Test` / `#expect`), not XCTest
-- CI `check.yml` only runs the protocol tests and `check-strings.py`; run both locally after touching strings or the protocol
+- CI `check.yml` runs both package test suites and `check-strings.py`; run them locally after touching strings, the protocol or core logic
 
 ## Architecture
 
 ### Modules (see `Package.swift`)
 
 - `MicYouProtocol` (separate package under `Packages/`): hand-written protobuf codec (`ProtoWire.swift`, no third-party deps), TCP `MicY` / UDP `MicU` framing, `AudioSequencer` numbering and XOR FEC, manual address parsing; upstream definition in `Proto/network.proto`
+- `MicYouCore` (separate package under `Packages/`, depends on `MicYouProtocol`): transport and codec choices, presets, `StreamOptions`, `ReconnectPolicy`, `SampleProcessor` and `PeakLimiter`, `MeterBallistics`, `InputPreference`, Bonjour display names
 - `MicYouShared`: `L10n`, `DeepLink`, `StreamActivityAttributes`, shared by the app and the widget
 - `MicYou`: the app; `MicYouWidget`: Live Activity, Dynamic Island, Control Center button
 - The widget shares no storage with the app and there is no App Group; every button routes back to the app through `micyou://` links (`DeepLink`)
 
 ### Data flow
 
-`AudioCapture` (AVAudioEngine tap, resample, gain, `PeakLimiter`, convert to Int16) → `SessionSink` (forwards under a lock, pushes levels to the main thread at up to 30 Hz) → `StreamSession` (Opus encode or PCM chunking, sequencing, FEC) → UDP by default (TCP port + 1), or `ControlChannel` in TCP-only mode
+`AudioCapture` (AVAudioEngine tap, resample, then `SampleProcessor`: gain, `PeakLimiter`, convert to Int16) → `SessionSink` (forwards under a lock, pushes levels to the main thread at up to 30 Hz) → `StreamSession` (Opus encode or PCM chunking, sequencing, FEC) → UDP by default (TCP port + 1), or `ControlChannel` in TCP-only mode
 
-- On connect, `AppSettings.streamConfig` freezes settings into a `StreamConfig` for the session; changes made while streaming only apply to the next connection
+- On connect, `AppSettings.streamConfig` freezes settings into a `StreamConfig` (endpoint plus `StreamOptions`) for the session; changes made while streaming apply to the next connection, or right away through `AppModel.restart()` ("Reconnect Now to Apply" in Settings). Input gain and the microphone choice apply immediately
+- A remembered Bonjour computer connects through `NWEndpoint.service` built from its instance name, without waiting for the browser, so Control Center and connect on open work right after launch
+- `AudioCapture` reports interruptions (calls, other apps) and failed restarts to `AppModel.captureStatus`; the connection stays up meanwhile and capture is retried when the interruption ends or the app returns to the foreground
 - `ControlChannel` handles the handshake, heartbeats and two-way mute sync, and treats 5 seconds without a `ping` as a disconnect; when the TCP send backlog exceeds 128 KiB new audio packets are dropped
 
 ### Threading

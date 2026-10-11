@@ -5,19 +5,20 @@
 | 模块 | 内容 | 依赖 |
 | --- | --- | --- |
 | `MicYouProtocol` | protobuf 编解码、TCP / UDP 分帧、音频包编号与 FEC、手动地址解析，纯 Foundation 实现 | 无 |
+| `MicYouCore` | 传输与编码选项、预设、`StreamOptions`、重连策略、采样处理与限幅、电平表动态、输入偏好，纯 Foundation 实现 | `MicYouProtocol` |
 | `MicYouShared` | 多语言文案 `L10n`、`DeepLink`、实时活动定义 `StreamActivityAttributes` | 无 |
-| `MicYou` | 主应用 | `MicYouProtocol`、`MicYouShared` |
+| `MicYou` | 主应用 | `MicYouProtocol`、`MicYouCore`、`MicYouShared` |
 | `MicYouWidget` | 锁屏实时活动、灵动岛、控制中心按钮 | `MicYouShared` |
 
 小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，小组件与控制中心里的按钮都通过 `micyou://` 链接回到主应用处理。
 
-主应用内部按职责分目录。`Model` 只放设置项与选项这类值类型。点击连接开始传输时，`AppSettings.streamConfig` 会把当前设置固定成一份 `StreamConfig` 传给会话层，传输中途改设置只影响下一次连接。界面和实时活动共用的编码名、传输方式等展示文字集中在 `Views/Common/StreamText.swift`。
+主应用内部按职责分目录。`Model` 只放设置项与 `StreamConfig` 这类值类型。不依赖 Apple 框架的逻辑放在 `MicYouCore`，这样可以在 Linux 上测试。点击连接开始传输时，`AppSettings.streamConfig` 会把当前设置固定成一份 `StreamConfig`（目标地址加 `StreamOptions`）传给会话层。传输中途修改设置默认只影响下一次连接；设置页会在设置与当前会话不一致时提供“立即重连以应用”，由 `AppModel.restart()` 在保留传输界面和实时活动的前提下重新连接。输入增益和麦克风选择则立即生效。界面和实时活动共用的编码名、传输方式等展示文字集中在 `Views/Common/StreamText.swift`。
 
 ## 音频与控制流程
 
 ```text
 AVAudioEngine 输入 tap（音频线程，约 20 ms 一块）
-  -> AudioCapture    重采样到目标格式，乘上输入增益，PeakLimiter 限幅，转为小端 Int16
+  -> AudioCapture    重采样到目标格式，再由 SampleProcessor 乘上输入增益、PeakLimiter 限幅、转为小端 Int16
   -> SessionSink     加锁转发给当前会话，同时按最高 30 Hz 向主线程更新音量电平
   -> StreamSession   会话串行队列：Opus 编码（或把 PCM 按 1320 字节分块）
                      AudioSequencer 编号；开启 FEC 时每满 12 包追加 1 个 XOR 校验包
@@ -25,6 +26,16 @@ AVAudioEngine 输入 tap（音频线程，约 20 ms 一块）
 ```
 
 `ControlChannel` 维护 TCP 连接，负责握手、发首帧 `connect`、回复心跳、双向同步静音，并在连续 5 秒收不到 `ping` 时判定断线。“仅 TCP”模式下音频也走这条连接；当发送缓冲积压超过 128 KiB 时会直接丢弃新音频包，避免网络卡顿时延迟越积越大。
+
+选中的是 Bonjour 搜到的电脑时，连接直接用实例名构造 `NWEndpoint.service`，交给 `NWConnection` 自己解析，不等 `NWBrowser` 的搜索结果。这样从控制中心、快捷指令冷启动，或开启“打开时自动连接”时，App 刚启动也能立刻连上；解析失败会提示找不到电脑。
+
+## 麦克风中断与输入选择
+
+- 来电或其他 App 占用麦克风时，`AudioCapture` 通过事件回调报告 `interrupted`，连接保持不断，界面和实时活动显示“麦克风已暂停”。中断结束后强制重启引擎，成功报告 `resumed`，失败报告 `resumeFailed`。
+- 在后台可能无法重新开始录音，所以 App 回到前台时会对 `resumeFailed` 自动重试一次；界面上也提供“恢复”按钮，用于处理系统没有发出中断结束通知的情况。
+- 输入设备选择保存为 `InputPreference`：自动（跟随系统，接上耳机就切换）、内置麦克风的某个位置（底部、前置、后置），或按端口 UID 记住的外接设备（未连接时按自动处理）。传输中切换会在采集队列上重启引擎。
+- 立体声只能用内置麦克风录制。选择“自动”时沿用原有逻辑，强制使用内置麦克风并选用支持立体声的数据源；立体声方向跟随界面方向，iPad 横屏时也能保持左右声道正确。开启人声处理（`voiceChat` 模式）时，内置麦克风的数据源都不提供立体声指向模式，只能录单声道再复制到左右声道，设置页的音频说明里会提示。
+- 列出可选输入需要音频会话处于录音类别，所以空闲时首次打开选择器会先设置类别（不激活会话）。
 
 ## 线程模型
 

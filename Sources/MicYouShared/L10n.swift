@@ -136,6 +136,7 @@ public enum L10n {
         public static var channels: String { string("settings.channels") }
         public static var opusNo44Footer: String { string("settings.audio.footer-opus-44") }
         public static var audioFooter: String { string("settings.audio.footer") }
+        public static var stereoVoiceProcessingFooter: String { string("settings.audio.footer-stereo-voice-processing") }
         public static var microphone: String { string("settings.microphone") }
         public static var input: String { string("settings.input") }
         public static var inputGain: String { string("settings.input-gain") }
