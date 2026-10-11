@@ -85,6 +85,10 @@
 | 声音太小 | 调高设置里的输入增益，限幅器会防止爆音 |
 | 小组件与实时活动不可用 | LiveContainer 版本不含扩展，或系统设置里关闭了实时活动 |
 
+在 LiveContainer 中，选择电脑页面会提示无法查找，并直接聚焦到地址输入框
+
+<img src="docs/screenshots/livecontainer-picker.png" width="240" alt="LiveContainer 中的选择电脑页面">
+
 ## 技术栈
 
 - 界面：SwiftUI、Observation，实时活动与灵动岛用 ActivityKit，控制中心按钮用 WidgetKit，快捷指令用 App Intents
