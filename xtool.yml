@@ -8,6 +8,9 @@ resources:
 - Resources/AppIcon/Assets.car
 - Resources/AppIcon/MicYou60x60@2x.png
 - Resources/AppIcon/MicYou76x76@2x~ipad.png
+# Shown in full on the licenses page
+- LICENSE
+- NOTICE
 - Support/Localization/en.lproj
 - Support/Localization/zh-Hans.lproj
 - Support/Localization/zh-Hant.lproj

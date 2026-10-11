@@ -9,11 +9,23 @@ enum ProjectLinks {
     static let releases = URL(string: "https://github.com/MicYou-Dev/MicYou-iOS/releases/latest")!
     static let desktop = URL(string: "https://github.com/MicYou-Dev/MicYou")!
     static let discussions = URL(string: "https://github.com/MicYou-Dev/MicYou/discussions")!
-    static let website = URL(string: "https://micyou.top")!
-    static let quickStart = URL(string: "https://micyou.top/docs/quick-start")!
+    static var website: URL { site("") }
+    static var quickStart: URL { site("docs/quick-start") }
+    static var faq: URL { site("docs/faq") }
     static let qqGroup = URL(string: "https://qm.qq.com/q/V16hPpWPKO")!
     static let qqGroupNumber = "995452107"
     static let telegram = URL(string: "https://t.me/MicYouChannel")!
+
+    /// A page on the website in the app's language, which serves English under /en and Traditional Chinese under /zh-TW
+    /// The www host directly, the bare domain only redirects there
+    private static func site(_ path: String) -> URL {
+        let prefix = switch Bundle.main.preferredLocalizations.first {
+        case "zh-Hans": ""
+        case "zh-Hant": "zh-TW/"
+        default: "en/"
+        }
+        return URL(string: "https://www.micyou.top/\(prefix)\(path)")!
+    }
 
     /// A new issue from one of the forms in .github/ISSUE_TEMPLATE, fields keyed by their id
     static func newIssue(template: String, fields: [String: String]) -> URL {
@@ -29,6 +41,7 @@ enum ProjectLinks {
 
 struct AboutView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
     @State private var copies = 0
     @State private var copied = false
 
@@ -44,6 +57,24 @@ struct AboutView: View {
                 LabeledContent(L10n.About.defaultPort, value: String(MicYouWire.defaultPort))
             }
 
+            Section(L10n.About.help) {
+                LinkRow(
+                    title: L10n.About.quickStart, detail: "micyou.top",
+                    systemImage: "book.fill", color: .teal,
+                    url: ProjectLinks.quickStart
+                )
+                LinkRow(
+                    title: L10n.About.faq, detail: "micyou.top",
+                    systemImage: "questionmark", color: .orange,
+                    url: ProjectLinks.faq
+                )
+                Button {
+                    settings.replayIntroduction()
+                } label: {
+                    RowLabel(title: L10n.About.replayIntroduction, systemImage: "hand.wave.fill", color: .mint)
+                }
+            }
+
             Section {
                 LinkRow(
                     title: L10n.About.reportBug, detail: "GitHub Issues",
@@ -52,7 +83,7 @@ struct AboutView: View {
                 )
                 LinkRow(
                     title: L10n.About.requestFeature, detail: "GitHub Issues",
-                    systemImage: "lightbulb.fill", color: .orange,
+                    systemImage: "lightbulb.fill", color: .yellow,
                     url: IssueReport.feature()
                 )
                 Button {
@@ -109,11 +140,6 @@ struct AboutView: View {
 
             Section(L10n.About.project) {
                 LinkRow(
-                    title: L10n.About.quickStart, detail: "micyou.top/docs/quick-start",
-                    systemImage: "book.fill", color: .teal,
-                    url: ProjectLinks.quickStart
-                )
-                LinkRow(
                     title: L10n.About.desktop, detail: "github.com/MicYou-Dev/MicYou",
                     systemImage: "desktopcomputer", color: .indigo,
                     url: ProjectLinks.desktop
@@ -160,16 +186,8 @@ private struct AboutHeader: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            icon
-                .frame(width: iconSize, height: iconSize)
-                .clipShape(RoundedRectangle(cornerRadius: iconSize * 0.225, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: iconSize * 0.225, style: .continuous)
-                        .strokeBorder(.separator, lineWidth: 0.5)
-                }
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+            AppIconView(size: iconSize)
                 .padding(.bottom, 6)
-                .accessibilityHidden(true)
             Text(L10n.App.name)
                 .font(.title2.bold())
             Text(L10n.About.tagline)
@@ -191,20 +209,6 @@ private struct AboutHeader: View {
             Button(L10n.About.copy, systemImage: "doc.on.doc") {
                 UIPasteboard.general.string = "MicYou \(Diagnostics.version) (\(Diagnostics.build))"
             }
-        }
-    }
-
-    /// The bundled home screen icon, a plain glyph if it is missing
-    @ViewBuilder
-    private var icon: some View {
-        if let image = UIImage(named: "MicYou60x60") {
-            Image(uiImage: image).resizable()
-        } else {
-            Image(systemName: "mic.fill")
-                .font(.system(size: iconSize * 0.45, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.accentColor.gradient)
         }
     }
 }

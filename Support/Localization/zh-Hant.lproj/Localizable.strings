@@ -116,6 +116,9 @@
 "about.discussions" = "討論區";
 "about.website" = "官方網站";
 "about.project" = "專案";
+"about.help" = "說明";
+"about.faq" = "常見問題";
+"about.replay-introduction" = "重新查看新手導覽";
 "about.quick-start" = "快速入門指南";
 "about.desktop" = "MicYou 桌面版";
 "about.source-code" = "原始碼";
@@ -125,11 +128,38 @@
 "about.notice" = "版權聲明";
 "about.footer" = "MicYou iOS 版是以 GPL 3.0 或更新版本發佈的自由軟體，協定實作移植自 LanRhyme 及貢獻者開發的 MicYou。";
 
-"credits.license" = "授權";
-"credits.thanks" = "致謝";
-"credits.footer" = "MicYou iOS 版不依賴任何第三方程式庫，Opus 編碼由系統提供。";
+"welcome.title" = "歡迎使用 MicYou";
+"welcome.subtitle" = "三步把 iPhone 變成電腦的麥克風。";
+"welcome.desktop.title" = "準備電腦";
+"welcome.desktop.text" = "在電腦上安裝 MicYou 桌面版和虛擬音效卡，Windows 用 VB-CABLE，macOS 用 BlackHole，Linux 不需另外安裝。";
+"welcome.network.title" = "連上同一個 Wi-Fi";
+"welcome.network.text" = "電腦版選擇 Wi-Fi 模式，在這裡選取附近的電腦或輸入它的 IP 位址，然後點一下連線。";
+"welcome.apps.title" = "在軟體裡選擇麥克風";
+"welcome.apps.text" = "在聊天、會議或遊戲軟體裡把麥克風選為虛擬音效卡，例如 CABLE Output 或 BlackHole 2ch。";
+"welcome.start" = "開始使用";
+
+"tour.progress" = "%1$lld/%2$lld";
+"tour.skip" = "略過";
+"tour.next" = "下一步";
+"tour.computer.title" = "選擇電腦";
+"tour.computer.text" = "點一下這裡尋找同一個 Wi-Fi 下的電腦，找不到時也可以手動輸入 IP 位址。";
+"tour.connect.title" = "開始傳輸";
+"tour.connect.text" = "選好電腦後點一下這裡連線，之後可以鎖定螢幕或切到背景，聲音會繼續傳到電腦。";
+"tour.format.title" = "傳輸格式";
+"tour.format.text" = "這裡是下次連線使用的編碼、取樣率和傳輸方式，點一下可以調整。";
+"tour.settings.title" = "設定與說明";
+"tour.settings.text" = "場景預設、輸入增益和即時動態都在設定裡，關於頁面有使用文件和問題回報。";
+
+"credits.included" = "App 包含的元件";
+"credits.included.footer" = "MicYou iOS 版沒有打包任何第三方程式庫，SwiftUI、AVFoundation、Network 等系統框架和 Opus 編碼器由 iOS 提供，不在此列。";
+"credits.references" = "參考與工具";
+"credits.references.footer" = "以下專案都沒有包含在 App 中。";
+"credits.view-source" = "檢視原始碼";
+"credits.text-unavailable" = "無法讀取授權文字，請在專案頁面上檢視。";
+"credits.app.role" = "App 本體、小工具與即時動態。";
+"credits.protocol.role" = "訊息編解碼、分幀與前向錯誤更正，本儲存庫內的 Swift 套件。";
 "credits.micyou.author" = "LanRhyme 及貢獻者";
-"credits.micyou.role" = "協定與用戶端行為移植自它的 Android 版。";
+"credits.micyou.role" = "Proto/network.proto 原樣複製自 MicYou，握手、心跳、靜音同步與前向錯誤更正移植自它的 Android 版。";
 "credits.micyou-ios.author" = "MicYou 貢獻者";
 "credits.micyou-ios.role" = "介面文案與設定版面參考了它。";
 "credits.icon.name" = "液態玻璃圖示";

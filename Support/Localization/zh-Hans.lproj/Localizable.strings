@@ -116,6 +116,9 @@
 "about.discussions" = "讨论区";
 "about.website" = "官网";
 "about.project" = "项目";
+"about.help" = "帮助";
+"about.faq" = "常见问题";
+"about.replay-introduction" = "重新查看新手引导";
 "about.quick-start" = "快速开始指南";
 "about.desktop" = "MicYou 桌面端";
 "about.source-code" = "源代码";
@@ -125,11 +128,38 @@
 "about.notice" = "版权声明";
 "about.footer" = "MicYou iOS 版是以 GPL 3.0 或更高版本发布的自由软件，协议实现移植自 LanRhyme 及贡献者开发的 MicYou。";
 
-"credits.license" = "许可";
-"credits.thanks" = "致谢";
-"credits.footer" = "MicYou iOS 版不依赖任何第三方代码库，Opus 编码由系统提供。";
+"welcome.title" = "欢迎使用 MicYou";
+"welcome.subtitle" = "三步把 iPhone 变成电脑的麦克风。";
+"welcome.desktop.title" = "准备电脑";
+"welcome.desktop.text" = "在电脑上安装 MicYou 桌面端和虚拟声卡，Windows 用 VB-CABLE，macOS 用 BlackHole，Linux 无需额外安装。";
+"welcome.network.title" = "连接同一个 Wi-Fi";
+"welcome.network.text" = "电脑端选择 Wi-Fi 模式，在这里选中附近的电脑或输入它的 IP 地址，然后轻点连接。";
+"welcome.apps.title" = "在软件里选择麦克风";
+"welcome.apps.text" = "在聊天、会议或游戏软件里把麦克风选为虚拟声卡，例如 CABLE Output 或 BlackHole 2ch。";
+"welcome.start" = "开始使用";
+
+"tour.progress" = "%1$lld/%2$lld";
+"tour.skip" = "跳过";
+"tour.next" = "下一步";
+"tour.computer.title" = "选择电脑";
+"tour.computer.text" = "轻点这里查找同一 Wi-Fi 下的电脑，找不到时也可以手动输入 IP 地址。";
+"tour.connect.title" = "开始传输";
+"tour.connect.text" = "选好电脑后轻点这里连接，之后可以锁屏或切到后台，声音会继续传到电脑。";
+"tour.format.title" = "传输格式";
+"tour.format.text" = "这里是下次连接使用的编码、采样率和传输方式，轻点可以调整。";
+"tour.settings.title" = "设置与帮助";
+"tour.settings.text" = "场景预设、输入增益和实时活动都在设置里，关于页有使用文档和问题反馈。";
+
+"credits.included" = "应用中包含的组件";
+"credits.included.footer" = "MicYou iOS 版没有打包任何第三方库，SwiftUI、AVFoundation、Network 等系统框架和 Opus 编码器由 iOS 提供，不在此列。";
+"credits.references" = "参考与工具";
+"credits.references.footer" = "以下项目都没有包含在应用中。";
+"credits.view-source" = "查看源代码";
+"credits.text-unavailable" = "无法读取许可文本，请在项目页面上查看。";
+"credits.app.role" = "应用本体、小组件与实时活动。";
+"credits.protocol.role" = "消息编解码、分帧与前向纠错，本仓库内的 Swift 包。";
 "credits.micyou.author" = "LanRhyme 及贡献者";
-"credits.micyou.role" = "协议与客户端行为移植自它的 Android 端。";
+"credits.micyou.role" = "Proto/network.proto 原样复制自 MicYou，握手、心跳、静音同步与前向纠错移植自它的 Android 端。";
 "credits.micyou-ios.author" = "MicYou 贡献者";
 "credits.micyou-ios.role" = "界面文案与设置布局参考了它。";
 "credits.icon.name" = "液态玻璃图标";

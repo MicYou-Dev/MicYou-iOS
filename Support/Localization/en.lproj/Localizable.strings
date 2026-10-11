@@ -116,6 +116,9 @@
 "about.discussions" = "Discussions";
 "about.website" = "Website";
 "about.project" = "Project";
+"about.help" = "Help";
+"about.faq" = "FAQ";
+"about.replay-introduction" = "Replay the Introduction";
 "about.quick-start" = "Quick Start Guide";
 "about.desktop" = "MicYou Desktop";
 "about.source-code" = "Source Code";
@@ -125,11 +128,38 @@
 "about.notice" = "Copyright Notice";
 "about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
 
-"credits.license" = "License";
-"credits.thanks" = "Acknowledgements";
-"credits.footer" = "MicYou for iOS does not depend on any third party code. Opus encoding is provided by iOS.";
+"welcome.title" = "Welcome to MicYou";
+"welcome.subtitle" = "Use your iPhone as your computer's microphone in three steps.";
+"welcome.desktop.title" = "Set Up Your Computer";
+"welcome.desktop.text" = "Install the MicYou desktop app and a virtual audio device: VB-CABLE on Windows, BlackHole on macOS, nothing extra on Linux.";
+"welcome.network.title" = "Join the Same Wi-Fi";
+"welcome.network.text" = "Choose Wi-Fi mode on the computer, pick it from the nearby computers here or enter its IP address, then tap Connect.";
+"welcome.apps.title" = "Choose the Microphone in Your Apps";
+"welcome.apps.text" = "In chat, meeting or game apps, set the microphone to the virtual device, such as CABLE Output or BlackHole 2ch.";
+"welcome.start" = "Get Started";
+
+"tour.progress" = "%1$lld/%2$lld";
+"tour.skip" = "Skip";
+"tour.next" = "Next";
+"tour.computer.title" = "Choose a Computer";
+"tour.computer.text" = "Tap here to find computers on the same Wi-Fi, or enter an IP address if yours does not show up.";
+"tour.connect.title" = "Start Streaming";
+"tour.connect.text" = "Once a computer is chosen, tap here to connect. You can then lock the phone or switch apps and the audio keeps going.";
+"tour.format.title" = "Stream Format";
+"tour.format.text" = "The codec, sample rate and transport for the next connection. Tap to change them.";
+"tour.settings.title" = "Settings and Help";
+"tour.settings.text" = "Presets, input gain and Live Activity are in Settings, and About has the guides and feedback links.";
+
+"credits.included" = "Included in the App";
+"credits.included.footer" = "MicYou for iOS bundles no third party libraries. System frameworks such as SwiftUI, AVFoundation and Network, and the Opus encoder, come with iOS and are not listed.";
+"credits.references" = "References and Tools";
+"credits.references.footer" = "None of these projects ship in the app.";
+"credits.view-source" = "View Source";
+"credits.text-unavailable" = "The license text could not be read, view it on the project page instead.";
+"credits.app.role" = "The app, widget and Live Activity.";
+"credits.protocol.role" = "Message encoding, framing and forward error correction, a Swift package in this repository.";
 "credits.micyou.author" = "LanRhyme and contributors";
-"credits.micyou.role" = "The protocol and client behaviour are ported from its Android app.";
+"credits.micyou.role" = "Proto/network.proto is copied verbatim, the handshake, heartbeat, mute sync and FEC are ported from its Android app.";
 "credits.micyou-ios.author" = "MicYou contributors";
 "credits.micyou-ios.role" = "Its wording and settings layout were used as a reference.";
 "credits.icon.name" = "Liquid Glass Icon";

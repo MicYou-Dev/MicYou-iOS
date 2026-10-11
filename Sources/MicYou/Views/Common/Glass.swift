@@ -17,6 +17,16 @@ extension View {
             buttonStyle(.bordered)
         }
     }
+
+    /// Tinted Liquid Glass on iOS 26, a filled button before
+    @ViewBuilder
+    func glassProminentButtonStyle() -> some View {
+        if #available(iOS 26, *) {
+            buttonStyle(.glassProminent)
+        } else {
+            buttonStyle(.borderedProminent)
+        }
+    }
 }
 
 extension View {

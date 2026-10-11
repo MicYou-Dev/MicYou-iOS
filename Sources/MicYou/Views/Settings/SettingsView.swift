@@ -112,6 +112,10 @@ struct SettingsView: View {
             }
             .navigationTitle(L10n.Common.settings)
             .navigationBarTitleDisplayMode(.inline)
+            // Replaying the introduction from the about page needs the home screen
+            .onChange(of: settings.welcomeShown) { _, shown in
+                if !shown { dismiss() }
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L10n.Common.done) { dismiss() }

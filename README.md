@@ -29,6 +29,7 @@
 - 与桌面端双向同步静音，心跳超时后自动重连，最多 6 次
 - 锁屏与后台持续传输，实时活动和灵动岛显示状态、当前麦克风和格式，可直接静音或断开
 - 控制中心按钮、快捷指令、`micyou://` URL
+- 首次启动有欢迎页与聚光灯式的首页引导，并链接官网的快速开始指南与常见问题，可在关于页重新查看
 - 简体中文、繁体中文、英文
 
 ## 软件截图
@@ -36,6 +37,10 @@
 | 首页 | 传输中 | 设置 |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/home.png" width="240" alt="首页"> | <img src="docs/screenshots/streaming.png" width="240" alt="传输中"> | <img src="docs/screenshots/settings.png" width="240" alt="设置"> |
+
+| 欢迎页 | 引导：开始传输 | 引导：传输格式 |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/welcome.png" width="240" alt="欢迎页"> | <img src="docs/screenshots/tour-connect.png" width="240" alt="聚光灯引导：开始传输"> | <img src="docs/screenshots/tour-format.png" width="240" alt="聚光灯引导：传输格式"> |
 
 | 锁屏实时活动 | 灵动岛 |
 | :---: | :---: |
@@ -51,7 +56,7 @@
 | `MicYou-<版本>-LiveContainer.ipa` | 去掉了小组件扩展，用于 LiveContainer，没有实时活动、灵动岛与控制中心按钮 |
 | `SHA256SUMS.txt` | 两个 IPA 的校验值 |
 
-电脑端从 [MicYou Releases](https://github.com/MicYou-Dev/MicYou/releases) 下载桌面端，并按[快速开始指南](https://micyou.top/docs/quick-start)配置虚拟麦克风
+电脑端从 [MicYou Releases](https://github.com/MicYou-Dev/MicYou/releases) 下载桌面端，并按[快速开始指南](https://www.micyou.top/docs/quick-start)配置虚拟麦克风，侧载步骤见[在 iOS 上安装](https://www.micyou.top/docs/how-to-install-in-ios)
 
 ## 使用指南
 
@@ -84,6 +89,8 @@
 | 声音断断续续 | 设置里改用仅 TCP，或开启前向纠错 |
 | 声音太小 | 调高设置里的输入增益，限幅器会防止爆音 |
 | 小组件与实时活动不可用 | LiveContainer 版本不含扩展，或系统设置里关闭了实时活动 |
+
+更多排查方法见官网[常见问题](https://www.micyou.top/docs/faq)
 
 在 LiveContainer 中，选择电脑页面会提示无法查找，并直接聚焦到地址输入框
 

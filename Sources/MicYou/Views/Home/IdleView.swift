@@ -12,6 +12,7 @@ struct IdleView: View {
     var body: some View {
         VStack(spacing: 20) {
             TargetCard(action: openPicker)
+                .tourTarget(.computer)
             if case .failed(let message) = model.phase {
                 NoticeCard(title: L10n.Status.failed, text: message, kind: .error) {
                     withAnimation(Motion.state) { model.clearError() }
@@ -26,6 +27,7 @@ struct IdleView: View {
             Spacer(minLength: 16)
             VStack(spacing: 24) {
                 HeroButton(title: heroTitle, systemImage: heroSymbol, isProminent: model.canConnect, action: heroAction)
+                    .tourTarget(.connect)
                 // Kept in the layout while hidden so the button does not shift
                 Text(L10n.Home.hint)
                     .font(.subheadline)
@@ -203,6 +205,7 @@ private struct FormatSummary: View {
                 .contentShape(.rect(cornerRadius: 22))
             }
             .buttonStyle(.surface)
+            .tourTarget(.format)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(L10n.Home.formatHeader)
             .accessibilityValue(L10n.Common.joined([codec, codecDetail, L10n.Unit.kHz(sampleRate), transport, transportDetail]))

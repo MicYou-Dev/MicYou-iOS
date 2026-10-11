@@ -9,6 +9,8 @@ struct HomeView: View {
     @Environment(AppModel.self) private var model
     @State private var showPicker = false
     @State private var showSettings = false
+    @State private var showWelcome = false
+    @State private var tourStep: TourStep?
 
     var body: some View {
         FillingScrollView {
@@ -50,16 +52,67 @@ struct HomeView: View {
         .animation(Motion.screen, value: model.isActive)
         .background(Color(.systemGroupedBackground))
         .sensoryFeedback(trigger: model.phase, Self.feedback)
+        .overlayPreferenceValue(TourAnchorKey.self) { anchors in
+            if tourStep != nil {
+                TourOverlay(anchors: anchors, step: $tourStep, finish: finishTour)
+                    .transition(.opacity)
+            }
+        }
+        .animation(Motion.state, value: tourStep == nil)
+        .task(id: tourReady) {
+            guard tourReady else { return }
+            // Let the welcome sheet slide away before the screen dims
+            try? await Task.sleep(for: .seconds(0.4))
+            guard tourReady, !Task.isCancelled else { return }
+            tourStep = Self.firstTourStep
+        }
         .onChange(of: model.isActive) { _, active in
-            // A shortcut or URL may start streaming while the picker is open
-            if active { showPicker = false }
+            // A shortcut or URL may start streaming while the picker, the welcome sheet or the tour is open
+            if active {
+                showPicker = false
+                showWelcome = false
+                model.settings.welcomeShown = true
+                if tourStep != nil { finishTour() }
+            }
         }
         .sheet(isPresented: $showPicker) {
             ServerPickerView()
         }
-        .sheet(isPresented: $showSettings) {
+        // After the settings close, in case the introduction was replayed from the about page
+        // Presenting while the settings sheet is still sliding away would be dropped
+        .sheet(isPresented: $showSettings, onDismiss: presentWelcomeIfNeeded) {
             SettingsView()
         }
+        .sheet(isPresented: $showWelcome, onDismiss: { model.settings.welcomeShown = true }) {
+            WelcomeView()
+        }
+        .onAppear(perform: presentWelcomeIfNeeded)
+    }
+
+    /// The idle screen is showing with nothing on top of it, and the tour has not been seen yet
+    private var tourReady: Bool {
+        let settings = model.settings
+        return settings.welcomeShown && !settings.tourShown && !model.isActive
+            && !showPicker && !showSettings && !showWelcome && tourStep == nil
+    }
+
+    #if DEBUG
+    /// For screenshots, since a connected device cannot be tapped from the computer:
+    /// launch with -tourShown NO -MicYouTourStep 3 to open the tour on its third step
+    private static var firstTourStep: TourStep {
+        TourStep(rawValue: UserDefaults.standard.integer(forKey: "MicYouTourStep") - 1) ?? .computer
+    }
+    #else
+    private static let firstTourStep = TourStep.computer
+    #endif
+
+    private func finishTour() {
+        tourStep = nil
+        model.settings.tourShown = true
+    }
+
+    private func presentWelcomeIfNeeded() {
+        if !model.settings.welcomeShown && !model.isActive { showWelcome = true }
     }
 
     /// A tap when a stream starts or is stopped, a warning when the link drops and an error when it gives up
@@ -90,6 +143,7 @@ struct HomeHeader<Leading: View>: View {
             }
             .glassButtonStyle()
             .buttonBorderShape(.circle)
+            .tourTarget(.settings)
             .accessibilityLabel(L10n.Common.settings)
         }
         .frame(minHeight: 44)

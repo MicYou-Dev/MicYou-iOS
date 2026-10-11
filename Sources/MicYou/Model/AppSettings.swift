@@ -17,7 +17,7 @@ final class AppSettings {
 
     private enum Key: String {
         case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB
-        case fecEnabled, autoReconnect, keepScreenOn, liveActivity, recentHosts, lastServiceName
+        case fecEnabled, autoReconnect, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -39,6 +39,10 @@ final class AppSettings {
     var recentHosts: [String] { didSet { save(recentHosts, .recentHosts) } }
     /// Bonjour instance name of the last server picked from the list
     var lastServiceName: String? { didSet { save(lastServiceName, .lastServiceName) } }
+    /// The welcome sheet appears once, on the first launch
+    var welcomeShown: Bool { didSet { save(welcomeShown, .welcomeShown) } }
+    /// The spotlight tour of the home screen follows the welcome sheet, also once
+    var tourShown: Bool { didSet { save(tourShown, .tourShown) } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -58,6 +62,12 @@ final class AppSettings {
         liveActivity = load(.liveActivity) ?? true
         recentHosts = load(.recentHosts) ?? []
         lastServiceName = load(.lastServiceName)
+        // Anyone who connected before this sheet existed has already found their way
+        // Read again rather than through the properties, which are not all set yet
+        let hosts: [String] = load(.recentHosts) ?? []
+        let service: String? = load(.lastServiceName)
+        welcomeShown = load(.welcomeShown) ?? (!hosts.isEmpty || service != nil)
+        tourShown = load(.tourShown) ?? (!hosts.isEmpty || service != nil)
     }
 
     /// The manual fields as an address, nil while they are empty or invalid
@@ -69,6 +79,12 @@ final class AppSettings {
     /// True when something is typed but cannot be used, for an inline hint
     var manualInputInvalid: Bool {
         !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && manualTarget == nil
+    }
+
+    /// Shows the welcome sheet and the tour again, from the about page
+    func replayIntroduction() {
+        welcomeShown = false
+        tourShown = false
     }
 
     func rememberHost(_ host: String) {

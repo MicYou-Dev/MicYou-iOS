@@ -158,7 +158,10 @@ public enum L10n {
         public static var discussions: String { string("about.discussions") }
         public static var website: String { string("about.website") }
         public static var project: String { string("about.project") }
+        public static var help: String { string("about.help") }
         public static var quickStart: String { string("about.quick-start") }
+        public static var faq: String { string("about.faq") }
+        public static var replayIntroduction: String { string("about.replay-introduction") }
         public static var desktop: String { string("about.desktop") }
         public static var sourceCode: String { string("about.source-code") }
         public static var releases: String { string("about.releases") }
@@ -168,10 +171,42 @@ public enum L10n {
         public static var footer: String { string("about.footer") }
     }
 
+    public enum Welcome {
+        public static var title: String { string("welcome.title") }
+        public static var subtitle: String { string("welcome.subtitle") }
+        public static var desktopTitle: String { string("welcome.desktop.title") }
+        public static var desktopText: String { string("welcome.desktop.text") }
+        public static var networkTitle: String { string("welcome.network.title") }
+        public static var networkText: String { string("welcome.network.text") }
+        public static var appsTitle: String { string("welcome.apps.title") }
+        public static var appsText: String { string("welcome.apps.text") }
+        public static var start: String { string("welcome.start") }
+    }
+
+    public enum Tour {
+        /// For example "2/4"
+        public static func progress(_ step: Int, of total: Int) -> String { format("tour.progress", step, total) }
+        public static var skip: String { string("tour.skip") }
+        public static var next: String { string("tour.next") }
+        public static var computerTitle: String { string("tour.computer.title") }
+        public static var computerText: String { string("tour.computer.text") }
+        public static var connectTitle: String { string("tour.connect.title") }
+        public static var connectText: String { string("tour.connect.text") }
+        public static var formatTitle: String { string("tour.format.title") }
+        public static var formatText: String { string("tour.format.text") }
+        public static var settingsTitle: String { string("tour.settings.title") }
+        public static var settingsText: String { string("tour.settings.text") }
+    }
+
     public enum Credits {
-        public static var license: String { string("credits.license") }
-        public static var thanks: String { string("credits.thanks") }
-        public static var footer: String { string("credits.footer") }
+        public static var included: String { string("credits.included") }
+        public static var includedFooter: String { string("credits.included.footer") }
+        public static var references: String { string("credits.references") }
+        public static var referencesFooter: String { string("credits.references.footer") }
+        public static var viewSource: String { string("credits.view-source") }
+        public static var textUnavailable: String { string("credits.text-unavailable") }
+        public static var appRole: String { string("credits.app.role") }
+        public static var protocolRole: String { string("credits.protocol.role") }
         public static var micyouAuthor: String { string("credits.micyou.author") }
         public static var micyouRole: String { string("credits.micyou.role") }
         public static var micyouIOSAuthor: String { string("credits.micyou-ios.author") }
