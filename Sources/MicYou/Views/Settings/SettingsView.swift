@@ -115,6 +115,10 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle(isOn: Binding(get: { settings.pushToTalk }, set: { model.setPushToTalk($0) })) {
+                        Text(L10n.Settings.pushToTalk)
+                        Text(L10n.Settings.pushToTalkDetail)
+                    }
                     Toggle(L10n.Settings.keepScreenOn, isOn: $settings.keepScreenOn)
                     Toggle(L10n.Settings.liveActivity, isOn: $settings.liveActivity)
                 } header: {

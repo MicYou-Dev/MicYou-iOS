@@ -14,6 +14,7 @@
 "common.open-settings" = "打開設定";
 "common.retry" = "重試";
 "common.resume" = "恢復";
+"common.hold-to-talk" = "按住說話";
 "common.dismiss" = "關閉";
 "common.mono" = "單聲道";
 "common.stereo" = "立體聲";
@@ -31,6 +32,7 @@
 "status.streaming" = "正在傳輸";
 "status.waiting" = "…";
 "status.muted" = "已靜音";
+"status.talking" = "正在說話";
 "status.interrupted" = "麥克風已暫停";
 "status.failed" = "連線失敗";
 "status.ready" = "將連線到 %@";
@@ -41,6 +43,7 @@
 "status.transport" = "傳輸";
 "status.fec" = "糾錯";
 "status.muted-detail" = "已暫停向電腦傳送聲音，連線仍保持開啟。";
+"status.push-to-talk-detail" = "已開啟按住說話，按住下方按鈕即可說話。";
 "status.reconnect-detail" = "麥克風保持開啟，重新連線後將自動恢復傳輸。";
 "status.interrupted-detail" = "通話或其他 App 正在使用麥克風，結束後將自動恢復傳輸。";
 "status.resume-failed-detail" = "麥克風未能恢復，連線仍保持開啟。";
@@ -105,6 +108,8 @@
 "settings.mic-mode.voice-isolation" = "語音突顯";
 "settings.mic-mode.footer" = "開啟人聲處理並傳輸時，打開控制中心，輕點「麥克風模式」即可切換，例如選擇「語音突顯」過濾背景噪音。";
 "settings.general" = "一般";
+"settings.push-to-talk" = "按住說話";
+"settings.push-to-talk.detail" = "僅在按住說話按鈕時傳送聲音。";
 "settings.keep-screen-on" = "保持螢幕常亮";
 "settings.live-activity" = "即時動態";
 "settings.general.footer" = "即時動態會在鎖定畫面和動態島顯示連線狀態與快捷控制。";
@@ -214,3 +219,5 @@
 "input.unavailable" = "未連接的裝置";
 
 "control.description" = "開始或停止向電腦傳輸聲音。";
+"dim.button" = "黑屏模式";
+"dim.wake" = "輕點任意位置喚醒";

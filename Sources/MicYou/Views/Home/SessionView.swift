@@ -8,6 +8,7 @@ import SwiftUI
 /// Every phase uses the same layout, only the contents of each slot change, so nothing jumps while connecting or reconnecting
 struct SessionView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         VStack(spacing: 24) {
@@ -72,7 +73,8 @@ struct SessionView: View {
                     resumeButton
                 case .running:
                     if model.isMuted {
-                        caption(L10n.Status.mutedDetail, systemImage: "mic.slash.fill", color: .orange)
+                        caption(settings.pushToTalk ? L10n.Status.pushToTalkDetail : L10n.Status.mutedDetail,
+                                systemImage: "mic.slash.fill", color: .orange)
                     } else {
                         MeterScale()
                     }
@@ -147,17 +149,24 @@ struct StatusPill: View {
         model.phase != .streaming
     }
 
-    private var tint: Color {
-        switch model.phase {
-        case .streaming: model.captureStatus != .running ? .yellow : model.isMuted ? .orange : .green
+    private var tint: Color { model.statusTint }
+
+    private var title: String { model.statusTitle }
+}
+
+extension AppModel {
+    /// Color of the session phase, shared by the status pill and the dim screen
+    var statusTint: Color {
+        switch phase {
+        case .streaming: captureStatus != .running ? .yellow : isMuted ? .orange : .green
         default: .blue
         }
     }
 
-    private var title: String {
-        switch model.phase {
+    var statusTitle: String {
+        switch phase {
         case .streaming:
-            model.captureStatus != .running ? L10n.Status.interrupted : model.isMuted ? L10n.Status.muted : L10n.Status.streaming
+            captureStatus != .running ? L10n.Status.interrupted : isMuted ? L10n.Status.muted : L10n.Status.streaming
         case .reconnecting(let attempt): L10n.Status.reconnectingAttempt(attempt, of: AppModel.maxReconnectAttempts)
         default: L10n.Status.connecting
         }
@@ -165,7 +174,7 @@ struct StatusPill: View {
 }
 
 /// Large elapsed time, dimmed until audio flows again
-private struct ElapsedTime: View {
+struct ElapsedTime: View {
     let since: Date?
     let isLive: Bool
     /// Follows Dynamic Type, the minimum scale factor still fits long sessions on one line
@@ -190,7 +199,7 @@ private struct ElapsedTime: View {
     }
 
     /// "0:06", "12:34" or "1:02:03"
-    private static func elapsed(from start: Date, to now: Date) -> String {
+    static func elapsed(from start: Date, to now: Date) -> String {
         let seconds = max(0, Int(now.timeIntervalSince(start)))
         let pattern: Duration.TimeFormatStyle.Pattern = seconds >= 3600 ? .hourMinuteSecond : .minuteSecond
         return Duration.seconds(seconds).formatted(.time(pattern: pattern))

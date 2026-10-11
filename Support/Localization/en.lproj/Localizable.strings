@@ -14,6 +14,7 @@
 "common.open-settings" = "Open Settings";
 "common.retry" = "Try Again";
 "common.resume" = "Resume";
+"common.hold-to-talk" = "Hold to Talk";
 "common.dismiss" = "Dismiss";
 "common.mono" = "Mono";
 "common.stereo" = "Stereo";
@@ -31,6 +32,7 @@
 "status.streaming" = "Streaming";
 "status.waiting" = "…";
 "status.muted" = "Muted";
+"status.talking" = "Talking";
 "status.interrupted" = "Microphone Paused";
 "status.failed" = "Connection Failed";
 "status.ready" = "Ready to connect to %@";
@@ -41,6 +43,7 @@
 "status.transport" = "Transport";
 "status.fec" = "FEC";
 "status.muted-detail" = "Audio is muted while the connection stays open.";
+"status.push-to-talk-detail" = "Push to Talk is on. Hold the button below to talk.";
 "status.reconnect-detail" = "The microphone stays active and streaming will resume once reconnected.";
 "status.interrupted-detail" = "A call or another app is using the microphone. Streaming resumes when it's done.";
 "status.resume-failed-detail" = "The microphone could not be resumed. The connection is still open.";
@@ -105,6 +108,8 @@
 "settings.mic-mode.voice-isolation" = "Voice Isolation";
 "settings.mic-mode.footer" = "While streaming with Voice Processing on, open Control Center and tap Mic Mode to switch, for example to Voice Isolation to filter out background noise.";
 "settings.general" = "General";
+"settings.push-to-talk" = "Push to Talk";
+"settings.push-to-talk.detail" = "Sends audio only while you hold the talk button.";
 "settings.keep-screen-on" = "Keep Screen On";
 "settings.live-activity" = "Live Activity";
 "settings.general.footer" = "Live Activity displays connection status and quick controls on the Lock Screen and in the Dynamic Island.";
@@ -214,3 +219,5 @@
 "input.unavailable" = "Disconnected Device";
 
 "control.description" = "Start or stop streaming to your computer.";
+"dim.button" = "Black Screen";
+"dim.wake" = "Tap anywhere to wake";

@@ -14,6 +14,7 @@
 "common.open-settings" = "打开设置";
 "common.retry" = "重试";
 "common.resume" = "恢复";
+"common.hold-to-talk" = "按住说话";
 "common.dismiss" = "关闭";
 "common.mono" = "单声道";
 "common.stereo" = "立体声";
@@ -31,6 +32,7 @@
 "status.streaming" = "正在传输";
 "status.waiting" = "…";
 "status.muted" = "已静音";
+"status.talking" = "正在说话";
 "status.interrupted" = "麦克风已暂停";
 "status.failed" = "连接失败";
 "status.ready" = "将连接到 %@";
@@ -41,6 +43,7 @@
 "status.transport" = "传输";
 "status.fec" = "纠错";
 "status.muted-detail" = "已暂停向电脑发送声音，连接仍保持开启。";
+"status.push-to-talk-detail" = "已开启按住说话，按住下方按钮即可说话。";
 "status.reconnect-detail" = "麦克风保持开启，重连成功后将自动恢复传输。";
 "status.interrupted-detail" = "通话或其他应用正在使用麦克风，结束后将自动恢复传输。";
 "status.resume-failed-detail" = "麦克风未能恢复，连接仍保持开启。";
@@ -105,6 +108,8 @@
 "settings.mic-mode.voice-isolation" = "语音突显";
 "settings.mic-mode.footer" = "开启人声处理并传输时，打开控制中心，轻点“麦克风模式”即可切换，例如选择“语音突显”过滤背景噪声。";
 "settings.general" = "通用";
+"settings.push-to-talk" = "按住说话";
+"settings.push-to-talk.detail" = "仅在按住说话按钮时发送声音。";
 "settings.keep-screen-on" = "保持屏幕常亮";
 "settings.live-activity" = "实时活动";
 "settings.general.footer" = "实时活动会在锁定屏幕和灵动岛显示连接状态与快捷控制。";
@@ -214,3 +219,5 @@
 "input.unavailable" = "未连接的设备";
 
 "control.description" = "开始或停止向电脑传输声音。";
+"dim.button" = "黑屏模式";
+"dim.wake" = "轻点任意位置唤醒";

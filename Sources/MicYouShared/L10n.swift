@@ -33,6 +33,7 @@ public enum L10n {
         public static var openSettings: String { string("common.open-settings") }
         public static var retry: String { string("common.retry") }
         public static var resume: String { string("common.resume") }
+        public static var holdToTalk: String { string("common.hold-to-talk") }
         public static var dismiss: String { string("common.dismiss") }
         public static var mono: String { string("common.mono") }
         public static var stereo: String { string("common.stereo") }
@@ -67,6 +68,7 @@ public enum L10n {
         public static var waiting: String { string("status.waiting") }
         public static var muted: String { string("status.muted") }
         public static var interrupted: String { string("status.interrupted") }
+        public static var talking: String { string("status.talking") }
         public static var failed: String { string("status.failed") }
         public static func ready(_ name: String) -> String { format("status.ready", name) }
         public static var duration: String { string("status.duration") }
@@ -77,6 +79,7 @@ public enum L10n {
         /// Short form of forward error correction for the stats tile
         public static var fec: String { string("status.fec") }
         public static var mutedDetail: String { string("status.muted-detail") }
+        public static var pushToTalkDetail: String { string("status.push-to-talk-detail") }
         public static var reconnectDetail: String { string("status.reconnect-detail") }
         public static var interruptedDetail: String { string("status.interrupted-detail") }
         public static var resumeFailedDetail: String { string("status.resume-failed-detail") }
@@ -145,6 +148,8 @@ public enum L10n {
         public static var micModeVoiceIsolation: String { string("settings.mic-mode.voice-isolation") }
         public static var micModeFooter: String { string("settings.mic-mode.footer") }
         public static var general: String { string("settings.general") }
+        public static var pushToTalk: String { string("settings.push-to-talk") }
+        public static var pushToTalkDetail: String { string("settings.push-to-talk.detail") }
         public static var keepScreenOn: String { string("settings.keep-screen-on") }
         public static var liveActivity: String { string("settings.live-activity") }
         public static var generalFooter: String { string("settings.general.footer") }
@@ -271,6 +276,11 @@ public enum L10n {
         public static var front: String { string("input.front") }
         public static var back: String { string("input.back") }
         public static var unavailable: String { string("input.unavailable") }
+    }
+
+    public enum Dim {
+        public static var button: String { string("dim.button") }
+        public static var wake: String { string("dim.wake") }
     }
 
     public enum Control {

@@ -18,7 +18,7 @@ final class AppSettings {
 
     private enum Key: String {
         case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB, input
-        case fecEnabled, autoReconnect, autoConnect, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
+        case fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -39,6 +39,8 @@ final class AppSettings {
     var autoReconnect: Bool { didSet { save(autoReconnect, .autoReconnect) } }
     /// Connects to the selected computer when the app opens
     var autoConnect: Bool { didSet { save(autoConnect, .autoConnect) } }
+    /// Muted unless the talk button is held
+    var pushToTalk: Bool { didSet { save(pushToTalk, .pushToTalk) } }
     var keepScreenOn: Bool { didSet { save(keepScreenOn, .keepScreenOn) } }
     var liveActivity: Bool { didSet { save(liveActivity, .liveActivity) } }
     var recentHosts: [String] { didSet { save(recentHosts, .recentHosts) } }
@@ -65,6 +67,7 @@ final class AppSettings {
         fecEnabled = load(.fecEnabled) ?? true
         autoReconnect = load(.autoReconnect) ?? true
         autoConnect = load(.autoConnect) ?? false
+        pushToTalk = load(.pushToTalk) ?? false
         keepScreenOn = load(.keepScreenOn) ?? false
         liveActivity = load(.liveActivity) ?? true
         recentHosts = load(.recentHosts) ?? []

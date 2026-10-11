@@ -55,6 +55,8 @@ final class AppModel {
     /// The microphone in use, follows headsets coming and going
     private(set) var audioInput: AudioInputInfo?
     private(set) var captureStatus: CaptureStatus = .running
+    /// A black screen covers the app while streaming, it keeps the display on but dark
+    private(set) var isDimmed = false
     /// Microphones to pick from, refreshed when a picker appears and when devices come and go
     private(set) var inputOptions: [InputOption] = []
     /// One-off message, for example when Opus is not available
@@ -145,6 +147,12 @@ final class AppModel {
     func disconnect() {
         stopStream()
         phase = .idle
+        isDimmed = false
+        refreshSideEffects()
+    }
+
+    func setDimmed(_ value: Bool) {
+        isDimmed = value && isActive
         refreshSideEffects()
     }
 
@@ -170,6 +178,8 @@ final class AppModel {
     private func begin() async {
         let token = UUID()
         connectToken = token
+        // Push to talk starts silent, the session tells the computer right after the handshake
+        if settings.pushToTalk { isMuted = true }
         guard await AudioCapture.requestPermission() else {
             if connectToken == token { phase = .failed(CaptureError.permissionDenied.localizedDescription) }
             return
@@ -265,6 +275,12 @@ final class AppModel {
             let ports = await capture.inputPorts()
             inputOptions = InputOption.list(ports)
         }
+    }
+
+    /// Turning push to talk on mutes a running stream until the talk button is held
+    func setPushToTalk(_ value: Bool) {
+        settings.pushToTalk = value
+        if value && isActive { setMuted(true) }
     }
 
     /// The screen rotated, only iPad allows it
@@ -445,7 +461,8 @@ final class AppModel {
     // MARK: Side effects
 
     private func refreshSideEffects() {
-        UIApplication.shared.isIdleTimerDisabled = settings.keepScreenOn && isActive
+        // A dimmed screen that turns itself off would only be a slower way to lock
+        UIApplication.shared.isIdleTimerDisabled = (settings.keepScreenOn || isDimmed) && isActive
         audioInput = isActive ? AudioInputInfo.current() : nil
 
         guard settings.liveActivity, isActive, let name = connectedName else {

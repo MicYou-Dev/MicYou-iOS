@@ -15,7 +15,7 @@ struct HomeView: View {
     var body: some View {
         FillingScrollView {
             VStack(spacing: 20) {
-                HomeHeader(openSettings: { showSettings = true }) {
+                HomeHeader(openSettings: { showSettings = true }, dim: model.isActive ? { model.setDimmed(true) } : nil) {
                     ZStack(alignment: .leading) {
                         if model.isActive {
                             StatusPill()
@@ -56,6 +56,13 @@ struct HomeView: View {
             model.orientationChanged()
         }
         .sensoryFeedback(trigger: model.phase, Self.feedback)
+        .overlay {
+            if model.isDimmed {
+                DimOverlay()
+                    .transition(.opacity)
+            }
+        }
+        .animation(Motion.screen, value: model.isDimmed)
         .overlayPreferenceValue(TourAnchorKey.self) { anchors in
             if tourStep != nil {
                 TourOverlay(anchors: anchors, step: $tourStep, finish: finishTour)
@@ -139,12 +146,25 @@ enum HomeLayout {
 /// Title or status on the left and the settings button on the right
 struct HomeHeader<Leading: View>: View {
     let openSettings: () -> Void
+    /// Turns the screen black, offered while a session is active
+    var dim: (() -> Void)?
     @ViewBuilder var leading: Leading
 
     var body: some View {
         HStack {
             leading
             Spacer(minLength: 12)
+            if let dim {
+                Button(action: dim) {
+                    Image(systemName: "moon.fill")
+                        .font(.title3)
+                        .frame(width: 28, height: 28)
+                }
+                .glassButtonStyle()
+                .buttonBorderShape(.circle)
+                .accessibilityLabel(L10n.Dim.button)
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
             Button(action: openSettings) {
                 Image(systemName: "gearshape")
                     .font(.title3)
