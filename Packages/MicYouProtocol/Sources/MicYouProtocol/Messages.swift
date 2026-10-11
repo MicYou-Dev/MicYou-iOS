@@ -28,16 +28,26 @@ extension ProtoMessage {
 
 public struct ConnectMessage: ProtoMessage {
     public var sessionId: Int64 = 0
+    /// Lets the desktop tell iOS and Android apart, empty for clients that predate the field
+    public var platform = ""
 
     public init() {}
-    public init(sessionId: Int64) { self.sessionId = sessionId }
+    public init(sessionId: Int64, platform: String) {
+        self.sessionId = sessionId
+        self.platform = platform
+    }
 
     public func encode(into w: inout ProtoWriter) {
         w.writeInt64(1, sessionId)
+        w.writeBytes(2, Data(platform.utf8))
     }
 
     public mutating func decodeField(_ field: Int, _ type: WireType, _ r: inout ProtoReader) throws {
-        if field == 1, type == .varint { sessionId = try r.readInt64() } else { try r.skip(type) }
+        switch (field, type) {
+        case (1, .varint): sessionId = try r.readInt64()
+        case (2, .lengthDelimited): platform = String(decoding: try r.readLengthDelimited(), as: UTF8.self)
+        default: try r.skip(type)
+        }
     }
 }
 
@@ -159,9 +169,9 @@ public struct MessageWrapper: ProtoMessage {
 
     public init() {}
 
-    public static func connect(sessionId: Int64) -> MessageWrapper {
+    public static func connect(sessionId: Int64, platform: String = MicYouWire.clientPlatform) -> MessageWrapper {
         var m = MessageWrapper()
-        m.connect = ConnectMessage(sessionId: sessionId)
+        m.connect = ConnectMessage(sessionId: sessionId, platform: platform)
         return m
     }
 

@@ -19,7 +19,9 @@ private func hex(_ s: String) -> Data {
 
 @Suite struct GoldenEncoding {
     @Test func connect() {
-        #expect(MessageWrapper.connect(sessionId: 1_234_567_890_123).serialized() == hex("120708cb89ec8ff723"))
+        #expect(MessageWrapper.connect(sessionId: 1_234_567_890_123).serialized() == hex("120c08cb89ec8ff7231203696f73"))
+        // Legacy encoding without a platform, which older desktops and clients still use
+        #expect(MessageWrapper.connect(sessionId: 1_234_567_890_123, platform: "").serialized() == hex("120708cb89ec8ff723"))
     }
 
     @Test func muteKeepsExplicitFalse() {
@@ -75,6 +77,13 @@ private func hex(_ s: String) -> Data {
         packet.fecPacketLengths = [UInt32](repeating: 1320, count: 12)
         let wrapper = MessageWrapper.audio(packet)
         #expect(try MessageWrapper(serialized: wrapper.serialized()) == wrapper)
+    }
+
+    @Test func connectRoundTrip() throws {
+        let wrapper = MessageWrapper.connect(sessionId: -42)
+        let decoded = try MessageWrapper(serialized: wrapper.serialized())
+        #expect(decoded == wrapper)
+        #expect(decoded.connect?.platform == "ios")
     }
 
     @Test func absentMuteValueIsNil() throws {

@@ -32,6 +32,8 @@ message PluginMessage {
 message ConnectMessage {
     // Zero identifies legacy clients that predate transport session isolation.
     int64 sessionId = 1;
+    // Client platform: "android" or "ios". Empty for clients that predate this field.
+    string platform = 2;
 }
 
 message MuteMessage {

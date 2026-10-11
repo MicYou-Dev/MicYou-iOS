@@ -24,6 +24,8 @@ public enum MicYouWire {
     /// Audio datagrams go to the TCP port plus this offset
     public static let udpPortOffset: UInt16 = 1
     public static let bonjourServiceType = "_micyou._tcp"
+    /// Sent as `ConnectMessage.platform` so the desktop shows an iOS device
+    public static let clientPlatform = "ios"
 
     /// The desktop pings every 500 ms, silence for this long means it is gone
     public static let heartbeatTimeout: TimeInterval = 5

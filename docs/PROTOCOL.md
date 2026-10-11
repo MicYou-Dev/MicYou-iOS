@@ -16,7 +16,7 @@
 1. 客户端建立 TCP 连接（建议开启 `TCP_NODELAY` 和 keepalive）。
 2. 客户端直接发送 12 字节 ASCII 字符串 `MicYouCheck1`，不带帧头。
 3. 桌面端回复 12 字节 `MicYouCheck2`，同样不带帧头。两步的超时均为 5 秒。
-4. 握手完成后，客户端在 10 秒内发送第一个 protobuf 帧 `MessageWrapper { connect { sessionId } }`，`sessionId` 是每次连接随机生成的非零 `int64`。
+4. 握手完成后，客户端在 10 秒内发送第一个 protobuf 帧 `MessageWrapper { connect { sessionId platform } }`，`sessionId` 是每次连接随机生成的非零 `int64`；`platform` 是客户端平台（`"ios"` 或 `"android"`），桌面端从 commit `f319bdd` 起据此显示设备类型；旧版客户端不带这个字段，桌面端按未知设备处理。
 5. 客户端紧接着发送一次当前静音状态 `mute { isMuted }`。
 6. 桌面端只保留一个活动连接，新连接会直接顶掉旧连接。断开时直接关闭 TCP 即可，没有专门的断开消息。
 

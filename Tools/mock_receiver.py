@@ -228,8 +228,10 @@ def serve_client(conn, addr, stats, args, peer):
             body = recv_exact(conn, length)
             for f, _, v in fields(body):
                 if f == 2:
-                    sid = signed64(next((vv for ff, _, vv in fields(v) if ff == 1), 0))
-                    print(f"  connect session={sid}")
+                    connect = {ff: vv for ff, _, vv in fields(v)}
+                    sid = signed64(connect.get(1, 0))
+                    platform = connect.get(2, b"").decode(errors="replace") or "(none)"
+                    print(f"  connect session={sid} platform={platform}")
                     stats.session = sid
                 elif first:
                     print("  ! first frame is not Connect")
