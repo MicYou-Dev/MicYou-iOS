@@ -47,7 +47,7 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver,
 - `MicYouProtocol` (separate package under `Packages/`): hand-written protobuf codec (`ProtoWire.swift`, no third-party deps), TCP `MicY` / UDP `MicU` framing, `AudioSequencer` numbering and XOR FEC, manual address parsing; upstream definition in `Proto/network.proto`
 - `MicYouCore` (separate package under `Packages/`, depends on `MicYouProtocol`): transport and codec choices, presets, `StreamOptions`, `ReconnectPolicy`, `SampleProcessor` and `PeakLimiter`, `MeterBallistics`, `InputPreference`, Bonjour display names
 - `MicYouShared`: `L10n`, `DeepLink`, `StreamActivityAttributes`, shared by the app and the widget
-- `MicYou`: the app; `MicYouWidget`: Live Activity, Dynamic Island, Control Center button
+- `MicYou`: the app; `MicYouWidget`: Live Activity and Dynamic Island
 - The widget shares no storage with the app and there is no App Group; every button routes back to the app through `micyou://` links (`DeepLink`)
 
 ### Data flow
@@ -55,7 +55,7 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver,
 `AudioCapture` (AVAudioEngine tap, resample, then `SampleProcessor`: gain, `PeakLimiter`, convert to Int16) → `SessionSink` (forwards under a lock, pushes levels to the main thread at up to 30 Hz) → `StreamSession` (Opus encode or PCM chunking, sequencing, FEC) → UDP by default (TCP port + 1), or `ControlChannel` in TCP-only mode
 
 - On connect, `AppSettings.streamConfig` freezes settings into a `StreamConfig` (endpoint plus `StreamOptions`) for the session; changes made while streaming apply to the next connection, or right away through `AppModel.restart()` ("Reconnect Now to Apply" in Settings). Input gain and the microphone choice apply immediately
-- A remembered Bonjour computer connects through `NWEndpoint.service` built from its instance name, without waiting for the browser, so Control Center and connect on open work right after launch
+- A remembered Bonjour computer connects through `NWEndpoint.service` built from its instance name, without waiting for the browser, so Shortcuts, links and connect on open work right after launch
 - `AudioCapture` reports interruptions (calls, other apps) and failed restarts to `AppModel.captureStatus`; the connection stays up meanwhile and capture is retried when the interruption ends or the app returns to the foreground
 - `ControlChannel` handles the handshake, heartbeats and two-way mute sync, and treats 5 seconds without a `ping` as a disconnect; when the TCP send backlog exceeds 128 KiB new audio packets are dropped
 
@@ -88,7 +88,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 - `sdkVersion` in `Package.swift` (default `27.1`, overridden in CI by `MICYOU_IOS_SDK_VERSION`) fixes the Mach-O SDK version via `-platform_version`; without it iOS runs the app in compatibility mode with no Liquid Glass; update it when the local Darwin SDK changes
 - Keep the `-u _main` linker flag on `MicYouWidget`, otherwise the widget `@main` is dead stripped; do not change it to `-e _main` either (assertion crash at launch)
 - No SwiftPM resource bundles: the icon, licenses and `.lproj` folders are copied to the `.app` root by `resources` in `xtool.yml`; the widget extension lists its own localization folders, so a new language must be added in both places
-- xtool does not run the App Intents metadata processor, so Shortcuts may not show the actions in `Intents/`; Live Activity buttons therefore use `Link` to open `micyou://`, and the Control Center button uses `OpenURLIntent`
+- xtool does not run the App Intents metadata processor, so Shortcuts may not show the actions in `Intents/`; Live Activity buttons therefore use `Link` to open `micyou://`
 - `Resources/AppIcon/Assets.car` can only be compiled by `actool` on macOS; trigger the `compile-icon.yml` workflow manually and replace the file with its output
 - When upgrading xtool, update the version and SHA-256 in `.github/actions/setup-xtool/action.yml`
 

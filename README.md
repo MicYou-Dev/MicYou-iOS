@@ -29,7 +29,7 @@
 - 与电脑端双向同步静音状态，也可开启“按住说话”。断线后支持自动重连（最多 6 次），重连期间后台录音不会中断；通话等占用麦克风结束后会自动恢复。
 - 可设置打开 App 时自动连接；传输时可切换到黑屏模式，屏幕保持常亮但几乎不耗电。
 - 支持锁屏与后台持续传输，可在锁屏实时活动和灵动岛查看连接状态、当前麦克风与音频格式，并直接静音或断开。
-- 支持控制中心按钮、快捷指令和 `micyou://` URL。
+- 支持快捷指令和 `micyou://` URL。
 - 首次启动配有欢迎页与首页操作引导，并提供官网快速开始与常见问题入口（可在“关于”页重新查看）。“关于”页可导出本次运行的日志，方便反馈问题。
 - 提供简体中文、繁体中文和英文界面。
 
@@ -54,7 +54,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `MicYou-<版本>.ipa` | 完整版（未签名），可用 AltStore、SideStore、Sideloadly 或 xtool 签名安装 |
-| `MicYou-<版本>-LiveContainer.ipa` | LiveContainer 专用版，去掉了小组件扩展，不支持实时活动、灵动岛和控制中心按钮 |
+| `MicYou-<版本>-LiveContainer.ipa` | LiveContainer 专用版，去掉了小组件扩展，不支持实时活动和灵动岛 |
 | `SHA256SUMS.txt` | 安装包的 SHA-256 校验值 |
 
 电脑端请到 [MicYou Releases](https://github.com/MicYou-Dev/MicYou/releases) 下载。虚拟麦克风的配置方法见官网[快速开始指南](https://www.micyou.top/docs/quick-start)，IPA 侧载教程见[在 iOS 上安装](https://www.micyou.top/docs/how-to-install-in-ios)。
@@ -89,7 +89,7 @@
 | 提示电脑拒绝了连接 | 端口填错了，或者电脑端没在监听。默认端口是 `8554`。 |
 | 声音断断续续 | 去设置里把传输方式改成“仅 TCP”，或者开启“前向纠错”。 |
 | 声音太小 | 在设置或主界面调高“输入增益”，内置限幅器会防止爆音。 |
-| 没有实时活动或控制中心按钮 | 检查系统设置里是否关掉了实时活动权限；另外 LiveContainer 专用包不包含小组件扩展。 |
+| 没有实时活动 | 检查系统设置里是否关掉了实时活动权限；另外 LiveContainer 专用包不包含小组件扩展。 |
 
 更多问题可参考官网[常见问题](https://www.micyou.top/docs/faq)。
 
@@ -101,7 +101,7 @@
 
 项目用 Swift 6 和 [xtool](https://github.com/xtool-org/xtool) 构建，不需要完整的 Xcode 工程，在 Linux 和 macOS 上都可以编译签名。
 
-- 界面用 SwiftUI 和 Observation；实时活动与灵动岛用 ActivityKit，控制中心按钮用 WidgetKit，快捷指令用 App Intents。
+- 界面用 SwiftUI 和 Observation；实时活动与灵动岛用 ActivityKit 和 WidgetKit，快捷指令用 App Intents。
 - 音频采集基于 `AVAudioEngine`，重采样与系统 Opus 编码使用 `AVAudioConverter`，自带峰值限幅器。
 - 网络层基于 `Network.framework`（`NWBrowser` 负责 Bonjour 发现，TCP 走控制信令，UDP 发音频）。
 - `MicYouProtocol` 只依赖 Foundation，包含 protobuf 编解码、数据分帧和 XOR 前向纠错，可以直接在 Linux 上跑测试。
@@ -148,7 +148,7 @@ Sources/MicYou            主应用源码
   Views/Settings          设置与关于
   Views/Common            液态玻璃样式、提示卡片、增益滑块、格式文案
 Sources/MicYouShared      主应用与小组件共用：多语言 L10n、DeepLink、实时活动定义
-Sources/MicYouWidget      实时活动、灵动岛与控制中心按钮扩展
+Sources/MicYouWidget      实时活动与灵动岛扩展
 Support/                  Info.plist 与三语本地化文件
 Resources/AppIcon         液态玻璃图标源文件 MicYou.icon 与编译产物 Assets.car
 Tools/                    模拟接收端脚本、LiveContainer 打包、本地化检查

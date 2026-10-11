@@ -37,7 +37,7 @@ xtool 链接扩展时固定传入 `-e _NSExtensionMain`，导致 SwiftUI 小组�
 
 ### App Intents
 
-xtool 没法运行 Xcode 自带的 App Intents 元数据处理器，系统“快捷指令”里可能看不到 `Sources/MicYou/Intents` 定义的操作。因此实时活动按钮改用 `Link` 打开 `micyou://`，控制中心按钮则用系统自带的 `OpenURLIntent`。
+xtool 没法运行 Xcode 自带的 App Intents 元数据处理器，系统“快捷指令”里可能看不到 `Sources/MicYou/Intents` 定义的操作。因此实时活动按钮改用 `Link` 打开 `micyou://`。
 
 ### 免费开发者账号限制
 

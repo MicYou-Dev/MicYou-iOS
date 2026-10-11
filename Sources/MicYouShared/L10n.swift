@@ -291,9 +291,4 @@ public enum L10n {
         public static var button: String { string("dim.button") }
         public static var wake: String { string("dim.wake") }
     }
-
-    public enum Control {
-        public static var name: LocalizedStringResource { resource("app.name") }
-        public static var description: LocalizedStringResource { resource("control.description") }
-    }
 }

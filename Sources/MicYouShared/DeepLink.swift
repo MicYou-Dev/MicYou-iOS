@@ -2,7 +2,7 @@
 
 import Foundation
 
-/// URLs handled by the app, used by the Live Activity, the Control Center control and Shortcuts
+/// URLs handled by the app, used by the Live Activity and Shortcuts
 public enum DeepLink: String, CaseIterable, Sendable {
     case connect
     case disconnect

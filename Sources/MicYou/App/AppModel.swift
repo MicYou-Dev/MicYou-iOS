@@ -240,7 +240,7 @@ final class AppModel {
         // Not before the introduction has been seen, the first connection is part of it
         guard settings.autoConnect, settings.welcomeShown, settings.tourShown else { return }
         Task {
-            // A link from Control Center or the Live Activity arrives right after launch and wins
+            // A link from Shortcuts or the Live Activity arrives right after launch and wins
             try? await Task.sleep(for: .milliseconds(500))
             guard !openedByLink, phase == .idle, canConnect else { return }
             log.info("Connecting on launch")
@@ -333,7 +333,7 @@ final class AppModel {
     private func resolveTarget() -> Target? {
         switch selection {
         case .discovered(let name):
-            // Right after launch, for example from Control Center, the search has not found the computer yet
+            // Right after launch, for example from Shortcuts, the search has not found the computer yet
             let endpoint = browser.servers.first { $0.name == name }?.endpoint ?? DiscoveredServer.endpoint(for: name)
             return Target(endpoint: endpoint, name: DiscoveredServer.displayName(for: name), preferIPv4: true)
         case .manual:

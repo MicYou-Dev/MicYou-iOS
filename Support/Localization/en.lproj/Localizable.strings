@@ -183,7 +183,7 @@
 "credits.references.footer" = "Projects and tools referenced or used during development and building.";
 "credits.view-source" = "View Source";
 "credits.text-unavailable" = "Unable to load the license text. Please view it on the project page.";
-"credits.app.role" = "Main app, Control Center widget, and Live Activity extension.";
+"credits.app.role" = "Main app and Live Activity extension.";
 "credits.protocol.role" = "Internal Swift package for message encoding, framing, and forward error correction.";
 "credits.micyou.author" = "LanRhyme and contributors";
 "credits.micyou.role" = "MicYou desktop and Android apps. The protocol definition (Proto/network.proto) and client connection logic are ported from this project.";
@@ -227,6 +227,5 @@
 "input.back" = "Back Microphone";
 "input.unavailable" = "Disconnected Device";
 
-"control.description" = "Start or stop streaming to your computer.";
 "dim.button" = "Black Screen";
 "dim.wake" = "Tap anywhere to wake";

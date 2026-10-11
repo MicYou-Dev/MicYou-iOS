@@ -8,9 +8,9 @@
 | `MicYouCore` | 传输与编码选项、预设、`StreamOptions`、重连策略、采样处理与限幅、电平表动态、输入偏好，纯 Foundation 实现 | `MicYouProtocol` |
 | `MicYouShared` | 多语言文案 `L10n`、`DeepLink`、实时活动定义 `StreamActivityAttributes` | 无 |
 | `MicYou` | 主应用 | `MicYouProtocol`、`MicYouCore`、`MicYouShared` |
-| `MicYouWidget` | 锁屏实时活动、灵动岛、控制中心按钮 | `MicYouShared` |
+| `MicYouWidget` | 锁屏实时活动、灵动岛 | `MicYouShared` |
 
-小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，小组件与控制中心里的按钮都通过 `micyou://` 链接回到主应用处理。
+小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，实时活动和灵动岛上的按钮都通过 `micyou://` 链接回到主应用处理。
 
 主应用内部按职责分目录。`Model` 只放设置项与 `StreamConfig` 这类值类型。不依赖 Apple 框架的逻辑放在 `MicYouCore`，这样可以在 Linux 上测试。点击连接开始传输时，`AppSettings.streamConfig` 会把当前设置固定成一份 `StreamConfig`（目标地址加 `StreamOptions`）传给会话层。传输中途修改设置默认只影响下一次连接；设置页会在设置与当前会话不一致时提供“立即重连以应用”，由 `AppModel.restart()` 在保留传输界面和实时活动的前提下重新连接。输入增益和麦克风选择则立即生效。界面和实时活动共用的编码名、传输方式等展示文字集中在 `Views/Common/StreamText.swift`。
 
@@ -27,7 +27,7 @@ AVAudioEngine 输入 tap（音频线程，约 20 ms 一块）
 
 `ControlChannel` 维护 TCP 连接，负责握手、发首帧 `connect`、回复心跳、双向同步静音，并在连续 5 秒收不到 `ping` 时判定断线。“仅 TCP”模式下音频也走这条连接；当发送缓冲积压超过 128 KiB 时会直接丢弃新音频包，避免网络卡顿时延迟越积越大。
 
-选中的是 Bonjour 搜到的电脑时，连接直接用实例名构造 `NWEndpoint.service`，交给 `NWConnection` 自己解析，不等 `NWBrowser` 的搜索结果。这样从控制中心、快捷指令冷启动，或开启“打开时自动连接”时，App 刚启动也能立刻连上；解析失败会提示找不到电脑。
+选中的是 Bonjour 搜到的电脑时，连接直接用实例名构造 `NWEndpoint.service`，交给 `NWConnection` 自己解析，不等 `NWBrowser` 的搜索结果。这样从快捷指令、链接冷启动，或开启“打开时自动连接”时，App 刚启动也能立刻连上；解析失败会提示找不到电脑。
 
 ## 麦克风中断与输入选择
 

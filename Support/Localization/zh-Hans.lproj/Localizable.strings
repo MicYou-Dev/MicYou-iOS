@@ -183,7 +183,7 @@
 "credits.references.footer" = "开发与构建过程中参考或使用的相关项目与工具。";
 "credits.view-source" = "查看源代码";
 "credits.text-unavailable" = "无法读取许可证文本，请前往项目主页查看。";
-"credits.app.role" = "主应用、控制中心小组件与实时活动扩展。";
+"credits.app.role" = "主应用与实时活动扩展。";
 "credits.protocol.role" = "负责协议编解码、数据分帧与前向纠错的内部 Swift 包。";
 "credits.micyou.author" = "LanRhyme 及贡献者";
 "credits.micyou.role" = "MicYou 桌面端与 Android 客户端，本项目的通信协议（Proto/network.proto）与客户端连接逻辑移植自该项目。";
@@ -227,6 +227,5 @@
 "input.back" = "后置麦克风";
 "input.unavailable" = "未连接的设备";
 
-"control.description" = "开始或停止向电脑传输声音。";
 "dim.button" = "黑屏模式";
 "dim.wake" = "轻点任意位置唤醒";
