@@ -75,6 +75,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 
 - User-visible strings go only through `Sources/MicYouShared/L10n.swift`; to add one: add the key to all three `Support/Localization/*.lproj/Localizable.strings` → add a property in `L10n.swift` → run `Tools/check-strings.py`; full sentences end with a period, buttons and short labels have no punctuation
 - Display text shared by the UI and the Live Activity (codec names, transport modes) lives in `Views/Common/StreamText.swift`
+- Settings explain themselves with a toggle subtitle or a `SettingHint` under the row, which follows the current choice; a conflicting combination gets a warning hint with a button that fixes it. Avoid long section footers
 - Animation durations and curves come from `Motion` in `Views/Common/Motion.swift`; appear and disappear with `adaptiveTransition` / `adaptiveAnimation` (they respect Reduce Motion)
 - Stateful glass buttons use `glassSurface` and only change `tint`; do not switch between two `buttonStyle`s, and do not use filter transitions such as `blurReplace` on glass views
 - The Live Activity only updates when state, mute, microphone or format changes, and has no level meter (frequent updates make `Text(timerInterval:)` flicker)

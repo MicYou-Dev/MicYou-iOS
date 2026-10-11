@@ -116,33 +116,38 @@ public enum L10n {
         public static var presetLowLatency: String { string("settings.preset.low-latency") }
         public static var presetStable: String { string("settings.preset.stable") }
         public static var presetLossless: String { string("settings.preset.lossless") }
-        public static var presetFooter: String { string("settings.preset.footer") }
         public static var connection: String { string("settings.connection") }
         public static var transport: String { string("settings.transport") }
         public static var tcpUDP: String { string("settings.transport.tcp-udp") }
         public static var tcpOnly: String { string("settings.transport.tcp") }
+        public static var tcpUDPHint: String { string("settings.transport.tcp-udp.hint") }
+        public static var tcpOnlyHint: String { string("settings.transport.tcp.hint") }
         public static var fec: String { string("settings.fec") }
+        public static var fecDetail: String { string("settings.fec.detail") }
+        public static var fecDetailTCP: String { string("settings.fec.detail-tcp") }
         public static var autoReconnect: String { string("settings.auto-reconnect") }
         public static var autoConnect: String { string("settings.auto-connect") }
         public static var autoConnectDetail: String { string("settings.auto-connect.detail") }
-        public static var connectionFooter: String { string("settings.connection.footer") }
         public static var audio: String { string("settings.audio") }
         public static var codec: String { string("settings.codec") }
         public static var opus: String { string("settings.codec.opus") }
         public static var pcm: String { string("settings.codec.pcm") }
         public static var pcmShort: String { string("settings.codec.pcm-short") }
+        public static var opusHint: String { string("settings.codec.opus.hint") }
+        public static var pcmHint: String { string("settings.codec.pcm.hint") }
         public static var bitrate: String { string("settings.bitrate") }
         public static var sampleRate: String { string("settings.sample-rate") }
+        public static var opusNo44: String { string("settings.sample-rate.opus-44") }
         public static var channels: String { string("settings.channels") }
-        public static var opusNo44Footer: String { string("settings.audio.footer-opus-44") }
-        public static var audioFooter: String { string("settings.audio.footer") }
-        public static var stereoVoiceProcessingFooter: String { string("settings.audio.footer-stereo-voice-processing") }
+        public static var stereoVoiceProcessing: String { string("settings.channels.voice-processing") }
+        public static var turnOffVoiceProcessing: String { string("settings.channels.turn-off-voice-processing") }
+        public static var dataRate: String { string("settings.data-rate") }
+        public static func dataRateValue(_ rate: String) -> String { format("settings.data-rate.value", rate) }
         public static var microphone: String { string("settings.microphone") }
         public static var input: String { string("settings.input") }
         public static var inputGain: String { string("settings.input-gain") }
-        public static var inputGainFooter: String { string("settings.input-gain.footer") }
         public static var voiceProcessing: String { string("settings.voice-processing") }
-        public static var voiceProcessingFooter: String { string("settings.voice-processing.footer") }
+        public static var voiceProcessingDetail: String { string("settings.voice-processing.detail") }
         public static var micMode: String { string("settings.mic-mode") }
         public static var micModeStandard: String { string("settings.mic-mode.standard") }
         public static var micModeWideSpectrum: String { string("settings.mic-mode.wide-spectrum") }
@@ -153,7 +158,7 @@ public enum L10n {
         public static var pushToTalkDetail: String { string("settings.push-to-talk.detail") }
         public static var keepScreenOn: String { string("settings.keep-screen-on") }
         public static var liveActivity: String { string("settings.live-activity") }
-        public static var generalFooter: String { string("settings.general.footer") }
+        public static var liveActivityDetail: String { string("settings.live-activity.detail") }
     }
 
     public enum About {

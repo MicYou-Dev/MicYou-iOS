@@ -42,30 +42,27 @@ struct SettingsView: View {
                     .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
                 } header: {
                     Text(L10n.Settings.presets)
-                } footer: {
-                    Text(L10n.Settings.presetFooter)
                 }
 
-                Section {
-                    SegmentedRow(title: L10n.Settings.transport, selection: $settings.transport) {
+                Section(L10n.Settings.connection) {
+                    SegmentedRow(title: L10n.Settings.transport, selection: $settings.transport, hint: transportHint) {
                         ForEach(TransportMode.allCases) { Text($0.title).tag($0) }
                     }
                     // Disabled rather than removed, so switching presets does not make the list jump
-                    Toggle(L10n.Settings.fec, isOn: $settings.fecEnabled)
-                        .disabled(settings.transport != .tcpUDP)
+                    Toggle(isOn: $settings.fecEnabled) {
+                        Text(L10n.Settings.fec)
+                        Text(settings.transport == .tcpUDP ? L10n.Settings.fecDetail : L10n.Settings.fecDetailTCP)
+                    }
+                    .disabled(settings.transport != .tcpUDP)
                     Toggle(L10n.Settings.autoReconnect, isOn: $settings.autoReconnect)
                     Toggle(isOn: $settings.autoConnect) {
                         Text(L10n.Settings.autoConnect)
                         Text(L10n.Settings.autoConnectDetail)
                     }
-                } header: {
-                    Text(L10n.Settings.connection)
-                } footer: {
-                    Text(L10n.Settings.connectionFooter)
                 }
 
-                Section {
-                    SegmentedRow(title: L10n.Settings.codec, selection: $settings.codec) {
+                Section(L10n.Settings.audio) {
+                    SegmentedRow(title: L10n.Settings.codec, selection: $settings.codec, hint: codecHint) {
                         ForEach(CodecChoice.allCases) { Text($0.title).tag($0) }
                     }
                     SegmentedRow(title: L10n.Settings.bitrate, selection: $settings.opusBitrate) {
@@ -74,63 +71,40 @@ struct SettingsView: View {
                         }
                     }
                     .disabled(settings.codec != .opus)
-                    SegmentedRow(title: L10n.Settings.sampleRate, selection: $settings.sampleRate) {
+                    SegmentedRow(title: L10n.Settings.sampleRate, selection: $settings.sampleRate, hint: sampleRateHint) {
                         ForEach(AppSettings.sampleRates, id: \.self) { rate in
                             Text(L10n.Unit.kHz(rate)).tag(rate)
                         }
                     }
-                    SegmentedRow(title: L10n.Settings.channels, selection: $settings.stereo) {
+                    SegmentedRow(title: L10n.Settings.channels, selection: $settings.stereo, hint: channelsHint) {
                         Text(L10n.Common.mono).tag(false)
                         Text(L10n.Common.stereo).tag(true)
                     }
-                } header: {
-                    Text(L10n.Settings.audio)
-                } footer: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if settings.codec == .opus && settings.sampleRate == 44100 {
-                            Text(L10n.Settings.opusNo44Footer)
-                        } else {
-                            Text(L10n.Settings.audioFooter)
-                        }
-                        // The voice chat mode offers no stereo polar pattern, capture duplicates mono instead
-                        if settings.stereo && settings.voiceProcessing {
-                            Text(L10n.Settings.stereoVoiceProcessingFooter)
-                        }
-                    }
+                    DataRateRow()
                 }
 
-                Section {
+                Section(L10n.Settings.microphone) {
                     InputPicker()
                     InputGainControl()
                     Toggle(isOn: $settings.voiceProcessing) {
                         Text(L10n.Settings.voiceProcessing)
-                        Text(L10n.Settings.voiceProcessingFooter)
+                        Text(L10n.Settings.voiceProcessingDetail)
                     }
                     if settings.voiceProcessing {
                         MicrophoneModeRow()
                     }
-                } header: {
-                    Text(L10n.Settings.microphone)
-                } footer: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(L10n.Settings.inputGainFooter)
-                        if settings.voiceProcessing {
-                            Text(L10n.Settings.micModeFooter)
-                        }
-                    }
                 }
 
-                Section {
+                Section(L10n.Settings.general) {
                     Toggle(isOn: Binding(get: { settings.pushToTalk }, set: { model.setPushToTalk($0) })) {
                         Text(L10n.Settings.pushToTalk)
                         Text(L10n.Settings.pushToTalkDetail)
                     }
                     Toggle(L10n.Settings.keepScreenOn, isOn: $settings.keepScreenOn)
-                    Toggle(L10n.Settings.liveActivity, isOn: $settings.liveActivity)
-                } header: {
-                    Text(L10n.Settings.general)
-                } footer: {
-                    Text(L10n.Settings.generalFooter)
+                    Toggle(isOn: $settings.liveActivity) {
+                        Text(L10n.Settings.liveActivity)
+                        Text(L10n.Settings.liveActivityDetail)
+                    }
                 }
 
                 Section {
@@ -153,6 +127,53 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+}
+
+extension SettingsView {
+    private var transportHint: SettingHint {
+        switch settings.transport {
+        case .tcpUDP: SettingHint(text: L10n.Settings.tcpUDPHint, systemImage: "bolt.fill")
+        case .tcp: SettingHint(text: L10n.Settings.tcpOnlyHint, systemImage: "checkmark.shield.fill")
+        }
+    }
+
+    private var codecHint: SettingHint {
+        switch settings.codec {
+        case .opus: SettingHint(text: L10n.Settings.opusHint, systemImage: "arrow.down.forward.and.arrow.up.backward")
+        case .pcm: SettingHint(text: L10n.Settings.pcmHint, systemImage: "waveform")
+        }
+    }
+
+    private var sampleRateHint: SettingHint? {
+        guard settings.codec == .opus, settings.sampleRate == 44100 else { return nil }
+        return SettingHint(text: L10n.Settings.opusNo44, systemImage: "info.circle")
+    }
+
+    /// The voice chat mode offers no stereo polar pattern, capture duplicates mono instead
+    private var channelsHint: SettingHint? {
+        guard settings.stereo, settings.voiceProcessing else { return nil }
+        return SettingHint(
+            text: L10n.Settings.stereoVoiceProcessing,
+            systemImage: "exclamationmark.triangle.fill",
+            style: .warning,
+            action: (L10n.Settings.turnOffVoiceProcessing, { settings.voiceProcessing = false })
+        )
+    }
+}
+
+/// Roughly how much the stream sends with the current choices
+private struct DataRateRow: View {
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        let kbps = settings.streamOptions.estimatedBitrate / 1000
+        LabeledContent(L10n.Settings.dataRate) {
+            Text(L10n.Settings.dataRateValue(L10n.Unit.kbps(kbps)))
+                .monospacedDigit()
+                .contentTransition(.numericText(value: Double(kbps)))
+        }
+        .adaptiveAnimation(value: kbps)
     }
 }
 
@@ -181,15 +202,20 @@ private struct MicrophoneModeRow: View {
     @State private var mode = AVCaptureDevice.activeMicrophoneMode
 
     var body: some View {
-        LabeledContent(L10n.Settings.micMode, value: model.isVoiceProcessingActive ? mode.title ?? "" : "")
-            .trackingMicrophoneMode($mode, while: model.isVoiceProcessingActive)
+        VStack(alignment: .leading, spacing: 8) {
+            LabeledContent(L10n.Settings.micMode, value: model.isVoiceProcessingActive ? mode.title ?? "" : "")
+            SettingHint(text: L10n.Settings.micModeFooter, systemImage: "switch.2")
+        }
+        .trackingMicrophoneMode($mode, while: model.isVoiceProcessingActive)
     }
 }
 
-/// A label above a full width segmented control, so every choice is visible without opening a menu
+/// A label above a full width segmented control, so every choice is visible without opening a menu, and a hint below it
 private struct SegmentedRow<Value: Hashable, Options: View>: View {
     let title: String
     @Binding var selection: Value
+    /// Explains the current choice or warns about it
+    var hint: SettingHint?
     @ViewBuilder var options: Options
 
     var body: some View {
@@ -200,8 +226,15 @@ private struct SegmentedRow<Value: Hashable, Options: View>: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            if let hint {
+                // Replaced as a whole, so the old text fades out instead of morphing into the new one
+                hint
+                    .id(hint.text)
+                    .transition(.opacity)
+            }
         }
         .padding(.vertical, 4)
+        .adaptiveAnimation(value: hint?.text)
     }
 }
 

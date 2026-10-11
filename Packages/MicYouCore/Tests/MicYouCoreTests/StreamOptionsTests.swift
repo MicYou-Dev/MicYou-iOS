@@ -44,6 +44,14 @@ import Testing
         #expect(stereo.summary == "Opus 64 kbps, 48000 Hz stereo, UDP")
     }
 
+    @Test func estimatedBitrates() {
+        // One parity packet per group of 12
+        #expect(options().estimatedBitrate == 64000 * 13 / 12)
+        var pcm = options(codec: .pcm, transport: .tcp)
+        pcm.channels = 2
+        #expect(pcm.estimatedBitrate == 48000 * 16 * 2)
+    }
+
     @Test func fecOnlyCountsOverUDP() {
         #expect(options(transport: .tcpUDP, fec: true).usesFEC)
         #expect(!options(transport: .tcp, fec: true).usesFEC)

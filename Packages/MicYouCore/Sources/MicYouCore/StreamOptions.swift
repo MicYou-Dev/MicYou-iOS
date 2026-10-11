@@ -99,6 +99,12 @@ public struct StreamOptions: Equatable, Sendable {
         AudioStreamFormat(sampleRate: Int32(sampleRate), channelCount: Int32(channels), codec: codec.wire)
     }
 
+    /// Audio bits per second without packet headers, the parity packets of FEC included
+    public var estimatedBitrate: Int {
+        let audio = codec == .opus ? opusBitrate : sampleRate * 16 * channels
+        return usesFEC ? audio * (MicYouWire.fecGroupSize + 1) / MicYouWire.fecGroupSize : audio
+    }
+
     /// For logs and reports, always English: "Opus 64 kbps, 48000 Hz mono, UDP with FEC"
     public var summary: String {
         let codec = codec == .opus ? "Opus \(opusBitrate / 1000) kbps" : "PCM"
