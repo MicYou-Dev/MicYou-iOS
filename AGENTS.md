@@ -57,7 +57,8 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver,
 - On connect, `AppSettings.streamConfig` freezes settings into a `StreamConfig` (endpoint plus `StreamOptions`) for the session; changes made while streaming apply to the next connection, or right away through `AppModel.restart()` ("Reconnect Now to Apply" in Settings). Input gain and the microphone choice apply immediately
 - A remembered Bonjour computer connects through `NWEndpoint.service` built from its instance name, without waiting for the browser, so Shortcuts, links and connect on open work right after launch
 - `AudioCapture` reports interruptions (calls, other apps) and failed restarts to `AppModel.captureStatus`; the connection stays up meanwhile and capture is retried when the interruption ends or the app returns to the foreground
-- `ControlChannel` handles the handshake, heartbeats and two-way mute sync, and treats 5 seconds without a `ping` as a disconnect; when the TCP send backlog exceeds 128 KiB new audio packets are dropped
+- `ControlChannel` handles the handshake, heartbeats, two-way mute sync and the desktop's once-a-second link stats, and treats 5 seconds without a `ping` as a disconnect; when the TCP send backlog exceeds 128 KiB new audio packets are dropped
+- USB (`StreamLink.usb`): usbmuxd only lets the computer connect, so `ControlChannel` listens on loopback and runs the normal client handshake once the desktop in USB mode connects; audio is forced to TCP-only (`StreamOptions.overUSB`)
 
 ### Threading
 

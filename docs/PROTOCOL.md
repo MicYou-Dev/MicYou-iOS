@@ -37,6 +37,17 @@ UDP 发往 `TCP 端口 + 1`。桌面端只接收来源 IP 与当前 TCP 对端�
 - 客户端原样回传 `pong { timestamp }`，桌面端用它计算 RTT。
 - 客户端连续 5 秒收不到 `ping` 视为断线；桌面端连续 10 秒收不到任何数据则主动断开。
 
+## 链路统计
+
+桌面端在连接期间每秒向手机发送一次 `stats`（`MessageWrapper` 字段 8，`StatsMessage`），内容与桌面端界面显示的一致：
+
+- `rttMs`：平滑后的 ping/pong 往返时间（毫秒），收到第一个 `pong` 之前为 `0`。
+- `jitterMs`：音频包到达抖动（毫秒，`float`）。
+- `packetLoss`：音频包丢失比例，`0.0` 到 `1.0`（`float`）。
+- `latencyMs`：桌面端估算的端到端延迟，即接收缓冲加上往返时间。
+
+旧版客户端不认识这个字段，按 proto3 规则直接跳过。
+
 ## 静音
 
 - 静音状态双向同步，受桌面端 `mute_sync` 设置控制（默认开启）。
@@ -68,3 +79,14 @@ UDP 发往 `TCP 端口 + 1`。桌面端只接收来源 IP 与当前 TCP 对端�
 - `fecSequenceNumber` 填这组第 1 个常规包的序号。
 - `sequenceNumber` 填下一个常规包将要使用的序号，但计数器不递增（即后面的常规包继续用同一个 `sequenceNumber`）。
 - `fecPacketLengths` 依次记录这 12 个常规包各自的原始长度（范围 `1..=1320`）。常规包不能带这个字段。
+
+## USB 连接（iOS）
+
+usbmuxd 只允许电脑主动连接手机上的端口，所以 iOS 走 USB 时 TCP 连接的方向是反的，协议内容不变：
+
+1. 手机在回环地址上监听桌面端的服务端口（App 使用“手动连接”中填写的端口，默认 `8554`）。
+2. 桌面端处于 USB 模式时，每秒通过 usbmuxd（macOS 自带；Windows 由 iTunes 提供，地址 `127.0.0.1:27015`；Linux 为 `/var/run/usbmuxd`）列出 USB 设备，并对每台设备发送 `Connect`（`PortNumber` 为网络字节序的端口）。
+3. 连接成功后，桌面端把这条流转接到本机 TCP 服务端口；手机照常发送 `MicYouCheck1`、`connect` 等，与网络连接完全相同。
+4. 这条连接只能承载 TCP，音频按“仅 TCP”方式发送，没有 UDP 和 FEC。
+
+手机端监听 15 秒内没有等到桌面端连接，就报连接失败。断线重连时会重新开始监听。
