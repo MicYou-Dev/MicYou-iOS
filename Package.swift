@@ -18,6 +18,12 @@ let widgetEntryPoint: [LinkerSetting] = [
     .unsafeFlags(["-Xlinker", "-u", "-Xlinker", "_main"]),
 ]
 
+// Release builds leave out local symbols and debug info, which take more than half of the
+// binary. Crash reports then show addresses for app frames, debug builds keep their symbols
+let stripSymbols: [LinkerSetting] = [
+    .unsafeFlags(["-Xlinker", "-x", "-Xlinker", "-S"], .when(configuration: .release)),
+]
+
 let package = Package(
     name: "MicYou",
     platforms: [
@@ -44,12 +50,12 @@ let package = Package(
                 .product(name: "MicYouProtocol", package: "MicYouProtocol"),
                 .product(name: "MicYouCore", package: "MicYouCore"),
             ],
-            linkerSettings: linkSDKVersion
+            linkerSettings: linkSDKVersion + stripSymbols
         ),
         .target(
             name: "MicYouWidget",
             dependencies: ["MicYouShared"],
-            linkerSettings: linkSDKVersion + widgetEntryPoint
+            linkerSettings: linkSDKVersion + widgetEntryPoint + stripSymbols
         ),
     ]
 )

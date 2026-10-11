@@ -68,7 +68,7 @@ git push origin v1.2.0
 
 - 先跑一遍与 `check.yml` 相同的测试和本地化检查。
 - 把标签里的数字部分写入 `CFBundleShortVersionString`，把总提交数写入 `CFBundleVersion`（只在 CI 里改，不回写仓库）。
-- 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。
+- 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
 - 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、LiveContainer 包里不含扩展。
 - 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
 
