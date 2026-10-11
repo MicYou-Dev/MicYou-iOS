@@ -17,8 +17,8 @@ final class AppSettings {
     static let recentHostLimit = 5
 
     private enum Key: String {
-        case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB
-        case fecEnabled, autoReconnect, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
+        case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB, input
+        case fecEnabled, autoReconnect, autoConnect, keepScreenOn, liveActivity, recentHosts, lastServiceName, welcomeShown, tourShown
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -33,8 +33,12 @@ final class AppSettings {
     var voiceProcessing: Bool { didSet { save(voiceProcessing, .voiceProcessing) } }
     /// Software gain in dB, within inputGainRange
     var inputGainDB: Double { didSet { save(inputGainDB, .inputGainDB) } }
+    /// The microphone to record from, applies immediately
+    var input: InputPreference { didSet { save(input.storageValue, .input) } }
     var fecEnabled: Bool { didSet { save(fecEnabled, .fecEnabled) } }
     var autoReconnect: Bool { didSet { save(autoReconnect, .autoReconnect) } }
+    /// Connects to the selected computer when the app opens
+    var autoConnect: Bool { didSet { save(autoConnect, .autoConnect) } }
     var keepScreenOn: Bool { didSet { save(keepScreenOn, .keepScreenOn) } }
     var liveActivity: Bool { didSet { save(liveActivity, .liveActivity) } }
     var recentHosts: [String] { didSet { save(recentHosts, .recentHosts) } }
@@ -57,8 +61,10 @@ final class AppSettings {
         stereo = load(.stereo) ?? false
         voiceProcessing = load(.voiceProcessing) ?? false
         inputGainDB = load(.inputGainDB) ?? 6
+        input = load(.input).map(InputPreference.init(storageValue:)) ?? .automatic
         fecEnabled = load(.fecEnabled) ?? true
         autoReconnect = load(.autoReconnect) ?? true
+        autoConnect = load(.autoConnect) ?? false
         keepScreenOn = load(.keepScreenOn) ?? false
         liveActivity = load(.liveActivity) ?? true
         recentHosts = load(.recentHosts) ?? []

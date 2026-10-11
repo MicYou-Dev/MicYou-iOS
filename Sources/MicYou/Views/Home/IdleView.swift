@@ -143,11 +143,45 @@ private struct TargetCard: View {
             .adaptiveAnimation(value: title)
         }
         .buttonStyle(.surface)
+        // Long press switches between nearby and recent computers without opening the picker
+        .contextMenu { quickSwitch }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.canConnect ? L10n.Status.ready(title) : title)
         .accessibilityValue(subtitle ?? "")
         .accessibilityHint(L10n.Home.chooseComputer)
         .accessibilityAddTraits(.isButton)
+    }
+
+    @ViewBuilder
+    private var quickSwitch: some View {
+        if !model.browser.servers.isEmpty {
+            Section(L10n.Home.nearbyHeader) {
+                ForEach(model.browser.servers) { server in
+                    Toggle(isOn: Binding(
+                        get: { model.selection == .discovered(name: server.name) },
+                        set: { _ in model.selection = .discovered(name: server.name) }
+                    )) {
+                        Label(server.displayName, systemImage: "desktopcomputer")
+                    }
+                }
+            }
+        }
+        if !settings.recentHosts.isEmpty {
+            Section(L10n.Home.recentAddresses) {
+                ForEach(settings.recentHosts, id: \.self) { host in
+                    Toggle(isOn: Binding(
+                        get: { model.selection == .manual && settings.host == host },
+                        set: { _ in
+                            settings.host = host
+                            model.selection = .manual
+                        }
+                    )) {
+                        Label(host, systemImage: "network")
+                    }
+                }
+            }
+        }
+        Button(L10n.Home.chooseComputer, systemImage: "ellipsis.circle", action: action)
     }
 
     private var symbol: String {

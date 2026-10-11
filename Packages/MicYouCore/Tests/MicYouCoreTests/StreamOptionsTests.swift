@@ -75,3 +75,18 @@ import Testing
         #expect(ServiceName.displayName("Other") == "Other")
     }
 }
+
+@Suite struct Inputs {
+    @Test(arguments: [
+        InputPreference.automatic, .builtIn(nil), .builtIn(.bottom), .builtIn(.front), .builtIn(.back),
+        .external(uid: "USB:1234"), .external(uid: "a.b.c"),
+    ])
+    func roundTrips(_ preference: InputPreference) {
+        #expect(InputPreference(storageValue: preference.storageValue) == preference)
+    }
+
+    @Test(arguments: ["", "nonsense", "builtIn.left", "external."])
+    func unknownValuesAreAutomatic(_ value: String) {
+        #expect(InputPreference(storageValue: value) == .automatic)
+    }
+}

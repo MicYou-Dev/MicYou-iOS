@@ -10,6 +10,9 @@ struct CaptureConfig: Equatable, Sendable {
     var sampleRate: Double
     var channels: AVAudioChannelCount
     var voiceProcessing: Bool
+    var input: InputPreference
+    /// How the device is held, so stereo from the built-in microphones keeps left on the left
+    var stereoOrientation: AVAudioSession.StereoOrientation
 }
 
 enum CaptureError: LocalizedError {
@@ -103,6 +106,46 @@ final class AudioCapture: @unchecked Sendable {
         queue.async { self.stopOnQueue() }
     }
 
+    /// Switches the microphone, a running engine restarts on the new one
+    func setInput(_ preference: InputPreference) {
+        queue.async {
+            guard self.isRunning, var config = self.config, config.input != preference else { return }
+            config.input = preference
+            self.config = config
+            // An interrupted engine picks the new input up when it resumes
+            if !self.isInterrupted { self.scheduleRestart(force: true) }
+        }
+    }
+
+    /// Follows the interface orientation, which only changes on iPad
+    func setStereoOrientation(_ orientation: AVAudioSession.StereoOrientation) {
+        queue.async {
+            guard var config = self.config, config.stereoOrientation != orientation else { return }
+            config.stereoOrientation = orientation
+            self.config = config
+            guard self.isRunning, config.channels == 2 else { return }
+            do {
+                try AVAudioSession.sharedInstance().setPreferredInputOrientation(orientation)
+            } catch {
+                self.log.notice("Stereo orientation unavailable: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Microphones the user can pick from, read on the capture queue since the session may need its category first
+    func inputPorts() async -> [InputPort] {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                let session = AVAudioSession.sharedInstance()
+                // Only a recording category lists inputs, a running capture has set it already
+                if !self.isRunning && session.category != .playAndRecord {
+                    try? session.setCategory(.playAndRecord, mode: .default, options: Self.categoryOptions)
+                }
+                continuation.resume(returning: (session.availableInputs ?? []).map(InputPort.init))
+            }
+        }
+    }
+
     /// Tries again after an interruption that did not end cleanly, for example once the app is back in the foreground
     func resume() {
         queue.async {
@@ -153,29 +196,62 @@ final class AudioCapture: @unchecked Sendable {
         // voiceChat enables echo cancellation, noise suppression and AGC
         // measurement would bypass the system input gain and sounds far too quiet
         let mode: AVAudioSession.Mode = config.voiceProcessing ? .voiceChat : .default
-        try session.setCategory(.playAndRecord, mode: mode, options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers])
+        try session.setCategory(.playAndRecord, mode: mode, options: Self.categoryOptions)
         try? session.setPreferredSampleRate(config.sampleRate)
         try? session.setPreferredIOBufferDuration(0.01)
         try session.setActive(true)
-        if config.channels == 2 {
-            preferStereoBuiltInMic(session)
+        applyInput(config, session: session)
+    }
+
+    private static let categoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
+
+    /// Routes the chosen microphone, falling back to the system choice when it is not connected
+    private func applyInput(_ config: CaptureConfig, session: AVAudioSession) {
+        let inputs = session.availableInputs ?? []
+        let builtIn = inputs.first { $0.portType == .builtInMic }
+        do {
+            switch config.input {
+            case .external(let uid):
+                try session.setPreferredInput(inputs.first { $0.uid == uid })
+            case .builtIn(let position):
+                guard let builtIn else { return try session.setPreferredInput(nil) }
+                try preferBuiltIn(builtIn, position: position, config: config, session: session)
+            case .automatic:
+                // Stereo needs the built-in microphones, headsets record mono
+                if config.channels == 2, let builtIn {
+                    try preferBuiltIn(builtIn, position: nil, config: config, session: session)
+                } else {
+                    try session.setPreferredInput(nil)
+                }
+            }
+        } catch {
+            log.notice("Input selection failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     /// The built-in mic records stereo only when a data source with a stereo polar pattern is selected
-    private func preferStereoBuiltInMic(_ session: AVAudioSession) {
-        guard let builtIn = session.availableInputs?.first(where: { $0.portType == .builtInMic }) else { return }
+    private func preferBuiltIn(_ port: AVAudioSessionPortDescription, position: MicrophonePosition?, config: CaptureConfig, session: AVAudioSession) throws {
+        try session.setPreferredInput(port)
+        let sources = port.dataSources ?? []
+        let chosen = position.flatMap { position in sources.first { $0.orientation == position.orientation } }
+        guard config.channels == 2 else {
+            if let chosen { try port.setPreferredDataSource(chosen) }
+            return
+        }
+        let supportsStereo = { (source: AVAudioSessionDataSourceDescription) in source.supportedPolarPatterns?.contains(.stereo) == true }
+        // The chosen position keeps priority, stereo only when it can record it
+        guard let source = chosen.map({ supportsStereo($0) ? $0 : nil }) ?? sources.first(where: supportsStereo) else {
+            if let chosen { try port.setPreferredDataSource(chosen) }
+            log.notice("Stereo capture unavailable on this microphone")
+            return
+        }
         do {
-            try session.setPreferredInput(builtIn)
-            if let source = builtIn.dataSources?.first(where: { $0.supportedPolarPatterns?.contains(.stereo) == true }) {
-                try source.setPreferredPolarPattern(.stereo)
-                try builtIn.setPreferredDataSource(source)
-            }
+            try source.setPreferredPolarPattern(.stereo)
+            try port.setPreferredDataSource(source)
             try session.setPreferredInputNumberOfChannels(min(2, session.maximumInputNumberOfChannels))
-            let orientation: AVAudioSession.StereoOrientation = .portrait
-            try session.setPreferredInputOrientation(orientation)
+            try session.setPreferredInputOrientation(config.stereoOrientation)
         } catch {
-            log.notice("Stereo capture unavailable: \(error.localizedDescription)")
+            log.notice("Stereo capture unavailable: \(error.localizedDescription, privacy: .public)")
         }
     }
 

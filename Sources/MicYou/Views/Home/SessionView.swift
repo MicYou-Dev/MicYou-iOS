@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import AVFoundation
 import MicYouShared
 import SwiftUI
 
@@ -64,14 +65,11 @@ struct SessionView: View {
                 switch model.captureStatus {
                 case .interrupted:
                     caption(L10n.Status.interruptedDetail, systemImage: "pause.fill", color: .yellow)
+                    // Not every interruption reports its end
+                    resumeButton
                 case .resumeFailed:
                     caption(L10n.Status.resumeFailedDetail, systemImage: "exclamationmark.triangle.fill", color: .red)
-                    Button(L10n.Common.resume, systemImage: "arrow.clockwise") {
-                        model.resumeCapture()
-                    }
-                    .glassButtonStyle()
-                    .controlSize(.small)
-                    .transition(.opacity)
+                    resumeButton
                 case .running:
                     if model.isMuted {
                         caption(L10n.Status.mutedDetail, systemImage: "mic.slash.fill", color: .orange)
@@ -82,6 +80,15 @@ struct SessionView: View {
             }
         }
         .frame(minHeight: 96, alignment: .top)
+    }
+
+    private var resumeButton: some View {
+        Button(L10n.Common.resume, systemImage: "arrow.clockwise") {
+            model.resumeCapture()
+        }
+        .glassButtonStyle()
+        .controlSize(.small)
+        .transition(.opacity)
     }
 
     /// Audio is reaching the computer
@@ -224,6 +231,9 @@ private struct ReconnectProgress: View {
 /// Format, bitrate, transport and microphone of the stream, shown from the start of a connection
 private struct StreamStats: View {
     @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+    @State private var micMode = AVCaptureDevice.activeMicrophoneMode
+    @State private var showsMicModeHint = false
 
     var body: some View {
         Grid(horizontalSpacing: 8, verticalSpacing: 8) {
@@ -233,9 +243,45 @@ private struct StreamStats: View {
             }
             GridRow {
                 StatTile(label: L10n.Status.transport, value: transport)
-                StatTile(label: L10n.Settings.microphone, value: model.audioInput?.name ?? "")
+                // Tapping the microphone switches it, for example to the back microphone or a headset
+                Menu {
+                    Picker(L10n.Settings.input, selection: Binding(get: { settings.input }, set: { model.setInput($0) })) {
+                        ForEach(model.inputChoices) { option in
+                            Label(option.name, systemImage: option.symbol)
+                                .tag(option.preference)
+                        }
+                    }
+                } label: {
+                    StatTile(label: L10n.Settings.microphone, value: model.audioInput?.name ?? "", accessory: "chevron.up.chevron.down")
+                }
+                .buttonStyle(.plain)
+                .task { model.refreshInputOptions() }
+            }
+            // System microphone modes only apply to voice processing input
+            // Only Control Center can change them, the tile explains where
+            if model.isVoiceProcessingActive {
+                GridRow {
+                    Button {
+                        showsMicModeHint = true
+                    } label: {
+                        StatTile(label: L10n.Settings.micMode, value: micMode.title ?? "", accessory: "info.circle")
+                    }
+                    .buttonStyle(.plain)
+                    .gridCellColumns(2)
+                    .accessibilityHint(L10n.Settings.micModeFooter)
+                    .popover(isPresented: $showsMicModeHint) {
+                        Text(L10n.Settings.micModeFooter)
+                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(idealWidth: 300)
+                            .padding()
+                            .presentationCompactAdaptation(.popover)
+                    }
+                }
+                .transition(.opacity)
             }
         }
+        .trackingMicrophoneMode($micMode, while: model.isVoiceProcessingActive)
     }
 
     /// What the computer accepted once streaming, what was asked for before that
@@ -255,12 +301,22 @@ private struct StatTile: View {
     let value: String
     /// Rolls the digits of values that update every second
     var isNumeric = false
+    /// SF Symbol after the label for tiles that open something, such as a menu
+    var accessory: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 4) {
+                Text(label)
+                if let accessory {
+                    Spacer(minLength: 0)
+                    Image(systemName: accessory)
+                        .imageScale(.small)
+                        .accessibilityHidden(true)
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
             // A placeholder keeps the tile height while the value is not known yet
             Text(value.isEmpty ? L10n.Status.waiting : value)
                 .font(.subheadline.weight(.semibold))

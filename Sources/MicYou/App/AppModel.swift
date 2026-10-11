@@ -55,6 +55,8 @@ final class AppModel {
     /// The microphone in use, follows headsets coming and going
     private(set) var audioInput: AudioInputInfo?
     private(set) var captureStatus: CaptureStatus = .running
+    /// Microphones to pick from, refreshed when a picker appears and when devices come and go
+    private(set) var inputOptions: [InputOption] = []
     /// One-off message, for example when Opus is not available
     var notice: String?
     var selection: ServerSelection {
@@ -75,13 +77,26 @@ final class AppModel {
     @ObservationIgnored private var hasStreamed = false
     /// Set while capture is running or starting, a stale start that fails later is ignored
     @ObservationIgnored private var captureToken: UUID?
+    /// Identifies the current connect, so one that waited on the permission prompt can tell it was superseded
+    @ObservationIgnored private var connectToken: UUID?
+    /// Connect on launch is considered once per process
+    @ObservationIgnored private var launchHandled = false
+    /// A link or shortcut opened the app, it decides whether to connect
+    @ObservationIgnored private var openedByLink = false
+    /// Voice processing of the running capture, which keeps going across reconnects
+    private var captureVoiceProcessing: Bool?
 
     init() {
         selection = settings.lastServiceName.map { .discovered(name: $0) } ?? .manual
         liveActivity.endStale()
         // The Live Activity shows the microphone in use, so follow headsets coming and going
         NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshSideEffects() }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.refreshSideEffects()
+                // Only once a picker has asked, listing inputs sets the session category
+                if !self.inputOptions.isEmpty { self.refreshInputOptions() }
+            }
         }
         // Swiping the app away kills the process, the system keeps the activity unless it is ended first
         // Sent while streaming because the audio background mode keeps the app running rather than suspended
@@ -124,12 +139,43 @@ final class AppModel {
         notice = nil
         // Claim the connecting state before awaiting so a second tap is ignored
         phase = .connecting
+        await begin()
+    }
+
+    func disconnect() {
+        stopStream()
+        phase = .idle
+        refreshSideEffects()
+    }
+
+    /// Starts over with the current settings, the session screen and the Live Activity stay up meanwhile
+    func restart() {
+        guard isActive else { return }
+        stopStream()
+        phase = .connecting
+        refreshSideEffects()
+        Task { await begin() }
+    }
+
+    /// The running capture uses voice processing, which is what system microphone modes apply to
+    var isVoiceProcessingActive: Bool { captureVoiceProcessing == true }
+
+    /// The running stream was started with settings that have changed since
+    var hasPendingChanges: Bool {
+        guard isActive, let config = currentConfig else { return false }
+        let voiceProcessingChanged = captureVoiceProcessing.map { $0 != settings.voiceProcessing } ?? false
+        return config.options.differs(from: settings.streamOptions) || voiceProcessingChanged
+    }
+
+    private func begin() async {
+        let token = UUID()
+        connectToken = token
         guard await AudioCapture.requestPermission() else {
-            phase = .failed(CaptureError.permissionDenied.localizedDescription)
+            if connectToken == token { phase = .failed(CaptureError.permissionDenied.localizedDescription) }
             return
         }
-        // Disconnect may have been tapped while the permission prompt was up
-        guard phase == .connecting else { return }
+        // Disconnect or a restart may have happened while the permission prompt was up
+        guard connectToken == token, phase == .connecting else { return }
         guard let target = resolveTarget() else {
             phase = .failed(L10n.Failure.chooseTarget)
             return
@@ -141,23 +187,24 @@ final class AppModel {
         openSession()
     }
 
-    func disconnect() {
+    /// Ends the session and capture and clears what they reported, the caller sets the phase
+    private func stopStream() {
+        connectToken = nil
         reconnectTask?.cancel()
         reconnectTask = nil
         tearDownSession()
         captureToken = nil
+        captureVoiceProcessing = nil
         capture.stop()
-        phase = .idle
         streamingSince = nil
         activeFormat = nil
         remoteAddress = nil
         throughput = 0
         levelDB = -160
         captureStatus = .running
-        refreshSideEffects()
     }
 
-    /// Asks capture to try again after an interruption that did not end on its own
+    /// Asks capture to try again, for an interruption that never reported its end or a restart that failed
     func resumeCapture() {
         guard isActive, captureStatus != .running else { return }
         capture.resume()
@@ -166,8 +213,24 @@ final class AppModel {
     /// The app came to the foreground
     func didBecomeActive() {
         browser.start()
-        // Recording cannot restart from the background, so an interruption that ended there is picked up now
-        resumeCapture()
+        // Recording may not restart from the background, so a resume that failed there is tried again now
+        // A running interruption is left alone, a call still holds the microphone and ends it by itself
+        if captureStatus == .resumeFailed { resumeCapture() }
+        connectOnLaunchIfNeeded()
+    }
+
+    private func connectOnLaunchIfNeeded() {
+        guard !launchHandled else { return }
+        launchHandled = true
+        // Not before the introduction has been seen, the first connection is part of it
+        guard settings.autoConnect, settings.welcomeShown, settings.tourShown else { return }
+        Task {
+            // A link from Control Center or the Live Activity arrives right after launch and wins
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !openedByLink, phase == .idle, canConnect else { return }
+            log.info("Connecting on launch")
+            await connect()
+        }
     }
 
     func setMuted(_ value: Bool) {
@@ -183,11 +246,45 @@ final class AppModel {
         capture.setGain(dB: dB)
     }
 
+    /// Applies immediately while streaming
+    func setInput(_ preference: InputPreference) {
+        settings.input = preference
+        capture.setInput(preference)
+    }
+
+    /// The options for the input pickers, the saved choice included even while its device is away
+    var inputChoices: [InputOption] {
+        let options = inputOptions.isEmpty ? [.automatic] : inputOptions
+        if options.contains(where: { $0.preference == settings.input }) { return options }
+        return options + [.unavailable(settings.input)]
+    }
+
+    func refreshInputOptions() {
+        let capture = self.capture
+        Task {
+            let ports = await capture.inputPorts()
+            inputOptions = InputOption.list(ports)
+        }
+    }
+
+    /// The screen rotated, only iPad allows it
+    func orientationChanged() {
+        capture.setStereoOrientation(Self.stereoOrientation)
+    }
+
+    /// The interface orientation as a stereo orientation, the two enums share their raw values
+    private static var stereoOrientation: AVAudioSession.StereoOrientation {
+        let scene = UIApplication.shared.connectedScenes.lazy.compactMap { $0 as? UIWindowScene }.first
+        let orientation = scene?.effectiveGeometry.interfaceOrientation ?? .portrait
+        return AVAudioSession.StereoOrientation(rawValue: orientation.rawValue) ?? .portrait
+    }
+
     func toggleMute() {
         setMuted(!isMuted)
     }
 
     func handle(_ link: DeepLink) {
+        openedByLink = true
         switch link {
         case .connect: Task { await connect() }
         case .disconnect: disconnect()
@@ -276,11 +373,14 @@ final class AppModel {
         guard captureToken == nil else { return }
         let token = UUID()
         captureToken = token
+        captureVoiceProcessing = settings.voiceProcessing
         let sink = self.sink
         let captureConfig = CaptureConfig(
             sampleRate: Double(config.sampleRate),
             channels: AVAudioChannelCount(config.channels),
-            voiceProcessing: settings.voiceProcessing
+            voiceProcessing: settings.voiceProcessing,
+            input: settings.input,
+            stereoOrientation: Self.stereoOrientation
         )
         capture.setGain(dB: settings.inputGainDB)
         let handler: AudioCapture.Handler = { [weak self] pcm, level in

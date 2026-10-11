@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import AVFoundation
 import MicYouCore
 import MicYouShared
 import SwiftUI
@@ -18,7 +19,13 @@ struct SettingsView: View {
                     Section {
                         Label(L10n.Settings.appliesNextTime, systemImage: "info.circle")
                             .font(.subheadline)
+                        if model.hasPendingChanges {
+                            Button(L10n.Settings.reconnectToApply, systemImage: "arrow.clockwise") {
+                                model.restart()
+                            }
+                        }
                     }
+                    .animation(Motion.state, value: model.hasPendingChanges)
                 }
 
                 Section {
@@ -47,6 +54,10 @@ struct SettingsView: View {
                     Toggle(L10n.Settings.fec, isOn: $settings.fecEnabled)
                         .disabled(settings.transport != .tcpUDP)
                     Toggle(L10n.Settings.autoReconnect, isOn: $settings.autoReconnect)
+                    Toggle(isOn: $settings.autoConnect) {
+                        Text(L10n.Settings.autoConnect)
+                        Text(L10n.Settings.autoConnectDetail)
+                    }
                 } header: {
                     Text(L10n.Settings.connection)
                 } footer: {
@@ -83,15 +94,24 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    InputPicker()
                     InputGainControl()
                     Toggle(isOn: $settings.voiceProcessing) {
                         Text(L10n.Settings.voiceProcessing)
                         Text(L10n.Settings.voiceProcessingFooter)
                     }
+                    if settings.voiceProcessing {
+                        MicrophoneModeRow()
+                    }
                 } header: {
                     Text(L10n.Settings.microphone)
                 } footer: {
-                    Text(L10n.Settings.inputGainFooter)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L10n.Settings.inputGainFooter)
+                        if settings.voiceProcessing {
+                            Text(L10n.Settings.micModeFooter)
+                        }
+                    }
                 }
 
                 Section {
@@ -123,6 +143,36 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+}
+
+/// The microphone to record from, switches right away while streaming
+private struct InputPicker: View {
+    @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        Picker(selection: Binding(get: { settings.input }, set: { model.setInput($0) })) {
+            ForEach(model.inputChoices) { option in
+                Label(option.name, systemImage: option.symbol)
+                    .tag(option.preference)
+            }
+        } label: {
+            Text(L10n.Settings.input)
+        }
+        .task { model.refreshInputOptions() }
+    }
+}
+
+/// The system microphone mode, such as Voice Isolation, which only the user can change in Control Center
+/// It only applies to voice processing input, so the mode is shown while such a stream runs
+private struct MicrophoneModeRow: View {
+    @Environment(AppModel.self) private var model
+    @State private var mode = AVCaptureDevice.activeMicrophoneMode
+
+    var body: some View {
+        LabeledContent(L10n.Settings.micMode, value: model.isVoiceProcessingActive ? mode.title ?? "" : "")
+            .trackingMicrophoneMode($mode, while: model.isVoiceProcessingActive)
     }
 }
 

@@ -108,6 +108,7 @@ public enum L10n {
 
     public enum Settings {
         public static var appliesNextTime: String { string("settings.applies-next-time") }
+        public static var reconnectToApply: String { string("settings.reconnect-to-apply") }
         public static var presets: String { string("settings.preset") }
         public static var presetLowLatency: String { string("settings.preset.low-latency") }
         public static var presetStable: String { string("settings.preset.stable") }
@@ -119,6 +120,8 @@ public enum L10n {
         public static var tcpOnly: String { string("settings.transport.tcp") }
         public static var fec: String { string("settings.fec") }
         public static var autoReconnect: String { string("settings.auto-reconnect") }
+        public static var autoConnect: String { string("settings.auto-connect") }
+        public static var autoConnectDetail: String { string("settings.auto-connect.detail") }
         public static var connectionFooter: String { string("settings.connection.footer") }
         public static var audio: String { string("settings.audio") }
         public static var codec: String { string("settings.codec") }
@@ -131,10 +134,16 @@ public enum L10n {
         public static var opusNo44Footer: String { string("settings.audio.footer-opus-44") }
         public static var audioFooter: String { string("settings.audio.footer") }
         public static var microphone: String { string("settings.microphone") }
+        public static var input: String { string("settings.input") }
         public static var inputGain: String { string("settings.input-gain") }
         public static var inputGainFooter: String { string("settings.input-gain.footer") }
         public static var voiceProcessing: String { string("settings.voice-processing") }
         public static var voiceProcessingFooter: String { string("settings.voice-processing.footer") }
+        public static var micMode: String { string("settings.mic-mode") }
+        public static var micModeStandard: String { string("settings.mic-mode.standard") }
+        public static var micModeWideSpectrum: String { string("settings.mic-mode.wide-spectrum") }
+        public static var micModeVoiceIsolation: String { string("settings.mic-mode.voice-isolation") }
+        public static var micModeFooter: String { string("settings.mic-mode.footer") }
         public static var general: String { string("settings.general") }
         public static var keepScreenOn: String { string("settings.keep-screen-on") }
         public static var liveActivity: String { string("settings.live-activity") }
@@ -254,6 +263,14 @@ public enum L10n {
         public static func builtInInput(_ device: String) -> String { format("activity.input.built-in", device) }
         public static var udp: String { string("activity.transport.udp") }
         public static var tcp: String { string("activity.transport.tcp") }
+    }
+
+    public enum Input {
+        public static var automatic: String { string("input.automatic") }
+        public static var bottom: String { string("input.bottom") }
+        public static var front: String { string("input.front") }
+        public static var back: String { string("input.back") }
+        public static var unavailable: String { string("input.unavailable") }
     }
 
     public enum Control {

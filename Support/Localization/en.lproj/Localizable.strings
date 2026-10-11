@@ -68,6 +68,7 @@
 "home.format.adjust" = "Adjust";
 
 "settings.applies-next-time" = "Connection and audio settings take effect the next time you connect.";
+"settings.reconnect-to-apply" = "Reconnect Now to Apply";
 "settings.preset" = "Presets";
 "settings.preset.low-latency" = "Low Latency";
 "settings.preset.stable" = "Stable";
@@ -79,6 +80,8 @@
 "settings.transport.tcp" = "TCP Only";
 "settings.fec" = "Forward Error Correction";
 "settings.auto-reconnect" = "Reconnect Automatically";
+"settings.auto-connect" = "Connect on Open";
+"settings.auto-connect.detail" = "Connects to the selected computer when you open MicYou.";
 "settings.connection.footer" = "TCP + UDP offers the lowest latency. Switch to TCP Only if audio drops out. Forward Error Correction adds about 8% traffic overhead to recover lost UDP packets.";
 "settings.audio" = "Audio";
 "settings.codec" = "Codec";
@@ -91,10 +94,16 @@
 "settings.audio.footer-opus-44" = "Opus does not support 44.1 kHz; 48 kHz will be used instead.";
 "settings.audio.footer" = "Opus uses far less bandwidth than PCM and is well suited for voice; PCM sends uncompressed raw audio.";
 "settings.microphone" = "Microphone";
+"settings.input" = "Input";
 "settings.input-gain" = "Input Gain";
 "settings.input-gain.footer" = "Changes take effect immediately and can also be adjusted on the home screen while streaming. A built-in limiter prevents clipping on loud peaks.";
 "settings.voice-processing" = "Voice Processing";
 "settings.voice-processing.footer" = "Enables system echo cancellation, noise suppression, and automatic gain. Ideal for voice calls; turn off for music.";
+"settings.mic-mode" = "Mic Mode";
+"settings.mic-mode.standard" = "Standard";
+"settings.mic-mode.wide-spectrum" = "Wide Spectrum";
+"settings.mic-mode.voice-isolation" = "Voice Isolation";
+"settings.mic-mode.footer" = "While streaming with Voice Processing on, open Control Center and tap Mic Mode to switch, for example to Voice Isolation to filter out background noise.";
 "settings.general" = "General";
 "settings.keep-screen-on" = "Keep Screen On";
 "settings.live-activity" = "Live Activity";
@@ -198,5 +207,10 @@
 "activity.input.built-in" = "%@ Microphone";
 "activity.transport.udp" = "UDP";
 "activity.transport.tcp" = "TCP";
+"input.automatic" = "Automatic";
+"input.bottom" = "Bottom Microphone";
+"input.front" = "Front Microphone";
+"input.back" = "Back Microphone";
+"input.unavailable" = "Disconnected Device";
 
 "control.description" = "Start or stop streaming to your computer.";

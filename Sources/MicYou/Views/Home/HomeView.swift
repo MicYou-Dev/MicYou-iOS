@@ -51,6 +51,10 @@ struct HomeView: View {
         }
         .animation(Motion.screen, value: model.isActive)
         .background(Color(.systemGroupedBackground))
+        // Rotating changes the size, stereo capture follows the new orientation
+        .onGeometryChange(for: Bool.self) { $0.size.width > $0.size.height } action: { _ in
+            model.orientationChanged()
+        }
         .sensoryFeedback(trigger: model.phase, Self.feedback)
         .overlayPreferenceValue(TourAnchorKey.self) { anchors in
             if tourStep != nil {
@@ -127,6 +131,11 @@ struct HomeView: View {
     }
 }
 
+enum HomeLayout {
+    /// Widest the home screen content gets, about a large phone in portrait
+    static let maxWidth: CGFloat = 520
+}
+
 /// Title or status on the left and the settings button on the right
 struct HomeHeader<Leading: View>: View {
     let openSettings: () -> Void
@@ -151,6 +160,7 @@ struct HomeHeader<Leading: View>: View {
 }
 
 /// Fills the screen when the content is short and scrolls when it is not, such as on small phones or at large text sizes
+/// On iPad the content keeps a phone like width in the middle instead of stretching
 struct FillingScrollView<Content: View>: View {
     @ViewBuilder var content: Content
 
@@ -160,7 +170,8 @@ struct FillingScrollView<Content: View>: View {
                 content
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
-                    .frame(minHeight: proxy.size.height)
+                    .frame(maxWidth: HomeLayout.maxWidth, minHeight: proxy.size.height)
+                    .frame(maxWidth: .infinity)
             }
             .scrollBounceBehavior(.basedOnSize)
         }

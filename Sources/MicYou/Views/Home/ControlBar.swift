@@ -14,11 +14,14 @@ struct ControlBar: View {
                 buttons
             }
             .padding(.horizontal, 20)
+            .frame(maxWidth: HomeLayout.maxWidth)
             .padding(.bottom, 8)
         } else {
             buttons
                 .padding(.horizontal, 20)
+                .frame(maxWidth: HomeLayout.maxWidth)
                 .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
                 .background(.bar)
         }
     }

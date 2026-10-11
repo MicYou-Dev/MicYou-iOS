@@ -68,6 +68,7 @@
 "home.format.adjust" = "調整";
 
 "settings.applies-next-time" = "連線和音訊設定將在下次連線時生效。";
+"settings.reconnect-to-apply" = "立即重新連線以套用";
 "settings.preset" = "情境預設";
 "settings.preset.low-latency" = "低延遲";
 "settings.preset.stable" = "穩定";
@@ -79,6 +80,8 @@
 "settings.transport.tcp" = "僅 TCP";
 "settings.fec" = "前向錯誤修正";
 "settings.auto-reconnect" = "斷線自動重新連線";
+"settings.auto-connect" = "開啟時自動連線";
+"settings.auto-connect.detail" = "開啟 MicYou 時自動連線目前選擇的電腦。";
 "settings.connection.footer" = "TCP + UDP 延遲最低；若聲音斷斷續續，可改用「僅 TCP」。前向錯誤修正會增加約 8% 的流量，用於復原遺失的 UDP 封包。";
 "settings.audio" = "音訊";
 "settings.codec" = "編碼格式";
@@ -91,10 +94,16 @@
 "settings.audio.footer-opus-44" = "Opus 不支援 44.1 kHz，將自動改用 48 kHz。";
 "settings.audio.footer" = "Opus 佔用的頻寬遠低於 PCM，適合日常語音傳輸；PCM 不經壓縮，可保留原始音訊資料。";
 "settings.microphone" = "麥克風";
+"settings.input" = "輸入裝置";
 "settings.input-gain" = "輸入增益";
 "settings.input-gain.footer" = "增益調整立即生效，傳輸時也可在主畫面直接調節。內建限幅器可防止音量過大時爆音。";
 "settings.voice-processing" = "人聲處理";
 "settings.voice-processing.footer" = "啟用系統回音消除、降噪與自動增益，適合通話和會議；傳輸音樂時建議關閉。";
+"settings.mic-mode" = "麥克風模式";
+"settings.mic-mode.standard" = "標準";
+"settings.mic-mode.wide-spectrum" = "寬頻譜";
+"settings.mic-mode.voice-isolation" = "語音突顯";
+"settings.mic-mode.footer" = "開啟人聲處理並傳輸時，打開控制中心，輕點「麥克風模式」即可切換，例如選擇「語音突顯」過濾背景噪音。";
 "settings.general" = "一般";
 "settings.keep-screen-on" = "保持螢幕常亮";
 "settings.live-activity" = "即時動態";
@@ -198,5 +207,10 @@
 "activity.input.built-in" = "%@ 麥克風";
 "activity.transport.udp" = "UDP";
 "activity.transport.tcp" = "TCP";
+"input.automatic" = "自動";
+"input.bottom" = "底部麥克風";
+"input.front" = "前置麥克風";
+"input.back" = "後置麥克風";
+"input.unavailable" = "未連接的裝置";
 
 "control.description" = "開始或停止向電腦傳輸聲音。";
