@@ -10,6 +10,8 @@ public struct StreamActivityAttributes: ActivityAttributes {
         case connecting
         case streaming
         case reconnecting
+        /// Still connected, but a call or another app has the microphone
+        case interrupted
     }
 
     public struct ContentState: Codable, Hashable, Sendable {

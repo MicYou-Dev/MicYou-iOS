@@ -32,6 +32,16 @@ final class AudioCapture: @unchecked Sendable {
     /// PCM bytes and the RMS level of the block in dBFS
     typealias Handler = @Sendable (_ pcm: Data, _ levelDB: Float) -> Void
 
+    enum Event: Sendable {
+        /// A call or another app took the microphone, no audio arrives until it is resumed
+        case interrupted
+        case resumed
+        /// The engine could not be restarted, `resume()` tries again
+        case resumeFailed
+    }
+
+    typealias EventHandler = @Sendable (Event) -> Void
+
     private let log = Logger.micyou("capture")
     private let engine = AVAudioEngine()
     /// Activating the session and starting the engine block for a round trip to the audio server,
@@ -48,10 +58,15 @@ final class AudioCapture: @unchecked Sendable {
     private var handler: Handler?
     // Only touched on queue
     private var config: CaptureConfig?
+    private var onEvent: EventHandler?
     private var observers: [NSObjectProtocol] = []
     private var pendingRestart: DispatchWorkItem?
+    /// The pending restart follows an interruption or a request, not an echo of our own restart
+    private var restartForced = false
     private var lastRestart: Date?
     private var isRunning = false
+    /// Stopped by an interruption or a failed restart, until a restart succeeds
+    private var isInterrupted = false
 
     init() {
         notificationQueue.underlyingQueue = queue
@@ -67,11 +82,11 @@ final class AudioCapture: @unchecked Sendable {
     }
 
     /// Resumes once the engine runs, calls are applied in order with stop
-    func start(_ config: CaptureConfig, handler: @escaping Handler) async throws {
+    func start(_ config: CaptureConfig, handler: @escaping Handler, onEvent: @escaping EventHandler) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async {
                 do {
-                    try self.startOnQueue(config, handler: handler)
+                    try self.startOnQueue(config, handler: handler, onEvent: onEvent)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
@@ -85,12 +100,21 @@ final class AudioCapture: @unchecked Sendable {
         queue.async { self.stopOnQueue() }
     }
 
+    /// Tries again after an interruption that did not end cleanly, for example once the app is back in the foreground
+    func resume() {
+        queue.async {
+            guard self.isRunning, self.isInterrupted else { return }
+            self.scheduleRestart(force: true)
+        }
+    }
+
     // MARK: Lifecycle, always on queue
 
-    private func startOnQueue(_ config: CaptureConfig, handler: @escaping Handler) throws {
+    private func startOnQueue(_ config: CaptureConfig, handler: @escaping Handler, onEvent: @escaping EventHandler) throws {
         stopOnQueue()
         guard AVAudioApplication.shared.recordPermission == .granted else { throw CaptureError.permissionDenied }
         self.config = config
+        self.onEvent = onEvent
         lock.withLock { self.handler = handler }
         try configureSession(config)
         try startEngine(config)
@@ -113,7 +137,10 @@ final class AudioCapture: @unchecked Sendable {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
         isRunning = false
+        isInterrupted = false
+        restartForced = false
         config = nil
+        onEvent = nil
     }
 
     // MARK: Session
@@ -185,7 +212,11 @@ final class AudioCapture: @unchecked Sendable {
     }
 
     /// Coalesces bursts of notifications and ignores the ones our own restart causes
-    private func scheduleRestart() {
+    /// Forced restarts, after an interruption ends or on request, always run
+    private func scheduleRestart(force: Bool = false) {
+        // The microphone belongs to someone else until the interruption ends
+        if isInterrupted && !force { return }
+        restartForced = restartForced || force
         pendingRestart?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.restart() }
         pendingRestart = work
@@ -193,8 +224,10 @@ final class AudioCapture: @unchecked Sendable {
     }
 
     private func restart() {
+        let forced = restartForced
+        restartForced = false
         guard isRunning, let config, let handler = lock.withLock({ self.handler }) else { return }
-        if let last = lastRestart, Date().timeIntervalSince(last) < 1 { return }
+        if !forced, let last = lastRestart, Date().timeIntervalSince(last) < 1 { return }
         lastRestart = Date()
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
@@ -202,9 +235,26 @@ final class AudioCapture: @unchecked Sendable {
             try configureSession(config)
             lock.withLock { self.handler = handler }
             try startEngine(config)
+            if isInterrupted {
+                isInterrupted = false
+                log.info("Capture resumed")
+                onEvent?(.resumed)
+            }
         } catch {
-            log.error("Capture restart failed: \(error.localizedDescription)")
+            // Starting to record from the background is not allowed, the app tries again once it is opened
+            log.error("Capture restart failed: \(error.localizedDescription, privacy: .public)")
+            isInterrupted = true
+            onEvent?(.resumeFailed)
         }
+    }
+
+    private func interruptionBegan() {
+        guard isRunning, !isInterrupted else { return }
+        pendingRestart?.cancel()
+        restartForced = false
+        isInterrupted = true
+        log.notice("Capture interrupted")
+        onEvent?(.interrupted)
     }
 
     private func process(_ buffer: AVAudioPCMBuffer) {
@@ -252,11 +302,16 @@ final class AudioCapture: @unchecked Sendable {
         let session = AVAudioSession.sharedInstance()
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: notificationQueue) { [weak self] note in
             guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                  AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
-            self?.scheduleRestart()
+                  let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+            switch type {
+            case .began: self?.interruptionBegan()
+            // Recording resumes whether or not the system suggests it, that is what the user started
+            case .ended: self?.scheduleRestart(force: true)
+            @unknown default: break
+            }
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: notificationQueue) { [weak self] _ in
-            self?.scheduleRestart()
+            self?.scheduleRestart(force: true)
         })
         // Fires when the input hardware changes, for example a headset is plugged in
         observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: notificationQueue) { [weak self] _ in

@@ -22,6 +22,12 @@ struct DiscoveredServer: Identifiable, Hashable, Sendable {
         }
         return name
     }
+
+    /// A Bonjour endpoint for an instance name, resolved when a connection starts
+    /// rather than taken from the browse results, which take a moment after launch
+    static func endpoint(for name: String) -> NWEndpoint {
+        .service(name: name, type: MicYouWire.bonjourServiceType, domain: "local.", interface: nil)
+    }
 }
 
 /// Browses for desktops advertising `_micyou._tcp`

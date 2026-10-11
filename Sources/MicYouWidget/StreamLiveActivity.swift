@@ -220,7 +220,8 @@ private struct ElapsedText: View {
     let state: State
 
     var body: some View {
-        if state.phase == .streaming {
+        // The connection is still up while the microphone is interrupted, so the clock keeps running
+        if state.phase == .streaming || state.phase == .interrupted {
             Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false)
                 .monospacedDigit()
                 .multilineTextAlignment(.trailing)
@@ -235,6 +236,7 @@ private extension StreamActivityAttributes.ContentState {
         switch phase {
         case .streaming: isMuted ? .orange : .green
         case .connecting, .reconnecting: .blue
+        case .interrupted: .yellow
         }
     }
 
@@ -242,6 +244,7 @@ private extension StreamActivityAttributes.ContentState {
         switch phase {
         case .streaming: isMuted ? "mic.slash.fill" : "mic.fill"
         case .connecting, .reconnecting: "antenna.radiowaves.left.and.right"
+        case .interrupted: "pause.fill"
         }
     }
 }
@@ -251,5 +254,6 @@ private func phaseText(_ state: State) -> String {
     case .connecting: L10n.Status.connecting
     case .reconnecting: L10n.Status.reconnecting
     case .streaming: state.isMuted ? L10n.Status.muted : L10n.Status.streaming
+    case .interrupted: L10n.Status.interrupted
     }
 }

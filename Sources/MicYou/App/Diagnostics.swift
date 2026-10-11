@@ -33,7 +33,7 @@ enum Diagnostics {
             "MicYou \(version) (\(build))\(hasExtensions ? "" : ", without extensions")",
             "\(device.systemName) \(device.systemVersion), \(machine)",
             "Language: \(Locale.preferredLanguages.first ?? "?")",
-            "Connection: \(selection), \(phase(model.phase))",
+            "Connection: \(selection), \(phase(model.phase))\(model.captureStatus == .running ? "" : ", microphone interrupted")",
             "Transport: \(transport), FEC \(onOff(settings.fecEnabled)), auto reconnect \(onOff(settings.autoReconnect))",
             "Audio: \(codec), \(settings.sampleRate) Hz, \(settings.stereo ? "stereo" : "mono")",
             "Microphone: \(input), gain +\(Int(settings.inputGainDB)) dB, voice processing \(onOff(settings.voiceProcessing))",

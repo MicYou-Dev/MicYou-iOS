@@ -32,6 +32,7 @@ public enum L10n {
         public static var done: String { string("common.done") }
         public static var openSettings: String { string("common.open-settings") }
         public static var retry: String { string("common.retry") }
+        public static var resume: String { string("common.resume") }
         public static var dismiss: String { string("common.dismiss") }
         public static var mono: String { string("common.mono") }
         public static var stereo: String { string("common.stereo") }
@@ -65,6 +66,7 @@ public enum L10n {
         /// Placeholder while the elapsed time is not known yet
         public static var waiting: String { string("status.waiting") }
         public static var muted: String { string("status.muted") }
+        public static var interrupted: String { string("status.interrupted") }
         public static var failed: String { string("status.failed") }
         public static func ready(_ name: String) -> String { format("status.ready", name) }
         public static var duration: String { string("status.duration") }
@@ -76,6 +78,8 @@ public enum L10n {
         public static var fec: String { string("status.fec") }
         public static var mutedDetail: String { string("status.muted-detail") }
         public static var reconnectDetail: String { string("status.reconnect-detail") }
+        public static var interruptedDetail: String { string("status.interrupted-detail") }
+        public static var resumeFailedDetail: String { string("status.resume-failed-detail") }
     }
 
     public enum Home {
@@ -223,6 +227,7 @@ public enum L10n {
         public static func unreachable(_ reason: String) -> String { format("error.unreachable", reason) }
         public static var refused: String { string("error.refused") }
         public static var hostUnreachable: String { string("error.host-unreachable") }
+        public static var notFound: String { string("error.not-found") }
         public static var timeout: String { string("error.timeout") }
         public static var handshake: String { string("error.handshake") }
         public static var heartbeat: String { string("error.heartbeat") }

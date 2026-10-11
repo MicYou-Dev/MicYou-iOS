@@ -32,6 +32,7 @@ struct SessionView: View {
         .animation(Motion.state, value: model.phase)
         .animation(Motion.state, value: model.isMuted)
         .animation(Motion.state, value: model.notice)
+        .animation(Motion.state, value: model.captureStatus)
     }
 
     @ViewBuilder
@@ -57,17 +58,35 @@ struct SessionView: View {
                 caption(L10n.Status.reconnectDetail, systemImage: "antenna.radiowaves.left.and.right", color: .blue)
             } else {
                 // Capture keeps running while connecting, the meter only moves once audio reaches the computer
-                LevelMeterView(levelDB: model.phase == .streaming && !model.isMuted ? model.levelDB : -160)
+                LevelMeterView(levelDB: isLive ? model.levelDB : -160)
                     .frame(height: 44)
-                    .opacity(model.isMuted ? 0.4 : 1)
-                if model.isMuted {
-                    caption(L10n.Status.mutedDetail, systemImage: "mic.slash.fill", color: .orange)
-                } else {
-                    MeterScale()
+                    .opacity(model.isMuted || model.captureStatus != .running ? 0.4 : 1)
+                switch model.captureStatus {
+                case .interrupted:
+                    caption(L10n.Status.interruptedDetail, systemImage: "pause.fill", color: .yellow)
+                case .resumeFailed:
+                    caption(L10n.Status.resumeFailedDetail, systemImage: "exclamationmark.triangle.fill", color: .red)
+                    Button(L10n.Common.resume, systemImage: "arrow.clockwise") {
+                        model.resumeCapture()
+                    }
+                    .glassButtonStyle()
+                    .controlSize(.small)
+                    .transition(.opacity)
+                case .running:
+                    if model.isMuted {
+                        caption(L10n.Status.mutedDetail, systemImage: "mic.slash.fill", color: .orange)
+                    } else {
+                        MeterScale()
+                    }
                 }
             }
         }
         .frame(minHeight: 96, alignment: .top)
+    }
+
+    /// Audio is reaching the computer
+    private var isLive: Bool {
+        model.phase == .streaming && !model.isMuted && model.captureStatus == .running
     }
 
     private func caption(_ text: String, systemImage: String, color: Color) -> some View {
@@ -123,14 +142,15 @@ struct StatusPill: View {
 
     private var tint: Color {
         switch model.phase {
-        case .streaming: model.isMuted ? .orange : .green
+        case .streaming: model.captureStatus != .running ? .yellow : model.isMuted ? .orange : .green
         default: .blue
         }
     }
 
     private var title: String {
         switch model.phase {
-        case .streaming: model.isMuted ? L10n.Status.muted : L10n.Status.streaming
+        case .streaming:
+            model.captureStatus != .running ? L10n.Status.interrupted : model.isMuted ? L10n.Status.muted : L10n.Status.streaming
         case .reconnecting(let attempt): L10n.Status.reconnectingAttempt(attempt, of: AppModel.maxReconnectAttempts)
         default: L10n.Status.connecting
         }

@@ -13,6 +13,7 @@
 "common.done" = "完成";
 "common.open-settings" = "打开设置";
 "common.retry" = "重试";
+"common.resume" = "恢复";
 "common.dismiss" = "关闭";
 "common.mono" = "单声道";
 "common.stereo" = "立体声";
@@ -30,6 +31,7 @@
 "status.streaming" = "正在传输";
 "status.waiting" = "…";
 "status.muted" = "已静音";
+"status.interrupted" = "麦克风已暂停";
 "status.failed" = "连接失败";
 "status.ready" = "将连接到 %@";
 "status.duration" = "时长";
@@ -40,6 +42,8 @@
 "status.fec" = "纠错";
 "status.muted-detail" = "已暂停向电脑发送声音，连接仍保持开启。";
 "status.reconnect-detail" = "麦克风保持开启，重连成功后将自动恢复传输。";
+"status.interrupted-detail" = "通话或其他应用正在使用麦克风，结束后将自动恢复传输。";
+"status.resume-failed-detail" = "麦克风未能恢复，连接仍保持开启。";
 
 "home.nearby.header" = "附近的电脑";
 "home.nearby.searching" = "正在查找电脑…";
@@ -172,6 +176,7 @@
 "error.unreachable" = "无法连接到电脑：%@";
 "error.refused" = "电脑拒绝了连接。请确认 MicYou 正在电脑上运行，并检查端口是否正确。";
 "error.host-unreachable" = "无法访问目标电脑。请检查 IP 地址，并确认两台设备处于同一网络。";
+"error.not-found" = "找不到这台电脑。请确认电脑上的 MicYou 正在运行，且两台设备处于同一网络。";
 "error.timeout" = "连接超时。请确认电脑上的 MicYou 正在运行，且两台设备处于同一网络。";
 "error.handshake" = "电脑未响应 MicYou 握手，请检查端口及桌面端版本。";
 "error.heartbeat" = "与电脑的连接已中断，电脑可能已休眠或断开网络。";

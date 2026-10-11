@@ -19,7 +19,7 @@ struct MicYouApp: App {
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
             // Browsing only matters while the list is visible
-            if phase == .active { model.browser.start() } else if phase == .background { model.browser.stop() }
+            if phase == .active { model.didBecomeActive() } else if phase == .background { model.browser.stop() }
         }
     }
 }

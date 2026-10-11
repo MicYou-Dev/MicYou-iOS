@@ -13,6 +13,7 @@
 "common.done" = "Done";
 "common.open-settings" = "Open Settings";
 "common.retry" = "Try Again";
+"common.resume" = "Resume";
 "common.dismiss" = "Dismiss";
 "common.mono" = "Mono";
 "common.stereo" = "Stereo";
@@ -30,6 +31,7 @@
 "status.streaming" = "Streaming";
 "status.waiting" = "…";
 "status.muted" = "Muted";
+"status.interrupted" = "Microphone Paused";
 "status.failed" = "Connection Failed";
 "status.ready" = "Ready to connect to %@";
 "status.duration" = "Duration";
@@ -40,6 +42,8 @@
 "status.fec" = "FEC";
 "status.muted-detail" = "Audio is muted while the connection stays open.";
 "status.reconnect-detail" = "The microphone stays active and streaming will resume once reconnected.";
+"status.interrupted-detail" = "A call or another app is using the microphone. Streaming resumes when it's done.";
+"status.resume-failed-detail" = "The microphone could not be resumed. The connection is still open.";
 
 "home.nearby.header" = "Nearby Computers";
 "home.nearby.searching" = "Looking for computers…";
@@ -172,6 +176,7 @@
 "error.unreachable" = "Unable to connect to the computer: %@";
 "error.refused" = "Connection refused. Make sure MicYou is running on your computer and the port is correct.";
 "error.host-unreachable" = "Host unreachable. Check the IP address and make sure both devices are on the same network.";
+"error.not-found" = "Couldn't find the computer. Make sure MicYou is running on it and both devices are on the same network.";
 "error.timeout" = "Connection timed out. Make sure MicYou is running on your computer and both devices are on the same network.";
 "error.handshake" = "The computer did not respond to the MicYou handshake. Check the port and desktop app version.";
 "error.heartbeat" = "Connection to the computer was lost. It may have gone to sleep or disconnected from the network.";

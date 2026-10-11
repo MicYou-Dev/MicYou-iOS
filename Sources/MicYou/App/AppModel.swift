@@ -17,6 +17,15 @@ enum ConnectionPhase: Equatable {
     case failed(String)
 }
 
+/// Whether audio is reaching the stream while connected
+enum CaptureStatus: Equatable {
+    case running
+    /// A call or another app has the microphone, capture restarts when it is done
+    case interrupted
+    /// Restarting failed, for example because recording cannot start in the background
+    case resumeFailed
+}
+
 /// Where to connect: a Bonjour result or a typed address
 enum ServerSelection: Hashable {
     case discovered(name: String)
@@ -43,6 +52,7 @@ final class AppModel {
     private(set) var connectedName: String?
     /// The microphone in use, follows headsets coming and going
     private(set) var audioInput: AudioInputInfo?
+    private(set) var captureStatus: CaptureStatus = .running
     /// One-off message, for example when Opus is not available
     var notice: String?
     var selection: ServerSelection {
@@ -89,7 +99,8 @@ final class AppModel {
     var selectedName: String? {
         switch selection {
         case .discovered(let name):
-            return browser.servers.first { $0.name == name }?.displayName
+            // Usable before the search finds it again, the connection resolves the name itself
+            return DiscoveredServer.displayName(for: name)
         case .manual:
             return settings.manualTarget?.host
         }
@@ -140,7 +151,21 @@ final class AppModel {
         remoteAddress = nil
         throughput = 0
         levelDB = -160
+        captureStatus = .running
         refreshSideEffects()
+    }
+
+    /// Asks capture to try again after an interruption that did not end on its own
+    func resumeCapture() {
+        guard isActive, captureStatus != .running else { return }
+        capture.resume()
+    }
+
+    /// The app came to the foreground
+    func didBecomeActive() {
+        browser.start()
+        // Recording cannot restart from the background, so an interruption that ended there is picked up now
+        resumeCapture()
     }
 
     func setMuted(_ value: Bool) {
@@ -186,8 +211,9 @@ final class AppModel {
     private func resolveTarget() -> Target? {
         switch selection {
         case .discovered(let name):
-            guard let server = browser.servers.first(where: { $0.name == name }) else { return nil }
-            return Target(endpoint: server.endpoint, name: server.displayName, preferIPv4: true)
+            // Right after launch, for example from Control Center, the search has not found the computer yet
+            let endpoint = browser.servers.first { $0.name == name }?.endpoint ?? DiscoveredServer.endpoint(for: name)
+            return Target(endpoint: endpoint, name: DiscoveredServer.displayName(for: name), preferIPv4: true)
         case .manual:
             guard let address = settings.manualTarget, let port = NWEndpoint.Port(rawValue: address.port) else { return nil }
             settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -262,11 +288,14 @@ final class AppModel {
                 }
             }
         }
+        let onEvent: AudioCapture.EventHandler = { [weak self] event in
+            Task { @MainActor in self?.handle(event, token: token) }
+        }
         // Starts on the capture queue, the main thread stays free for the connect animation
         let capture = self.capture
         Task { [weak self] in
             do {
-                try await capture.start(captureConfig, handler: handler)
+                try await capture.start(captureConfig, handler: handler, onEvent: onEvent)
             } catch {
                 // Disconnected or restarted while the start was pending
                 guard let self, captureToken == token else { return }
@@ -274,6 +303,21 @@ final class AppModel {
                 phase = .failed(error.localizedDescription)
             }
         }
+    }
+
+    private func handle(_ event: AudioCapture.Event, token: UUID) {
+        guard captureToken == token, isActive else { return }
+        switch event {
+        case .interrupted:
+            captureStatus = .interrupted
+            levelDB = -160
+        case .resumed:
+            captureStatus = .running
+        case .resumeFailed:
+            captureStatus = .resumeFailed
+            levelDB = -160
+        }
+        refreshSideEffects()
     }
 
     private func scheduleReconnectOrFail(_ error: StreamError) {
@@ -308,7 +352,7 @@ final class AppModel {
         let activityPhase: StreamActivityAttributes.Phase
         var attempt = 0
         switch phase {
-        case .streaming: activityPhase = .streaming
+        case .streaming: activityPhase = captureStatus == .running ? .streaming : .interrupted
         case .reconnecting(let n): activityPhase = .reconnecting; attempt = n
         default: activityPhase = .connecting
         }

@@ -13,6 +13,7 @@
 "common.done" = "完成";
 "common.open-settings" = "打開設定";
 "common.retry" = "重試";
+"common.resume" = "恢復";
 "common.dismiss" = "關閉";
 "common.mono" = "單聲道";
 "common.stereo" = "立體聲";
@@ -30,6 +31,7 @@
 "status.streaming" = "正在傳輸";
 "status.waiting" = "…";
 "status.muted" = "已靜音";
+"status.interrupted" = "麥克風已暫停";
 "status.failed" = "連線失敗";
 "status.ready" = "將連線到 %@";
 "status.duration" = "時長";
@@ -40,6 +42,8 @@
 "status.fec" = "糾錯";
 "status.muted-detail" = "已暫停向電腦傳送聲音，連線仍保持開啟。";
 "status.reconnect-detail" = "麥克風保持開啟，重新連線後將自動恢復傳輸。";
+"status.interrupted-detail" = "通話或其他 App 正在使用麥克風，結束後將自動恢復傳輸。";
+"status.resume-failed-detail" = "麥克風未能恢復，連線仍保持開啟。";
 
 "home.nearby.header" = "附近的電腦";
 "home.nearby.searching" = "正在尋找電腦…";
@@ -172,6 +176,7 @@
 "error.unreachable" = "無法連線到電腦：%@";
 "error.refused" = "電腦拒絕了連線。請確認 MicYou 正在電腦上執行，並檢查連接埠是否正確。";
 "error.host-unreachable" = "無法連上目標電腦。請檢查 IP 位址，並確認兩台裝置處於同一網路。";
+"error.not-found" = "找不到這台電腦。請確認電腦上的 MicYou 正在執行，且兩台裝置處於同一網路。";
 "error.timeout" = "連線逾時。請確認電腦上的 MicYou 正在執行，且兩台裝置處於同一網路。";
 "error.handshake" = "電腦未回應 MicYou 交握，請檢查連接埠及桌面版版本。";
 "error.heartbeat" = "與電腦的連線已中斷，電腦可能已進入睡眠或中斷網路。";
