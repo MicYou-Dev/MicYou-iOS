@@ -91,12 +91,12 @@ private struct Credit: Identifiable {
         ]
     }
 
-    /// Consulted or used to build the app, none of their code ships in it
+    /// Projects and tools referenced or used during development
     static var references: [Credit] {
         [
             Credit(
-                name: "MicYou-iOS", author: L10n.Credits.micyouIOSAuthor, license: "GPL-3.0",
-                role: L10n.Credits.micyouIOSRole, url: ProjectLinks.repository
+                name: "MicYou-iOS (v2)", author: L10n.Credits.micyouIOSAuthor, license: "GPL-3.0",
+                role: L10n.Credits.micyouIOSRole, url: ProjectLinks.repository.appending(path: "tree/v2")
             ),
             Credit(
                 name: "MicWisp", author: "TimmySheep", license: "MIT",

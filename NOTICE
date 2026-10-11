@@ -6,19 +6,19 @@ the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version. See LICENSE for the full text.
 
-This project talks to the MicYou desktop receiver and contains material derived
-from the following GPL-3.0 licensed projects:
+This project communicates with the MicYou desktop receiver and contains material
+derived from or based on the following GPL-3.0 licensed projects:
 
 - MicYou (https://github.com/MicYou-Dev/MicYou)
   Copyright (C) LanRhyme and MicYou contributors
-  Packages/MicYouProtocol/Proto/network.proto is copied verbatim; the client
-  behaviour (handshake, heartbeat, mute sync, FEC) is ported from the Android
-  sender, and Resources/AppIcon/MicYou.icon is the Liquid Glass icon from
-  MicYou pull request #350 by WhatDamon
+  Packages/MicYouProtocol/Proto/network.proto is copied verbatim, the client
+  connection logic (handshake, heartbeat, mute sync, FEC) is ported from the
+  Android app, and Resources/AppIcon/MicYou.icon is the Liquid Glass icon from
+  MicYou pull request #350 by WhatDamon.
 
-- MicYou-iOS (https://github.com/MicYou-Dev/MicYou-iOS)
-  Copyright (C) MicYou contributors
-  Interface wording and settings layout were used as a reference
+- MicYou-iOS v2 branch (https://github.com/MicYou-Dev/MicYou-iOS/tree/v2)
+  Copyright (C) herbrine8403 and MicYou contributors
+  Referenced for interface wording and settings layout.
 
-MicWisp (https://github.com/TimmySheep/MicWisp, MIT) was consulted as a
-reference for the iOS audio session setup; no code was copied from it.
+MicWisp (https://github.com/TimmySheep/MicWisp, MIT) by TimmySheep was
+referenced for the iOS audio session configuration.

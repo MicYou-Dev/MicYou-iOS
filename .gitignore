@@ -6,3 +6,5 @@
 *.wav
 __pycache__/
 /.bsp
+promo/
+desktop.png

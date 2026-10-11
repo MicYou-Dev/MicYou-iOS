@@ -6,11 +6,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        中文或英文都可以，提交前请先看看 README 的常见问题，电脑端的问题请到 [MicYou](https://github.com/MicYou-Dev/MicYou/issues) 反馈
-        Chinese or English are both fine. Please check the FAQ in the README first, and report desktop problems to [MicYou](https://github.com/MicYou-Dev/MicYou/issues)
+        支持中文或英文反馈。提交前请先查看 README 中的常见问题；电脑端本身的问题请前往 [MicYou](https://github.com/MicYou-Dev/MicYou/issues) 反馈。
+        Chinese or English is welcome. Please check the FAQ in the README first, and report desktop app issues at [MicYou](https://github.com/MicYou-Dev/MicYou/issues).
 
-        在 App 的 设置 > 关于 > 报告问题 打开本页时，环境信息会自动填好
-        Opening this page from Settings > About > Report a Problem in the app fills in the environment for you
+        从 App 内“设置 > 关于 > 报告问题”打开本页时，下方环境信息会自动填入。
+        Opening this form from Settings > About > Report a Problem in the app automatically fills in the environment below.
   - type: textarea
     id: description
     attributes:

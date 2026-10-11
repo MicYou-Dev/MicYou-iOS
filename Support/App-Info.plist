@@ -42,9 +42,9 @@
 		<string>zh-Hant</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>MicYou streams your microphone to your computer.</string>
+	<string>MicYou needs microphone access to stream audio to your computer.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>MicYou finds and connects to your computer on the local network.</string>
+	<string>MicYou needs local network access to find and connect to your computer.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_micyou._tcp</string>

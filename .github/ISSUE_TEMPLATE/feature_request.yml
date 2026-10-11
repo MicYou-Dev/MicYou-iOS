@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        中文或英文都可以，需要电脑端配合的功能请同时到 [MicYou](https://github.com/MicYou-Dev/MicYou/issues) 提出
-        Chinese or English are both fine. Features that need desktop support should also be requested at [MicYou](https://github.com/MicYou-Dev/MicYou/issues)
+        支持中文或英文反馈。需要电脑端配合的功能请同时在 [MicYou](https://github.com/MicYou-Dev/MicYou/issues) 提出。
+        Chinese or English is welcome. Features that require desktop support should also be requested at [MicYou](https://github.com/MicYou-Dev/MicYou/issues).
   - type: textarea
     id: feature
     attributes:

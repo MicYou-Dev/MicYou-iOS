@@ -1,3 +1,3 @@
 "CFBundleDisplayName" = "MicYou";
-"NSMicrophoneUsageDescription" = "MicYou streams your microphone to your computer.";
-"NSLocalNetworkUsageDescription" = "MicYou finds and connects to your computer on the local network.";
+"NSMicrophoneUsageDescription" = "MicYou needs microphone access to stream audio to your computer.";
+"NSLocalNetworkUsageDescription" = "MicYou needs local network access to find and connect to your computer.";
