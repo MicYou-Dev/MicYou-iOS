@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 电脑端问题 / Desktop app issues
+    url: https://github.com/MicYou-Dev/MicYou/issues
+    about: Windows、macOS、Linux 上的 MicYou 与虚拟麦克风问题 / MicYou and the virtual microphone on Windows, macOS and Linux
+  - name: 讨论区 / Discussions
+    url: https://github.com/MicYou-Dev/MicYou/discussions
+    about: 使用问题与交流 / Questions and general discussion
+  - name: QQ 群 995452107 / QQ group
+    url: https://qm.qq.com/q/V16hPpWPKO
+    about: 中文交流群 / Chinese community group
+  - name: Telegram 频道 / Telegram channel
+    url: https://t.me/MicYouChannel
+    about: 更新动态 / Release news

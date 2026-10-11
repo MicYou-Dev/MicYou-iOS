@@ -1,0 +1,99 @@
+name: 问题反馈 / Bug report
+description: 连接、声音、界面等方面的问题 / Problems with connecting, audio or the interface
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        中文或英文都可以，提交前请先看看 README 的常见问题，电脑端的问题请到 [MicYou](https://github.com/MicYou-Dev/MicYou/issues) 反馈
+        Chinese or English are both fine. Please check the FAQ in the README first, and report desktop problems to [MicYou](https://github.com/MicYou-Dev/MicYou/issues)
+
+        在 App 的 设置 > 关于 > 报告问题 打开本页时，环境信息会自动填好
+        Opening this page from Settings > About > Report a Problem in the app fills in the environment for you
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述 / What happened
+      description: 发生了什么，是否每次都会出现 / What went wrong, and does it happen every time
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果 / Expected behavior
+  - type: input
+    id: desktop-version
+    attributes:
+      label: 电脑端 MicYou 版本 / Desktop MicYou version
+      placeholder: "2.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: desktop-os
+    attributes:
+      label: 电脑系统 / Desktop OS
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: 安装方式 / Install method
+      options:
+        - AltStore / SideStore
+        - Sideloadly
+        - LiveContainer
+        - TrollStore
+        - xtool
+        - 其他 / Other
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: 网络 / Network
+      description: 手机和电脑之间的连接方式 / How the phone and computer are connected
+      options:
+        - 同一 Wi-Fi / Same Wi-Fi
+        - 电脑有线，手机 Wi-Fi / Computer wired, phone on Wi-Fi
+        - 手机热点 / Phone hotspot
+        - 电脑热点 / Computer hotspot
+        - 其他 / Other
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境 / Environment
+      description: 从 App 打开时自动填写，也可以在 设置 > 关于 > 拷贝诊断信息 后粘贴 / Filled in when opened from the app, or paste it from Settings > About > Copy Diagnostic Info
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或录屏 / Screenshots or recordings
+      description: 可以直接把文件拖进来 / Drag files in here
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: 已确认 / Checklist
+      options:
+        - label: 手机和电脑在同一个局域网，电脑端正在运行 / Both devices are on the same network and the desktop app is running
+          required: true
+        - label: 已更新到两端的最新版本 / Both apps are up to date
+        - label: 改用仅 TCP 后问题仍然存在（声音问题） / The problem remains with TCP only (audio problems)
+        - label: 搜索过已有的问题，没有重复 / Searched existing issues and found no duplicate
+          required: true
