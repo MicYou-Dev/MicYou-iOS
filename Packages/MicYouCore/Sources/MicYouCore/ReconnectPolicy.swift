@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import Foundation
+
 /// When a dropped stream is retried and how long to wait before each attempt
 public struct ReconnectPolicy: Sendable {
     public static let standard = ReconnectPolicy(maxAttempts: 6, maxDelay: 15)
@@ -15,7 +17,7 @@ public struct ReconnectPolicy: Sendable {
 
     /// Seconds before an attempt, counted from 1: 1, 2, 4, 8, then capped
     public func delay(beforeAttempt attempt: Int) -> Double {
-        min(Double(1 << max(0, min(attempt - 1, 30))), maxDelay)
+        min(pow(2, Double(attempt - 1)), maxDelay)
     }
 
     /// Only a stream that worked is retried, and only for errors that may go away by themselves

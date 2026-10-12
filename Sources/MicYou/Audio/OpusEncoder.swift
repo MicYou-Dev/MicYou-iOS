@@ -13,10 +13,7 @@ enum OpusEncoderError: Error {
 /// Encodes interleaved Int16 PCM into raw 20 ms Opus packets with the system Opus encoder
 /// Not thread safe, owned by the stream queue
 final class OpusEncoder {
-    let sampleRate: Double
-    let channels: AVAudioChannelCount
-    let framesPerPacket: AVAudioFrameCount
-
+    private let framesPerPacket: AVAudioFrameCount
     private let converter: AVAudioConverter
     private let input: AVAudioPCMBuffer
     private let output: AVAudioCompressedBuffer
@@ -25,8 +22,6 @@ final class OpusEncoder {
 
     /// `sampleRate` must be one of OpusRates.supported, StreamConfig already carries one
     init(sampleRate: Double, channels: AVAudioChannelCount, bitrate: Int) throws {
-        self.sampleRate = sampleRate
-        self.channels = channels
         framesPerPacket = AVAudioFrameCount(sampleRate / 50)
 
         var description = AudioStreamBasicDescription(

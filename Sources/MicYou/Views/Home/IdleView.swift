@@ -225,7 +225,7 @@ private struct TargetCard: View {
         switch model.selection {
         case .discovered(let name):
             // A remembered computer keeps its name while the search is still running
-            return DiscoveredServer.displayName(for: name)
+            return ServiceName.displayName(name)
         case .manual:
             return settings.manualTarget?.host ?? L10n.Home.noTarget
         case .usb:

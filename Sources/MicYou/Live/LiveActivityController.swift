@@ -17,7 +17,7 @@ final class LiveActivityController {
     private var lastState: State?
     private var request: Task<Void, Never>?
 
-    var isAvailable: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+    private var isAvailable: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
 
     func update(serverName: String, state: StreamActivityAttributes.ContentState) {
         guard isAvailable else { return }

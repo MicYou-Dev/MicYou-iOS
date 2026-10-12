@@ -37,6 +37,8 @@ final class StreamSession: @unchecked Sendable {
     private var udpFailures = 0
     private var bytesThisSecond = 0
     private var statsTimer: DispatchSourceTimer?
+    /// Several seconds of audio packets in a row that the system could not send
+    private static let maxUDPFailures = 500
 
     init(config: StreamConfig, muted: Bool, onEvent: @escaping @Sendable (Event) -> Void) {
         self.config = config
@@ -137,7 +139,7 @@ final class StreamSession: @unchecked Sendable {
                     self.udpFailures = 0
                 } else {
                     self.udpFailures += 1
-                    if self.udpFailures >= 500 { self.finish(.udpFailed) }
+                    if self.udpFailures >= Self.maxUDPFailures { self.finish(.udpFailed) }
                 }
             })
         } else {

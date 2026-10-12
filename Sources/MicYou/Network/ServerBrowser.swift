@@ -14,11 +14,7 @@ struct DiscoveredServer: Identifiable, Hashable, Sendable {
 
     var id: String { name }
 
-    var displayName: String { Self.displayName(for: name) }
-
-    static func displayName(for name: String) -> String {
-        ServiceName.displayName(name)
-    }
+    var displayName: String { ServiceName.displayName(name) }
 
     /// A Bonjour endpoint for an instance name, resolved when a connection starts
     /// rather than taken from the browse results, which take a moment after launch

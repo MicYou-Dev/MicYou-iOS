@@ -358,14 +358,13 @@ final class AudioCapture: @unchecked Sendable {
     private func restart() {
         let forced = restartForced
         restartForced = false
-        guard isRunning, let config, let handler = lock.withLock({ self.handler }) else { return }
+        guard isRunning, let config else { return }
         if !forced, let last = lastRestart, Date().timeIntervalSince(last) < 1 { return }
         lastRestart = Date()
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         do {
             try configureSession(config)
-            lock.withLock { self.handler = handler }
             try startEngine(config)
             if isInterrupted {
                 isInterrupted = false

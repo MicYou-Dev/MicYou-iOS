@@ -49,9 +49,9 @@ final class AppSettings {
     var lastServiceName: String? { didSet { save(lastServiceName, .lastServiceName) } }
     /// The USB cable was picked last, it wins over lastServiceName
     var usbSelected: Bool { didSet { save(usbSelected, .usbSelected) } }
-    /// The welcome sheet appears once, on the first launch
     /// Full bandwidth recording from supported AirPods, iOS 26 and later
     var highQualityBluetooth: Bool { didSet { save(highQualityBluetooth, .highQualityBluetooth) } }
+    /// The welcome sheet appears once, on the first launch
     var welcomeShown: Bool { didSet { save(welcomeShown, .welcomeShown) } }
     /// The spotlight tour of the home screen follows the welcome sheet, also once
     var tourShown: Bool { didSet { save(tourShown, .tourShown) } }
@@ -80,15 +80,15 @@ final class AppSettings {
         pushToTalk = load(.pushToTalk) ?? false
         keepScreenOn = load(.keepScreenOn) ?? false
         liveActivity = load(.liveActivity) ?? true
-        recentHosts = load(.recentHosts) ?? []
-        lastServiceName = load(.lastServiceName)
-        usbSelected = load(.usbSelected) ?? false
-        // Anyone who connected before this sheet existed has already found their way
-        // Read again rather than through the properties, which are not all set yet
         let hosts: [String] = load(.recentHosts) ?? []
         let service: String? = load(.lastServiceName)
-        welcomeShown = load(.welcomeShown) ?? (!hosts.isEmpty || service != nil)
-        tourShown = load(.tourShown) ?? (!hosts.isEmpty || service != nil)
+        recentHosts = hosts
+        lastServiceName = service
+        usbSelected = load(.usbSelected) ?? false
+        // Anyone who connected before this sheet existed has already found their way
+        let hasConnected = !hosts.isEmpty || service != nil
+        welcomeShown = load(.welcomeShown) ?? hasConnected
+        tourShown = load(.tourShown) ?? hasConnected
         highQualityBluetooth = load(.highQualityBluetooth) ?? true
         autoCheckUpdates = load(.autoCheckUpdates) ?? true
         lastUpdateCheck = load(.lastUpdateCheck)

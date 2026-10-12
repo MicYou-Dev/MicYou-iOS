@@ -129,7 +129,7 @@ final class AppModel {
         switch selection {
         case .discovered(let name):
             // Usable before the search finds it again, the connection resolves the name itself
-            return DiscoveredServer.displayName(for: name)
+            return ServiceName.displayName(name)
         case .manual:
             return settings.manualTarget?.host
         case .usb:
@@ -368,7 +368,7 @@ final class AppModel {
         case .discovered(let name):
             // Right after launch, for example from Shortcuts, the search has not found the computer yet
             let endpoint = browser.servers.first { $0.name == name }?.endpoint ?? DiscoveredServer.endpoint(for: name)
-            return Target(link: .network(endpoint, preferIPv4: true), name: DiscoveredServer.displayName(for: name))
+            return Target(link: .network(endpoint, preferIPv4: true), name: ServiceName.displayName(name))
         case .manual:
             guard let address = settings.manualTarget, let port = NWEndpoint.Port(rawValue: address.port) else { return nil }
             settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -401,8 +401,8 @@ final class AppModel {
     }
 
     private func handle(_ event: StreamSession.Event, config: StreamConfig, token: UUID) {
-        // Ignore late events from a session that was already replaced
-        guard session != nil, token == sessionToken else { return }
+        // Ignore late events from a session that was already replaced, tearing down clears the token
+        guard token == sessionToken else { return }
         switch event {
         case .streaming(let remote, let format):
             let codec = format.codec == .opus ? "Opus" : "PCM"
