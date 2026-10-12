@@ -48,7 +48,10 @@ final class AppModel {
     let network = NetworkMonitor()
 
     private(set) var phase: ConnectionPhase = .idle
-    private(set) var isMuted = false
+    private(set) var isMuted = false {
+        // Mirrored to the system input mute, which a press on the AirPods stem toggles
+        didSet { if isMuted != oldValue { capture.setSystemMuted(isMuted) } }
+    }
     /// Smoothed input level in dBFS
     private(set) var levelDB: Float = -160
     private(set) var throughput = 0
@@ -458,6 +461,8 @@ final class AppModel {
         let onEvent: AudioCapture.EventHandler = { [weak self] event in
             Task { @MainActor in self?.handle(event, token: token) }
         }
+        // Applied once the session is active, push to talk starts muted
+        capture.setSystemMuted(isMuted)
         // Starts on the capture queue, the main thread stays free for the connect animation
         let capture = self.capture
         Task { [weak self] in
@@ -483,6 +488,12 @@ final class AppModel {
         case .resumeFailed:
             captureStatus = .resumeFailed
             levelDB = -160
+        case .systemMute(let value):
+            // Our own changes echo back with the value already set
+            guard isMuted != value else { return }
+            log.info("\(value ? "Muted" : "Unmuted", privacy: .public) by the system input mute")
+            setMuted(value)
+            return
         }
         refreshSideEffects()
     }

@@ -44,6 +44,8 @@ final class AudioCapture: @unchecked Sendable {
         case resumed
         /// The engine could not be restarted, `resume()` tries again
         case resumeFailed
+        /// The system input mute changed, for example with a press on the AirPods stem
+        case systemMute(Bool)
     }
 
     typealias EventHandler = @Sendable (Event) -> Void
@@ -129,6 +131,20 @@ final class AudioCapture: @unchecked Sendable {
         }
     }
 
+    /// Keeps the system input mute equal to the app's, so a press on the AirPods stem toggles from the right state
+    /// The system zeroes the samples while muted, the stream is silent then anyway
+    /// Set before capture starts it is stored and applied once the session is active
+    func setSystemMuted(_ muted: Bool) {
+        queue.async {
+            guard AVAudioApplication.shared.isInputMuted != muted else { return }
+            do {
+                try AVAudioApplication.shared.setInputMuted(muted)
+            } catch {
+                self.log.notice("Setting the system input mute failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
     /// Follows the interface orientation, which only changes on iPad
     func setStereoOrientation(_ orientation: AVAudioSession.StereoOrientation) {
         queue.async {
@@ -194,6 +210,8 @@ final class AudioCapture: @unchecked Sendable {
         // Also after a start that failed halfway, the session may already be active
         if config != nil {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            // The mute is stored for the next session otherwise
+            try? AVAudioApplication.shared.setInputMuted(false)
         }
         isRunning = false
         isInterrupted = false
@@ -424,6 +442,10 @@ final class AudioCapture: @unchecked Sendable {
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: notificationQueue) { [weak self] _ in
             self?.scheduleRestart(force: true)
+        })
+        observers.append(center.addObserver(forName: AVAudioApplication.inputMuteStateChangeNotification, object: nil, queue: notificationQueue) { [weak self] note in
+            guard let muted = note.userInfo?[AVAudioApplication.muteStateKey] as? Bool else { return }
+            self?.onEvent?(.systemMute(muted))
         })
         // Fires when the input hardware changes, for example a headset is plugged in
         observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: notificationQueue) { [weak self] _ in
