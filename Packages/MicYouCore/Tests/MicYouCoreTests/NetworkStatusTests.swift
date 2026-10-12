@@ -13,7 +13,7 @@ import Testing
         #expect(NetworkStatus(satisfied: false, wifi: true, wired: false, other: false) == .offline)
     }
 
-    @Test func usbNeedsNoNetwork() {
+    @Test func warnsUnlessLocalOrUSB() {
         #expect(NetworkStatus.cellularOnly.needsWarning(overUSB: false))
         #expect(NetworkStatus.offline.needsWarning(overUSB: false))
         #expect(!NetworkStatus.offline.needsWarning(overUSB: true))

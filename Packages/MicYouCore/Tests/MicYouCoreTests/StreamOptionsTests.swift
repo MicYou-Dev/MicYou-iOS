@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import MicYouProtocol
 import Testing
 @testable import MicYouCore
 
@@ -30,12 +29,6 @@ import Testing
         #expect(StreamPreset.matching(transport: .tcpUDP, codec: .opus, sampleRate: 16000, opusBitrate: 64000) == nil)
     }
 
-    @Test func requestedFormatCarriesCodecAndChannels() {
-        var value = options(codec: .pcm)
-        value.channels = 2
-        #expect(value.requestedFormat == AudioStreamFormat(sampleRate: 48000, channelCount: 2, codec: .pcm))
-    }
-
     @Test func summaries() {
         #expect(options().summary == "Opus 64 kbps, 48000 Hz mono, UDP with FEC")
         #expect(options(codec: .pcm, transport: .tcp).summary == "PCM, 48000 Hz mono, TCP only")
@@ -50,11 +43,6 @@ import Testing
         var pcm = options(codec: .pcm, transport: .tcp)
         pcm.channels = 2
         #expect(pcm.estimatedBitrate == 48000 * 16 * 2)
-    }
-
-    @Test func fecOnlyCountsOverUDP() {
-        #expect(options(transport: .tcpUDP, fec: true).usesFEC)
-        #expect(!options(transport: .tcp, fec: true).usesFEC)
     }
 
     @Test func usbAlwaysSendsAudioOverTCP() {

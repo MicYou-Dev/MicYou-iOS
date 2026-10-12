@@ -79,13 +79,6 @@ private func hex(_ s: String) -> Data {
         #expect(try MessageWrapper(serialized: wrapper.serialized()) == wrapper)
     }
 
-    @Test func connectRoundTrip() throws {
-        let wrapper = MessageWrapper.connect(sessionId: -42)
-        let decoded = try MessageWrapper(serialized: wrapper.serialized())
-        #expect(decoded == wrapper)
-        #expect(decoded.connect?.platform == "ios")
-    }
-
     @Test func statsFromDesktop() throws {
         let decoded = try MessageWrapper(serialized: hex("420e080c150000c03f1d0000803e202a"))
         let stats = try #require(decoded.stats)

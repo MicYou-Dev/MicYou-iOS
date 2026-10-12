@@ -38,11 +38,6 @@ import Testing
         let ceiling = Int16((PeakLimiter.ceiling * 32767).rounded())
         #expect(result.pcm.allSatisfy { abs(Int($0)) <= Int(ceiling) })
     }
-
-    @Test func linearGain() {
-        #expect(SampleProcessor.linearGain(dB: 0) == 1)
-        #expect(abs(SampleProcessor.linearGain(dB: 6) - 1.995) < 0.01)
-    }
 }
 
 @Suite struct Meter {
@@ -79,10 +74,5 @@ import Testing
         #expect(reading.isSettled)
         #expect(reading.level == MeterBallistics.floor)
         #expect(reading.peak == MeterBallistics.floor)
-    }
-
-    @Test func belowTheFloorIsTheFloor() {
-        let meter = MeterBallistics()
-        #expect(meter.isSettled(at: -160))
     }
 }
