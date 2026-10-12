@@ -78,6 +78,10 @@
 "home.format.adjust" = "Adjust";
 "home.update.title" = "Version %@ Is Available";
 "home.update.text" = "Download the new IPA and sideload it the same way as before.";
+"home.network.cellular" = "Not on Wi-Fi";
+"home.network.offline" = "No Network Connection";
+"home.network.text" = "MicYou reaches the computer over the local network. Join the same Wi-Fi as the computer, or connect with a USB cable.";
+"home.network.use-usb" = "Use USB";
 "home.update.view" = "View";
 "home.update.notes" = "What's New in %@";
 "home.update.download" = "Download from GitHub";

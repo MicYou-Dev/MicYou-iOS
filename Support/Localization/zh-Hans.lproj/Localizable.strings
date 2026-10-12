@@ -78,6 +78,10 @@
 "home.format.adjust" = "调整";
 "home.update.title" = "发现新版本 %@";
 "home.update.text" = "下载新的 IPA 后，按原来的方式重新侧载即可更新。";
+"home.network.cellular" = "未连接 Wi-Fi";
+"home.network.offline" = "没有网络连接";
+"home.network.text" = "MicYou 通过局域网连接电脑。请连接与电脑相同的 Wi-Fi，或改用 USB 数据线。";
+"home.network.use-usb" = "改用 USB";
 "home.update.view" = "查看";
 "home.update.notes" = "%@ 版本更新内容";
 "home.update.download" = "前往 GitHub 下载";

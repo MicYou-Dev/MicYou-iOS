@@ -45,6 +45,7 @@ final class AppModel {
     let settings = AppSettings.shared
     let browser = ServerBrowser()
     let updates = UpdateChecker(settings: AppSettings.shared)
+    let network = NetworkMonitor()
 
     private(set) var phase: ConnectionPhase = .idle
     private(set) var isMuted = false
@@ -260,6 +261,11 @@ final class AppModel {
             log.info("Connecting on launch")
             await connect()
         }
+    }
+
+    /// The selected computer is reached over the network, but the phone is not on a local one
+    var showsNetworkWarning: Bool {
+        network.warns(overUSB: selection == .usb)
     }
 
     func setMuted(_ value: Bool) {

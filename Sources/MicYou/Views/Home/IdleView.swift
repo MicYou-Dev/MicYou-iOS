@@ -26,6 +26,15 @@ struct IdleView: View {
                     withAnimation(Motion.state) { model.notice = nil }
                 }
                 .adaptiveTransition(.notice)
+            } else if model.showsNetworkWarning {
+                NoticeCard(
+                    title: model.network.status == .offline ? L10n.Home.offline : L10n.Home.notOnWiFi,
+                    text: L10n.Home.networkText, kind: .info,
+                    action: (L10n.Home.useUSB, { withAnimation(Motion.state) { model.selection = .usb } })
+                ) {
+                    withAnimation(Motion.state) { model.network.dismissWarning() }
+                }
+                .adaptiveTransition(.notice)
             } else if let release = model.updates.notice {
                 NoticeCard(
                     title: L10n.Home.updateTitle(release.version.description), text: L10n.Home.updateText, kind: .info,
@@ -53,6 +62,7 @@ struct IdleView: View {
         .animation(Motion.state, value: model.phase)
         .animation(Motion.state, value: model.canConnect)
         .animation(Motion.state, value: model.notice)
+        .animation(Motion.state, value: model.showsNetworkWarning)
         .animation(Motion.state, value: model.updates.notice)
         .releaseNotesSheet($shownRelease)
     }

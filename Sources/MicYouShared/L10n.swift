@@ -114,6 +114,10 @@ public enum L10n {
         public static var hint: String { string("home.hint") }
         public static var formatHeader: String { string("home.format") }
         public static var adjust: String { string("home.format.adjust") }
+        public static var notOnWiFi: String { string("home.network.cellular") }
+        public static var offline: String { string("home.network.offline") }
+        public static var networkText: String { string("home.network.text") }
+        public static var useUSB: String { string("home.network.use-usb") }
         public static func updateTitle(_ version: String) -> String { format("home.update.title", version) }
         public static var updateText: String { string("home.update.text") }
         public static var viewUpdate: String { string("home.update.view") }
