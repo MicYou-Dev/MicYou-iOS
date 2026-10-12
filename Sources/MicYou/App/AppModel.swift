@@ -377,7 +377,7 @@ final class AppModel {
             return Target(link: .network(endpoint, preferIPv4: true), name: ServiceName.displayName(name))
         case .manual:
             guard let address = settings.manualTarget, let port = NWEndpoint.Port(rawValue: address.port) else { return nil }
-            settings.rememberHost(settings.host.trimmingCharacters(in: .whitespacesAndNewlines))
+            settings.rememberHost(settings.typedHost)
             let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(address.host), port: port)
             return Target(link: .network(endpoint, preferIPv4: false), name: address.host)
         case .usb:

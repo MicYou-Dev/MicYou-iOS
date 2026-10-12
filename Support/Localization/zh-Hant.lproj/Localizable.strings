@@ -75,7 +75,6 @@
 "home.choose" = "選擇電腦";
 "home.hint" = "輕點開始傳輸，連線後可鎖定螢幕或切換到背景執行。";
 "home.format" = "傳輸格式";
-"home.format.adjust" = "調整";
 "home.update.title" = "發現新版本 %@";
 "home.update.text" = "下載新的 IPA 後，依照原本的方式重新側載即可更新。";
 "home.network.cellular" = "未連接 Wi-Fi";

@@ -75,7 +75,6 @@
 "home.choose" = "选择电脑";
 "home.hint" = "轻点开始传输，连接后可锁屏或切到后台运行。";
 "home.format" = "传输格式";
-"home.format.adjust" = "调整";
 "home.update.title" = "发现新版本 %@";
 "home.update.text" = "下载新的 IPA 后，按原来的方式重新侧载即可更新。";
 "home.network.cellular" = "未连接 Wi-Fi";

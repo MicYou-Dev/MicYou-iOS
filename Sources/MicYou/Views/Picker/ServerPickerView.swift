@@ -4,25 +4,22 @@ import MicYouProtocol
 import MicYouShared
 import SwiftUI
 
-/// Sheet for picking a nearby computer, the USB cable or typing an address
+/// Sheet for picking a nearby computer, the USB cable, a recent address or typing a new one
 struct ServerPickerView: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focus: ManualField?
+    /// The address or port was typed into since the sheet opened or a row was picked
+    @State private var editedManual = false
 
     var body: some View {
         NavigationStack {
             List {
-                NearbySection {
-                    dismiss()
-                }
-                USBSection {
-                    dismiss()
-                }
-                ManualSection(focus: $focus) {
-                    dismiss()
-                }
+                NearbySection(pick: pick)
+                USBSection(pick: pick)
+                ManualSection(focus: $focus, pick: pick)
+                RecentSection(pick: pick)
             }
             .scrollDismissesKeyboard(.interactively)
             // Bonjour results arrive outside any transaction, slide rows in and out instead of popping
@@ -33,6 +30,8 @@ struct ServerPickerView: View {
             .onChange(of: model.browser.state, initial: true) { _, state in
                 if state == .unavailable && settings.host.isEmpty { focus = .address }
             }
+            .onChange(of: settings.host) { editedManual = true }
+            .onChange(of: settings.port) { editedManual = true }
             .refreshable {
                 model.browser.restart()
                 // Hold the spinner briefly so the pull reads as a fresh search
@@ -52,38 +51,61 @@ struct ServerPickerView: View {
             }
         }
         .presentationDragIndicator(.visible)
+        // Closing the sheet after typing an address uses it, as Use Address would
+        .onDisappear {
+            if editedManual && settings.manualTarget != nil { model.selection = .manual }
+        }
+    }
+
+    private func pick(_ selection: ServerSelection) {
+        model.selection = selection
+        editedManual = false
+        dismiss()
+    }
+}
+
+/// A choice in the list, checked while it is the current selection
+private struct ChoiceRow: View {
+    let title: String
+    let systemImage: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: systemImage)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28)
+                Text(title)
+                    .foregroundStyle(.primary)
+                    .monospacedDigit()
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.tint)
+                }
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
 private struct NearbySection: View {
     @Environment(AppModel.self) private var model
-    let picked: () -> Void
+    let pick: (ServerSelection) -> Void
 
     var body: some View {
         Section {
             ForEach(model.browser.servers) { server in
-                Button {
-                    model.selection = .discovered(name: server.name)
-                    picked()
-                } label: {
-                    HStack(spacing: 14) {
-                        Image(systemName: "desktopcomputer")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 28)
-                        Text(server.displayName)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        if model.selection == .discovered(name: server.name) {
-                            Image(systemName: "checkmark")
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.tint)
-                        }
-                    }
-                    .contentShape(.rect)
+                let selection = ServerSelection.discovered(name: server.name)
+                ChoiceRow(title: server.displayName, systemImage: "desktopcomputer", isSelected: model.selection == selection) {
+                    pick(selection)
                 }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(model.selection == .discovered(name: server.name) ? .isSelected : [])
             }
             switch model.browser.state {
             case .denied:
@@ -123,32 +145,13 @@ private struct NearbySection: View {
 
 private struct USBSection: View {
     @Environment(AppModel.self) private var model
-    let picked: () -> Void
+    let pick: (ServerSelection) -> Void
 
     var body: some View {
         Section {
-            Button {
-                model.selection = .usb
-                picked()
-            } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: "cable.connector")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28)
-                    Text(L10n.Home.usbName)
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    if model.selection == .usb {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.tint)
-                    }
-                }
-                .contentShape(.rect)
+            ChoiceRow(title: L10n.Home.usbName, systemImage: "cable.connector", isSelected: model.selection == .usb) {
+                pick(.usb)
             }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(model.selection == .usb ? .isSelected : [])
         } header: {
             Text(L10n.Home.usbHeader)
         } footer: {
@@ -163,7 +166,7 @@ private struct ManualSection: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
     var focus: FocusState<ManualField?>.Binding
-    let picked: () -> Void
+    let pick: (ServerSelection) -> Void
 
     var body: some View {
         @Bindable var settings = settings
@@ -187,32 +190,14 @@ private struct ManualSection: View {
                     .monospacedDigit()
                     .focused(focus, equals: .port)
             }
-            if !settings.recentHosts.isEmpty {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel(L10n.Home.recentAddresses)
-                        ForEach(settings.recentHosts, id: \.self) { host in
-                            Button(host) { settings.host = host }
-                                .monospacedDigit()
-                                .buttonStyle(.bordered)
-                                .buttonBorderShape(.capsule)
-                                .controlSize(.small)
-                                .tint(.primary)
-                        }
-                    }
-                }
-                .scrollIndicators(.hidden)
-            }
             Button {
-                model.selection = .manual
-                picked()
+                pick(.manual)
             } label: {
                 HStack {
                     Text(L10n.Home.useAddress)
                     Spacer()
-                    if model.selection == .manual && settings.manualTarget != nil {
+                    // A remembered address carries the check in the recent list instead
+                    if isSelected && !settings.recentHosts.contains(settings.typedHost) {
                         Image(systemName: "checkmark")
                             .fontWeight(.semibold)
                     }
@@ -227,6 +212,31 @@ private struct ManualSection: View {
                     .foregroundStyle(.red)
             } else {
                 Text(L10n.Home.manualHint(port: Int(MicYouWire.defaultPort)))
+            }
+        }
+    }
+
+    private var isSelected: Bool {
+        model.selection == .manual && settings.manualTarget != nil
+    }
+}
+
+/// Addresses used before, tapping one uses it again and swiping removes it
+private struct RecentSection: View {
+    @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+    let pick: (ServerSelection) -> Void
+
+    var body: some View {
+        if !settings.recentHosts.isEmpty {
+            Section(L10n.Home.recentAddresses) {
+                ForEach(settings.recentHosts, id: \.self) { host in
+                    ChoiceRow(title: host, systemImage: "network", isSelected: model.selection == .manual && settings.typedHost == host) {
+                        settings.host = host
+                        pick(.manual)
+                    }
+                }
+                .onDelete(perform: settings.forgetHosts)
             }
         }
     }

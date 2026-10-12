@@ -75,7 +75,6 @@
 "home.choose" = "Choose Computer";
 "home.hint" = "Tap to start streaming. You can lock the screen or switch apps afterwards.";
 "home.format" = "Format";
-"home.format.adjust" = "Adjust";
 "home.update.title" = "Version %@ Is Available";
 "home.update.text" = "Download the new IPA and sideload it the same way as before.";
 "home.network.cellular" = "Not on Wi-Fi";

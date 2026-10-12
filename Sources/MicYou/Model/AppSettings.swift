@@ -101,9 +101,14 @@ final class AppSettings {
         ServerAddress(parsing: host, defaultPort: port)
     }
 
+    /// The address field without surrounding spaces, as it is remembered among the recent hosts
+    var typedHost: String {
+        host.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// True when something is typed but cannot be used, for an inline hint
     var manualInputInvalid: Bool {
-        !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && manualTarget == nil
+        !typedHost.isEmpty && manualTarget == nil
     }
 
     /// The port field as a TCP port, nil when it is out of range, used by USB where no address can carry one
@@ -121,6 +126,10 @@ final class AppSettings {
         var hosts = recentHosts.filter { $0 != host }
         hosts.insert(host, at: 0)
         recentHosts = Array(hosts.prefix(Self.recentHostLimit))
+    }
+
+    func forgetHosts(at offsets: IndexSet) {
+        recentHosts = recentHosts.enumerated().filter { !offsets.contains($0.offset) }.map(\.element)
     }
 
     private func save(_ value: Any?, _ key: Key) {

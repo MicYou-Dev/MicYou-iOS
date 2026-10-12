@@ -196,7 +196,7 @@ private struct TargetCard: View {
             Section(L10n.Home.recentAddresses) {
                 ForEach(settings.recentHosts, id: \.self) { host in
                     Toggle(isOn: Binding(
-                        get: { model.selection == .manual && settings.host == host },
+                        get: { model.selection == .manual && settings.typedHost == host },
                         set: { _ in
                             settings.host = host
                             model.selection = .manual
@@ -246,7 +246,7 @@ private struct TargetCard: View {
     }
 }
 
-/// Codec, sample rate and transport for the next stream, tapping it opens the settings
+/// Codec, sample rate and transport for the next stream, tapping the card opens the settings
 private struct FormatSummary: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
@@ -254,14 +254,9 @@ private struct FormatSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(L10n.Home.formatHeader)
-                Spacer()
-                Button(L10n.Home.adjust, action: action)
-                    .buttonStyle(.borderless)
-            }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
+            Text(L10n.Home.formatHeader)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
 
             Button(action: action) {
                 HStack(spacing: 0) {
@@ -270,6 +265,11 @@ private struct FormatSummary: View {
                     tile(L10n.Unit.kHz(sampleRate), StreamText.channels(settings.stereo ? 2 : 1))
                     Divider()
                     tile(transport, transportDetail)
+                    // Opens the settings like the computer card opens the picker
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .padding(.trailing, 14)
                 }
                 // Vertical dividers take all the height offered, keep the row at the height of its text
                 .fixedSize(horizontal: false, vertical: true)

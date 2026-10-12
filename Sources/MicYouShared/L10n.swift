@@ -113,7 +113,6 @@ public enum L10n {
         public static var chooseComputer: String { string("home.choose") }
         public static var hint: String { string("home.hint") }
         public static var formatHeader: String { string("home.format") }
-        public static var adjust: String { string("home.format.adjust") }
         public static var notOnWiFi: String { string("home.network.cellular") }
         public static var offline: String { string("home.network.offline") }
         public static var networkText: String { string("home.network.text") }
