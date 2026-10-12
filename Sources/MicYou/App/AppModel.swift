@@ -268,6 +268,12 @@ final class AppModel {
         network.warns(overUSB: selection == .usb)
     }
 
+
+    /// Long press actions on the app icon, refreshed with the connection and when the app leaves the screen
+    func refreshQuickActions() {
+        QuickActions.update(isActive: isActive, isMuted: isMuted, target: canConnect ? selectedName : nil)
+    }
+
     func setMuted(_ value: Bool) {
         guard isMuted != value else { return }
         log.info("\(value ? "Muted" : "Unmuted", privacy: .public)")
@@ -503,6 +509,7 @@ final class AppModel {
     private func refreshSideEffects() {
         // A dimmed screen that turns itself off would only be a slower way to lock
         UIApplication.shared.isIdleTimerDisabled = (settings.keepScreenOn || isDimmed) && isActive
+        refreshQuickActions()
         audioInput = isActive ? AudioInputInfo.current() : nil
 
         guard settings.liveActivity, isActive, let name = connectedName else {
