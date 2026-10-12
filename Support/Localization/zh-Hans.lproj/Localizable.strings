@@ -196,8 +196,8 @@
 "welcome.subtitle" = "只需三步，把 iPhone 当作电脑麦克风使用。";
 "welcome.desktop.title" = "配置电脑端";
 "welcome.desktop.text" = "在电脑上安装 MicYou 桌面端和虚拟声卡（Windows 可用 VB-CABLE，macOS 可用 BlackHole，Linux 无需额外安装）。";
-"welcome.network.title" = "连接同一 Wi-Fi";
-"welcome.network.text" = "在电脑端选择 Wi-Fi 模式，然后在手机上选择附近的电脑或手动输入 IP 地址，轻点“连接”。";
+"welcome.network.title" = "通过 Wi-Fi 或 USB 连接";
+"welcome.network.text" = "在电脑端选择 Wi-Fi 模式，然后在手机上选择附近的电脑或手动输入 IP 地址；也可以连接数据线，并在电脑端选择 USB 模式。最后轻点“连接”。";
 "welcome.apps.title" = "在软件中选择麦克风";
 "welcome.apps.text" = "在语音、会议或游戏软件中，将麦克风输入设备设为虚拟声卡（如 CABLE Output 或 BlackHole 2ch）。";
 "welcome.start" = "开始使用";
@@ -206,9 +206,9 @@
 "tour.skip" = "跳过";
 "tour.next" = "下一步";
 "tour.computer.title" = "选择电脑";
-"tour.computer.text" = "轻点此处查找同一 Wi-Fi 下的电脑，未找到时也可手动输入 IP 地址。";
+"tour.computer.text" = "轻点此处查找同一 Wi-Fi 下的电脑，也可以手动输入 IP 地址或选择 USB 数据线。";
 "tour.connect.title" = "开始传输";
-"tour.connect.text" = "选好电脑后轻点此处开始传输。连接后可随时锁屏或切到后台，音频传输不会中断。";
+"tour.connect.text" = "选好电脑后轻点此处开始传输。连接后可随时锁屏或切到后台，音频传输不会中断。在主屏幕长按 App 图标也能快速连接。";
 "tour.format.title" = "传输格式";
 "tour.format.text" = "显示下次连接所用的编码格式、采样率和传输方式，轻点可前往修改。";
 "tour.settings.title" = "设置与帮助";

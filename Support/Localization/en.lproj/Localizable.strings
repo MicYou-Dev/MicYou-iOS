@@ -196,8 +196,8 @@
 "welcome.subtitle" = "Use your iPhone as your computer's microphone in three steps.";
 "welcome.desktop.title" = "Set Up Your Computer";
 "welcome.desktop.text" = "Install the MicYou desktop app and a virtual audio device (such as VB-CABLE on Windows or BlackHole on macOS; none needed on Linux).";
-"welcome.network.title" = "Join the Same Wi-Fi";
-"welcome.network.text" = "Select Wi-Fi mode in the desktop app, then pick your computer from the nearby list or enter its IP address, and tap Connect.";
+"welcome.network.title" = "Connect over Wi-Fi or USB";
+"welcome.network.text" = "In the desktop app, select Wi-Fi mode and pick your computer from the nearby list or enter its IP address, or plug in a cable and select USB mode. Then tap Connect.";
 "welcome.apps.title" = "Choose the Microphone in Your Apps";
 "welcome.apps.text" = "In your voice, meeting, or gaming apps, set the input device to the virtual microphone (such as CABLE Output or BlackHole 2ch).";
 "welcome.start" = "Get Started";
@@ -206,9 +206,9 @@
 "tour.skip" = "Skip";
 "tour.next" = "Next";
 "tour.computer.title" = "Choose a Computer";
-"tour.computer.text" = "Tap here to find computers on the same Wi-Fi, or enter an IP address if yours does not show up.";
+"tour.computer.text" = "Tap here to find computers on the same Wi-Fi, enter an IP address, or choose the USB cable.";
 "tour.connect.title" = "Start Streaming";
-"tour.connect.text" = "Once a computer is selected, tap here to start streaming. Audio continues in the background or with the screen locked.";
+"tour.connect.text" = "Once a computer is selected, tap here to start streaming. Audio continues in the background or with the screen locked. You can also connect by touching and holding the app icon on the Home Screen.";
 "tour.format.title" = "Stream Format";
 "tour.format.text" = "Shows the codec, sample rate, and transport mode for your next connection. Tap to customize.";
 "tour.settings.title" = "Settings and Help";

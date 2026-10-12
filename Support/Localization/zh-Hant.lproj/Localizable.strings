@@ -196,8 +196,8 @@
 "welcome.subtitle" = "只需三步，把 iPhone 當作電腦麥克風使用。";
 "welcome.desktop.title" = "設定電腦端";
 "welcome.desktop.text" = "在電腦上安裝 MicYou 桌面版和虛擬音效卡（Windows 可用 VB-CABLE，macOS 可用 BlackHole，Linux 無需另外安裝）。";
-"welcome.network.title" = "連上同一 Wi-Fi";
-"welcome.network.text" = "在電腦版選擇 Wi-Fi 模式，然後在手機上選取附近的電腦或手動輸入 IP 位址，點一下「連線」。";
+"welcome.network.title" = "透過 Wi-Fi 或 USB 連線";
+"welcome.network.text" = "在電腦版選擇 Wi-Fi 模式，然後在手機上選取附近的電腦或手動輸入 IP 位址；也可以接上傳輸線，並在電腦版選擇 USB 模式。最後點一下「連線」。";
 "welcome.apps.title" = "在軟體中選擇麥克風";
 "welcome.apps.text" = "在語音、會議或遊戲軟體中，將麥克風輸入裝置設為虛擬音效卡（如 CABLE Output 或 BlackHole 2ch）。";
 "welcome.start" = "開始使用";
@@ -206,9 +206,9 @@
 "tour.skip" = "略過";
 "tour.next" = "下一步";
 "tour.computer.title" = "選擇電腦";
-"tour.computer.text" = "點一下此處尋找同一 Wi-Fi 下的電腦，找不到時也可手動輸入 IP 位址。";
+"tour.computer.text" = "點一下此處尋找同一 Wi-Fi 下的電腦，也可以手動輸入 IP 位址或選擇 USB 傳輸線。";
 "tour.connect.title" = "開始傳輸";
-"tour.connect.text" = "選好電腦後點一下此處開始傳輸。連線後可隨時鎖定螢幕或切換到背景，音訊傳輸不會中斷。";
+"tour.connect.text" = "選好電腦後點一下此處開始傳輸。連線後可隨時鎖定螢幕或切換到背景，音訊傳輸不會中斷。在主畫面長按 App 圖像也能快速連線。";
 "tour.format.title" = "傳輸格式";
 "tour.format.text" = "顯示下次連線所使用的編碼格式、取樣率和傳輸方式，點一下可前往修改。";
 "tour.settings.title" = "設定與說明";
