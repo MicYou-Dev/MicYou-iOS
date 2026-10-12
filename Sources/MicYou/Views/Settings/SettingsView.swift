@@ -93,6 +93,9 @@ struct SettingsView: View {
                     if settings.voiceProcessing {
                         MicrophoneModeRow()
                     }
+                    if #available(iOS 26, *) {
+                        HighQualityBluetoothRow()
+                    }
                 }
 
                 Section(L10n.Settings.general) {
@@ -195,6 +198,31 @@ private struct InputPicker: View {
             Text(L10n.Settings.input)
         }
         .task { model.refreshInputOptions() }
+    }
+}
+
+/// Full bandwidth AirPods recording, which only the default mode offers, applies right away
+private struct HighQualityBluetoothRow: View {
+    @Environment(AppModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: Binding(get: { settings.highQualityBluetooth }, set: { model.setHighQualityBluetooth($0) })) {
+                Text(L10n.Settings.highQualityBluetooth)
+                Text(L10n.Settings.highQualityBluetoothDetail)
+            }
+            if settings.highQualityBluetooth && settings.voiceProcessing {
+                SettingHint(
+                    text: L10n.Settings.highQualityBluetoothVoiceProcessing,
+                    systemImage: "exclamationmark.triangle.fill",
+                    style: .warning,
+                    action: (L10n.Settings.turnOffVoiceProcessing, { settings.voiceProcessing = false })
+                )
+                .transition(.opacity)
+            }
+        }
+        .adaptiveAnimation(value: settings.highQualityBluetooth && settings.voiceProcessing)
     }
 }
 

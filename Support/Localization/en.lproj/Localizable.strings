@@ -133,6 +133,9 @@
 "settings.input-gain" = "Input Gain";
 "settings.voice-processing" = "Voice Processing";
 "settings.voice-processing.detail" = "Echo cancellation, noise reduction and auto gain for speech. Mono only, turn off for music.";
+"settings.bluetooth-hq" = "High Quality Bluetooth";
+"settings.bluetooth-hq.detail" = "Records full bandwidth audio from AirPods that support it instead of call quality, with slightly more delay.";
+"settings.bluetooth-hq.voice-processing" = "Voice Processing records Bluetooth microphones at call quality.";
 "settings.mic-mode" = "Mic Mode";
 "settings.mic-mode.standard" = "Standard";
 "settings.mic-mode.wide-spectrum" = "Wide Spectrum";

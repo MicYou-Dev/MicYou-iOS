@@ -173,6 +173,9 @@ public enum L10n {
         public static var inputGain: String { string("settings.input-gain") }
         public static var voiceProcessing: String { string("settings.voice-processing") }
         public static var voiceProcessingDetail: String { string("settings.voice-processing.detail") }
+        public static var highQualityBluetooth: String { string("settings.bluetooth-hq") }
+        public static var highQualityBluetoothDetail: String { string("settings.bluetooth-hq.detail") }
+        public static var highQualityBluetoothVoiceProcessing: String { string("settings.bluetooth-hq.voice-processing") }
         public static var micMode: String { string("settings.mic-mode") }
         public static var micModeStandard: String { string("settings.mic-mode.standard") }
         public static var micModeWideSpectrum: String { string("settings.mic-mode.wide-spectrum") }

@@ -268,6 +268,11 @@ final class AppModel {
         network.warns(overUSB: selection == .usb)
     }
 
+    /// Applies immediately while streaming, capture restarts on the new route
+    func setHighQualityBluetooth(_ value: Bool) {
+        settings.highQualityBluetooth = value
+        capture.setHighQualityBluetooth(value)
+    }
 
     /// Long press actions on the app icon, refreshed with the connection and when the app leaves the screen
     func refreshQuickActions() {
@@ -438,6 +443,7 @@ final class AppModel {
             sampleRate: Double(config.sampleRate),
             channels: AVAudioChannelCount(config.channels),
             voiceProcessing: settings.voiceProcessing,
+            highQualityBluetooth: settings.highQualityBluetooth,
             input: settings.input,
             stereoOrientation: Self.stereoOrientation
         )

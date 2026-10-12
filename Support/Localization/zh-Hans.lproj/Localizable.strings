@@ -133,6 +133,9 @@
 "settings.input-gain" = "输入增益";
 "settings.voice-processing" = "人声处理";
 "settings.voice-processing.detail" = "回声消除、降噪与自动增益，适合说话；仅单声道，传输音乐时建议关闭。";
+"settings.bluetooth-hq" = "蓝牙高音质录音";
+"settings.bluetooth-hq.detail" = "支持的 AirPods 以完整音质录音，而不是通话音质，延迟会略有增加。";
+"settings.bluetooth-hq.voice-processing" = "开启语音处理时，蓝牙麦克风只能以通话音质录音。";
 "settings.mic-mode" = "麦克风模式";
 "settings.mic-mode.standard" = "标准";
 "settings.mic-mode.wide-spectrum" = "宽频谱";

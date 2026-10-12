@@ -10,6 +10,8 @@ struct CaptureConfig: Equatable, Sendable {
     var sampleRate: Double
     var channels: AVAudioChannelCount
     var voiceProcessing: Bool
+    /// Full bandwidth recording from AirPods that support it on iOS 26, the system ignores it for other routes
+    var highQualityBluetooth: Bool
     var input: InputPreference
     /// How the device is held, so stereo from the built-in microphones keeps left on the left
     var stereoOrientation: AVAudioSession.StereoOrientation
@@ -117,6 +119,16 @@ final class AudioCapture: @unchecked Sendable {
         }
     }
 
+    /// Switches Bluetooth high quality recording, a running engine restarts with it
+    func setHighQualityBluetooth(_ enabled: Bool) {
+        queue.async {
+            guard self.isRunning, var config = self.config, config.highQualityBluetooth != enabled else { return }
+            config.highQualityBluetooth = enabled
+            self.config = config
+            if !self.isInterrupted { self.scheduleRestart(force: true) }
+        }
+    }
+
     /// Follows the interface orientation, which only changes on iPad
     func setStereoOrientation(_ orientation: AVAudioSession.StereoOrientation) {
         queue.async {
@@ -139,7 +151,7 @@ final class AudioCapture: @unchecked Sendable {
                 let session = AVAudioSession.sharedInstance()
                 // Only a recording category lists inputs, a running capture has set it already
                 if !self.isRunning && session.category != .playAndRecord {
-                    try? session.setCategory(.playAndRecord, mode: .default, options: Self.categoryOptions)
+                    try? session.setCategory(.playAndRecord, mode: .default, options: Self.baseCategoryOptions)
                 }
                 continuation.resume(returning: (session.availableInputs ?? []).map(InputPort.init))
             }
@@ -197,14 +209,24 @@ final class AudioCapture: @unchecked Sendable {
         // voiceChat enables echo cancellation, noise suppression and AGC
         // measurement would bypass the system input gain and sounds far too quiet
         let mode: AVAudioSession.Mode = config.voiceProcessing ? .voiceChat : .default
-        try session.setCategory(.playAndRecord, mode: mode, options: Self.categoryOptions)
+        try session.setCategory(.playAndRecord, mode: mode, options: Self.categoryOptions(config))
         try? session.setPreferredSampleRate(config.sampleRate)
         try? session.setPreferredIOBufferDuration(0.01)
         try session.setActive(true)
         applyInput(config, session: session)
     }
 
-    private static let categoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
+    private static let baseCategoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
+
+    /// High quality Bluetooth only works in the default mode, voice processing keeps the call quality link
+    /// With HFP allowed as well, routes that cannot record in high quality fall back to it
+    private static func categoryOptions(_ config: CaptureConfig) -> AVAudioSession.CategoryOptions {
+        var options = baseCategoryOptions
+        if #available(iOS 26, *), config.highQualityBluetooth, !config.voiceProcessing {
+            options.insert(.bluetoothHighQualityRecording)
+        }
+        return options
+    }
 
     /// Routes the chosen microphone, falling back to the system choice when it is not connected
     private func applyInput(_ config: CaptureConfig, session: AVAudioSession) {
@@ -295,7 +317,11 @@ final class AudioCapture: @unchecked Sendable {
         engine.prepare()
         try engine.start()
         // The port type rather than the port name, Bluetooth names often carry the owner's name
-        let port = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none"
+        let route = AVAudioSession.sharedInstance().currentRoute.inputs.first
+        var port = route?.portType.rawValue ?? "none"
+        if #available(iOS 26, *), route?.bluetoothMicrophoneExtension?.highQualityRecording.isEnabled == true {
+            port += " in high quality"
+        }
         log.info("Capture started: \(port, privacy: .public) at \(Int(inputFormat.sampleRate)) Hz x\(inputFormat.channelCount), sending \(Int(config.sampleRate)) Hz x\(config.channels)")
     }
 

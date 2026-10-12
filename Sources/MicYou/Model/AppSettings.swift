@@ -18,7 +18,7 @@ final class AppSettings {
 
     private enum Key: String {
         case host, port, transport, codec, opusBitrate, sampleRate, stereo, voiceProcessing, inputGainDB, input
-        case fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, usbSelected
+        case highQualityBluetooth, fecEnabled, autoReconnect, autoConnect, pushToTalk, keepScreenOn, liveActivity, recentHosts, lastServiceName, usbSelected
         case welcomeShown, tourShown, autoCheckUpdates, lastUpdateCheck, dismissedUpdate
     }
 
@@ -50,6 +50,8 @@ final class AppSettings {
     /// The USB cable was picked last, it wins over lastServiceName
     var usbSelected: Bool { didSet { save(usbSelected, .usbSelected) } }
     /// The welcome sheet appears once, on the first launch
+    /// Full bandwidth recording from supported AirPods, iOS 26 and later
+    var highQualityBluetooth: Bool { didSet { save(highQualityBluetooth, .highQualityBluetooth) } }
     var welcomeShown: Bool { didSet { save(welcomeShown, .welcomeShown) } }
     /// The spotlight tour of the home screen follows the welcome sheet, also once
     var tourShown: Bool { didSet { save(tourShown, .tourShown) } }
@@ -87,6 +89,7 @@ final class AppSettings {
         let service: String? = load(.lastServiceName)
         welcomeShown = load(.welcomeShown) ?? (!hosts.isEmpty || service != nil)
         tourShown = load(.tourShown) ?? (!hosts.isEmpty || service != nil)
+        highQualityBluetooth = load(.highQualityBluetooth) ?? true
         autoCheckUpdates = load(.autoCheckUpdates) ?? true
         lastUpdateCheck = load(.lastUpdateCheck)
         dismissedUpdate = load(.dismissedUpdate)
