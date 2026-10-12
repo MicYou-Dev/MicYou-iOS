@@ -79,6 +79,16 @@
 "home.update.title" = "發現新版本 %@";
 "home.update.text" = "下載新的 IPA 後，依照原本的方式重新側載即可更新。";
 "home.update.view" = "查看";
+"home.update.notes" = "%@ 版本更新內容";
+"home.update.download" = "前往 GitHub 下載";
+"home.update.translate" = "翻譯";
+"home.update.original" = "顯示原文";
+"home.update.kind.feat" = "新功能";
+"home.update.kind.fix" = "修正";
+"home.update.kind.refactor" = "重構";
+"home.update.kind.style" = "介面";
+"home.update.kind.docs" = "文件";
+"home.update.kind.chore" = "其他";
 
 "settings.applies-next-time" = "連線和音訊設定將在下次連線時生效。";
 "settings.reconnect-to-apply" = "立即重新連線以套用";

@@ -39,19 +39,23 @@ public struct AppVersion: Comparable, Hashable, Sendable, CustomStringConvertibl
 }
 
 /// The latest published release of the app
-public struct AppRelease: Equatable, Sendable {
+public struct AppRelease: Equatable, Identifiable, Sendable {
     public let version: AppVersion
     /// The release page, where the IPA files are
     public let page: URL
+    /// Nil when the release came from the website redirect, which carries no body
+    public let notes: ReleaseNotes?
 
-    public init(version: AppVersion, page: URL) {
+    public init(version: AppVersion, page: URL, notes: ReleaseNotes? = nil) {
         self.version = version
         self.page = page
+        self.notes = notes
     }
 
     private struct Payload: Decodable {
         let tag_name: String
         let html_url: URL
+        let body: String?
         let draft: Bool?
         let prerelease: Bool?
     }
@@ -62,7 +66,8 @@ public struct AppRelease: Equatable, Sendable {
         guard payload.draft != true, payload.prerelease != true, let version = AppVersion(payload.tag_name) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Not an app release: \(payload.tag_name)"))
         }
-        self.init(version: version, page: payload.html_url)
+        let notes = payload.body.map(ReleaseNotes.init(markdown:))
+        self.init(version: version, page: payload.html_url, notes: notes?.isEmpty == false ? notes : nil)
     }
 
     /// From where `releases/latest` on the website redirects, ".../releases/tag/v1.2.0"
@@ -74,7 +79,91 @@ public struct AppRelease: Equatable, Sendable {
         self.init(version: version, page: url)
     }
 
+    public var id: AppVersion { version }
+
     public func isNewer(than current: AppVersion) -> Bool { version > current }
+}
+
+/// The changes listed in a release body, as written by `release.yml`
+/// Only the block structure is parsed here, inline Markdown such as `code` is left to the view
+public struct ReleaseNotes: Equatable, Sendable {
+    public enum Block: Equatable, Sendable {
+        case heading(String)
+        /// A list item, with the commit type split off when it starts with one such as "feat: "
+        case item(String, kind: ChangeKind? = nil)
+        case paragraph(String)
+
+        /// Without the commit type, so only the description goes to the translator
+        public var text: String {
+            switch self {
+            case .heading(let text), .item(let text, _), .paragraph(let text): text
+            }
+        }
+    }
+
+    /// The commit types in the changes list, shown as a label of their own
+    public enum ChangeKind: String, CaseIterable, Sendable {
+        case feat, fix, refactor, style, docs, chore
+
+        /// "feat(ui)!: text" gives feat and "text", anything else stays whole
+        static func split(_ line: String) -> (kind: ChangeKind?, text: String) {
+            guard let colon = line.firstIndex(of: ":") else { return (nil, line) }
+            var type = line[..<colon]
+            if type.last == "!" { type.removeLast() }
+            if let scope = type.firstIndex(of: "("), type.last == ")" { type = type[..<scope] }
+            let text = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+            guard let kind = ChangeKind(rawValue: type.lowercased()), !text.isEmpty else { return (nil, line) }
+            return (kind, text)
+        }
+    }
+
+    public let blocks: [Block]
+
+    /// Sections about the downloads themselves, the release page explains them next to the files
+    static let hiddenSections: Set<String> = ["files"]
+
+    public init(markdown: String) {
+        var blocks: [Block] = []
+        var paragraph: [String] = []
+        var hidden = false
+
+        func flush() {
+            if !paragraph.isEmpty { blocks.append(.paragraph(paragraph.joined(separator: " "))) }
+            paragraph = []
+        }
+
+        for raw in markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.hasPrefix("#") {
+                flush()
+                let title = line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)
+                hidden = Self.hiddenSections.contains(title.lowercased())
+                if !hidden, !title.isEmpty { blocks.append(.heading(title)) }
+            } else if hidden {
+                continue
+            } else if line.isEmpty {
+                flush()
+            } else if let marker = line.first, "-*+".contains(marker), line.dropFirst().first == " " {
+                flush()
+                let change = ChangeKind.split(line.dropFirst(2).trimmingCharacters(in: .whitespaces))
+                blocks.append(.item(change.text, kind: change.kind))
+            } else if raw.first?.isWhitespace == true, paragraph.isEmpty, case .item(let text, let kind) = blocks.last {
+                // An indented line continues the item above it
+                blocks[blocks.count - 1] = .item(text + " " + line, kind: kind)
+            } else {
+                paragraph.append(line)
+            }
+        }
+        flush()
+
+        // A single heading such as "Changes" only repeats what the sheet title says
+        if blocks.count(where: { if case .heading = $0 { true } else { false } }) == 1, case .heading = blocks.first {
+            blocks.removeFirst()
+        }
+        self.blocks = blocks
+    }
+
+    public var isEmpty: Bool { blocks.isEmpty }
 }
 
 /// How often the app looks for a new release on its own

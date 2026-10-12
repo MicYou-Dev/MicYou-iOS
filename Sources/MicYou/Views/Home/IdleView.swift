@@ -8,6 +8,7 @@ import SwiftUI
 struct IdleView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
+    @State private var shownRelease: AppRelease?
     let openPicker: () -> Void
     let openSettings: () -> Void
 
@@ -28,7 +29,7 @@ struct IdleView: View {
             } else if let release = model.updates.notice {
                 NoticeCard(
                     title: L10n.Home.updateTitle(release.version.description), text: L10n.Home.updateText, kind: .info,
-                    action: (L10n.Home.viewUpdate, { openURL(release.page) })
+                    action: (L10n.Home.viewUpdate, { view(release) })
                 ) {
                     withAnimation(Motion.state) { model.updates.dismissNotice() }
                 }
@@ -53,6 +54,11 @@ struct IdleView: View {
         .animation(Motion.state, value: model.canConnect)
         .animation(Motion.state, value: model.notice)
         .animation(Motion.state, value: model.updates.notice)
+        .releaseNotesSheet($shownRelease)
+    }
+
+    private func view(_ release: AppRelease) {
+        if release.notes != nil { shownRelease = release } else { openURL(release.page) }
     }
 
     private var isFailed: Bool {

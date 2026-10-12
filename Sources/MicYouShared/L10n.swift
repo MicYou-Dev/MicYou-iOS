@@ -117,6 +117,16 @@ public enum L10n {
         public static func updateTitle(_ version: String) -> String { format("home.update.title", version) }
         public static var updateText: String { string("home.update.text") }
         public static var viewUpdate: String { string("home.update.view") }
+        public static func updateNotesTitle(_ version: String) -> String { format("home.update.notes", version) }
+        public static var downloadUpdate: String { string("home.update.download") }
+        public static var translateNotes: String { string("home.update.translate") }
+        public static var showOriginalNotes: String { string("home.update.original") }
+        public static var newFeature: String { string("home.update.kind.feat") }
+        public static var bugFix: String { string("home.update.kind.fix") }
+        public static var refactor: String { string("home.update.kind.refactor") }
+        public static var design: String { string("home.update.kind.style") }
+        public static var documentation: String { string("home.update.kind.docs") }
+        public static var otherChange: String { string("home.update.kind.chore") }
     }
 
     public enum Settings {

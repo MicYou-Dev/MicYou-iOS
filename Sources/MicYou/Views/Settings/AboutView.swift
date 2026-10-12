@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import MicYouCore
 import MicYouProtocol
 import MicYouShared
 import SwiftUI
@@ -46,6 +47,7 @@ struct AboutView: View {
     @State private var copies = 0
     @State private var copied = false
     @State private var isExportingLogs = false
+    @State private var shownRelease: AppRelease?
 
     var body: some View {
         Form {
@@ -186,6 +188,7 @@ struct AboutView: View {
         }
         .navigationTitle(L10n.About.title)
         .navigationBarTitleDisplayMode(.inline)
+        .releaseNotesSheet($shownRelease)
     }
 
     private var diagnostics: String { Diagnostics.report(model: model) }
@@ -195,14 +198,18 @@ struct AboutView: View {
         let updates = model.updates
         return Section {
             Button {
-                if case .available(let release) = updates.state { openURL(release.page) } else { updates.check() }
+                if case .available(let release) = updates.state {
+                    if release.notes != nil { shownRelease = release } else { openURL(release.page) }
+                } else {
+                    updates.check()
+                }
             } label: {
                 HStack {
                     RowLabel(title: updateTitle, detail: updateDetail, systemImage: "arrow.down.circle.fill", color: .green)
                     Spacer(minLength: 8)
                     if updates.state == .checking {
                         ProgressView()
-                    } else if case .available = updates.state {
+                    } else if case .available(let release) = updates.state, release.notes == nil {
                         Image(systemName: "arrow.up.right")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(.tertiary)
