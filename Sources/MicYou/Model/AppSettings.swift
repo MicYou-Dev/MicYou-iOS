@@ -106,6 +106,11 @@ final class AppSettings {
         !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && manualTarget == nil
     }
 
+    /// The port field as a TCP port, nil when it is out of range, used by USB where no address can carry one
+    var validPort: UInt16? {
+        UInt16(exactly: port).flatMap { $0 > 0 ? $0 : nil }
+    }
+
     /// Shows the welcome sheet and the tour again, from the about page
     func replayIntroduction() {
         welcomeShown = false

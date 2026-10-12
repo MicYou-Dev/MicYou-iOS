@@ -151,6 +151,9 @@ final class AppModel {
     func connect() async {
         guard !isActive else { return }
         notice = nil
+        // A new connection starts live, push to talk starts silent and tells the computer right after the handshake
+        // Reconnects and restarts keep the mute as it is
+        isMuted = settings.pushToTalk
         // Claim the connecting state before awaiting so a second tap is ignored
         phase = .connecting
         await begin()
@@ -192,8 +195,11 @@ final class AppModel {
     private func begin() async {
         let token = UUID()
         connectToken = token
-        // Push to talk starts silent, the session tells the computer right after the handshake
-        if settings.pushToTalk { isMuted = true }
+        // Before the permission prompt, which would otherwise be asked for nothing
+        guard canConnect else {
+            phase = .failed(L10n.Failure.chooseTarget)
+            return
+        }
         guard await AudioCapture.requestPermission() else {
             if connectToken == token { phase = .failed(CaptureError.permissionDenied.localizedDescription) }
             return
@@ -201,7 +207,7 @@ final class AppModel {
         // Disconnect or a restart may have happened while the permission prompt was up
         guard connectToken == token, phase == .connecting else { return }
         guard let target = resolveTarget() else {
-            phase = .failed(L10n.Failure.chooseTarget)
+            phase = .failed(L10n.Home.manualInvalid)
             return
         }
         let config = settings.streamConfig(link: target.link)
@@ -376,7 +382,7 @@ final class AppModel {
             return Target(link: .network(endpoint, preferIPv4: false), name: address.host)
         case .usb:
             // The desktop connects to the port it serves on, the same one the manual fields use
-            guard let port = NWEndpoint.Port(rawValue: UInt16(clamping: settings.port)), port.rawValue != 0 else { return nil }
+            guard let port = settings.validPort.flatMap(NWEndpoint.Port.init(rawValue:)) else { return nil }
             return Target(link: .usb(port: port), name: L10n.Home.usbName)
         }
     }
