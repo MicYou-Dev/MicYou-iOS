@@ -100,10 +100,10 @@ public struct AudioSequencer: Sendable {
     }
 }
 
-/// Splits a PCM byte stream into frame aligned chunks that fit one UDP datagram
+/// Splits a PCM byte stream into frame aligned chunks, by default as many frames as fit one UDP datagram
 public struct PCMChunker: Sendable {
     public let chunkSize: Int
-    private var pending = Data()
+    private var pending: [UInt8] = []
 
     public init(frameBytes: Int, maxChunk: Int = MicYouWire.udpPCMPayload) {
         precondition(frameBytes > 0)
@@ -111,12 +111,15 @@ public struct PCMChunker: Sendable {
     }
 
     public mutating func append(_ data: Data) -> [Data] {
-        pending.append(data)
+        pending.append(contentsOf: data)
         var chunks: [Data] = []
-        while pending.count >= chunkSize {
-            chunks.append(Data(pending.prefix(chunkSize)))
-            pending.removeFirst(chunkSize)
+        var start = 0
+        while pending.count - start >= chunkSize {
+            chunks.append(Data(pending[start..<start + chunkSize]))
+            start += chunkSize
         }
+        // Only the remainder, shorter than one chunk, moves to the front
+        pending.removeFirst(start)
         return chunks
     }
 

@@ -3,6 +3,7 @@
 @preconcurrency import AVFoundation
 import AudioToolbox
 import Foundation
+import MicYouProtocol
 
 enum OpusEncoderError: Error {
     case unsupportedFormat
@@ -19,7 +20,8 @@ final class OpusEncoder {
     private let converter: AVAudioConverter
     private let input: AVAudioPCMBuffer
     private let output: AVAudioCompressedBuffer
-    private var pending = Data()
+    /// Cuts the PCM stream into whole 20 ms frames
+    private var frames: PCMChunker
 
     /// `sampleRate` must be one of OpusRates.supported, StreamConfig already carries one
     init(sampleRate: Double, channels: AVAudioChannelCount, bitrate: Int) throws {
@@ -53,28 +55,18 @@ final class OpusEncoder {
         let maxPacket = max(converter.maximumOutputPacketSize, 1500)
         self.converter = converter
         self.input = input
+        let frameBytes = Int(framesPerPacket) * Int(channels) * 2
+        frames = PCMChunker(frameBytes: frameBytes, maxChunk: frameBytes)
         output = AVAudioCompressedBuffer(format: opusFormat, packetCapacity: 1, maximumPacketSize: maxPacket)
     }
 
-    var bytesPerFrame: Int { Int(channels) * 2 }
-
     /// Buffers PCM and returns one Opus packet per complete 20 ms frame
     func encode(_ pcm: Data) throws -> [Data] {
-        pending.append(pcm)
-        let frameBytes = Int(framesPerPacket) * bytesPerFrame
-        var packets: [Data] = []
-        while pending.count >= frameBytes {
-            let chunk = pending.prefix(frameBytes)
-            if let packet = try encodeFrame(chunk) {
-                packets.append(packet)
-            }
-            pending.removeFirst(frameBytes)
-        }
-        return packets
+        try frames.append(pcm).compactMap(encodeFrame)
     }
 
     func reset() {
-        pending.removeAll(keepingCapacity: true)
+        frames.reset()
         converter.reset()
     }
 

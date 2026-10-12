@@ -99,4 +99,12 @@ import Testing
         #expect(PCMChunker(frameBytes: 4).chunkSize == 1320)
         #expect(PCMChunker(frameBytes: 7).chunkSize == 1316)
     }
+
+    @Test func chunkerKeepsByteOrderAcrossAppends() {
+        var chunker = PCMChunker(frameBytes: 4, maxChunk: 4)
+        #expect(chunker.append(Data([0, 1, 2])).isEmpty)
+        #expect(chunker.append(Data([3, 4, 5, 6, 7, 8, 9])) == [Data([0, 1, 2, 3]), Data([4, 5, 6, 7])])
+        chunker.reset()
+        #expect(chunker.append(Data([10, 11, 12, 13])) == [Data([10, 11, 12, 13])])
+    }
 }
