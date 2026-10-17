@@ -15,19 +15,6 @@ struct SettingsView: View {
         @Bindable var settings = settings
         NavigationStack {
             Form {
-                if model.isActive {
-                    Section {
-                        Label(L10n.Settings.appliesNextTime, systemImage: "info.circle")
-                            .font(.subheadline)
-                        if model.hasPendingChanges {
-                            Button(L10n.Settings.reconnectToApply, systemImage: "arrow.clockwise") {
-                                model.restart()
-                            }
-                        }
-                    }
-                    .animation(Motion.state, value: model.hasPendingChanges)
-                }
-
                 Section {
                     HStack(spacing: 8) {
                         ForEach(StreamPreset.allCases) { preset in
@@ -118,6 +105,14 @@ struct SettingsView: View {
                     }
                 }
             }
+            // Pinned below the list rather than a section above it, so the rows do not move while being edited
+            .safeAreaInset(edge: .bottom) {
+                if model.hasPendingChanges {
+                    PendingChangesBar(restart: model.restart)
+                        .adaptiveTransition(.bottomBar)
+                }
+            }
+            .animation(Motion.state, value: model.hasPendingChanges)
             .navigationTitle(L10n.Common.settings)
             .navigationBarTitleDisplayMode(.inline)
             // Replaying the introduction from the about page needs the home screen
@@ -165,6 +160,33 @@ extension SettingsView {
             style: .warning,
             action: (L10n.Settings.turnOffVoiceProcessing, { settings.voiceProcessing = false })
         )
+    }
+}
+
+/// Shown once a setting differs from the running stream, which keeps its settings until it reconnects
+private struct PendingChangesBar: View {
+    let restart: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(L10n.Settings.appliesNextTime)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button(action: restart) {
+                Label(L10n.Settings.reconnectToApply, systemImage: "arrow.clockwise")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .glassProminentButtonStyle()
+            .controlSize(.large)
+            .buttonBorderShape(.capsule)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(.bar)
     }
 }
 
