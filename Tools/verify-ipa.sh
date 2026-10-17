@@ -38,11 +38,12 @@ python3 Tools/appintents-metadata.py --configuration Release --check || fail "Ap
 # Every intent must be in both binaries, the widget builds them and the app performs them
 for binary in "$app/MicYou" "$widget/MicYouWidget"; do
     for intent in StartStreamingIntent StopStreamingIntent ToggleMuteIntent ToggleConnectionIntent; do
-        strings "$binary" | grep -qx "$intent" || fail "$intent was not linked into $(basename "$binary")"
+        # grep -q would stop reading at the first match, strings then fails writing and pipefail reports it
+        strings "$binary" | grep -x "$intent" >/dev/null || fail "$intent was not linked into $(basename "$binary")"
     done
 done
 
-if unzip -l xtool/MicYou-LiveContainer.ipa | grep -q 'PlugIns/'; then
+if unzip -l xtool/MicYou-LiveContainer.ipa | grep 'PlugIns/' >/dev/null; then
     fail "LiveContainer IPA still contains extensions"
 fi
 echo "IPAs OK: SDK $sdk, version $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Info.plist")"
