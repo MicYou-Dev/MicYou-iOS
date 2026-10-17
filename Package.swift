@@ -24,6 +24,16 @@ let stripSymbols: [LinkerSetting] = [
     .unsafeFlags(["-Xlinker", "-x", "-Xlinker", "-S"], .when(configuration: .release)),
 ]
 
+// Tools/appintents-metadata.py reads the conformances the compiler records in .swiftconstvalues.
+// Swift Build on Linux asks for them by itself, Xcode's leaves them out for package targets, so
+// the targets with intents ask explicitly, with the protocol list Swift Build uses
+let constValues: [SwiftSetting] = [
+    .unsafeFlags([
+        "-emit-const-values",
+        "-const-gather-protocols-list", "\(Context.packageDirectory)/Tools/appintents-protocols.json",
+    ]),
+]
+
 let package = Package(
     name: "MicYou",
     platforms: [
@@ -41,7 +51,8 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "MicYouShared"
+            name: "MicYouShared",
+            swiftSettings: constValues
         ),
         .target(
             name: "MicYou",
@@ -50,11 +61,13 @@ let package = Package(
                 .product(name: "MicYouProtocol", package: "MicYouProtocol"),
                 .product(name: "MicYouCore", package: "MicYouCore"),
             ],
+            swiftSettings: constValues,
             linkerSettings: linkSDKVersion + stripSymbols
         ),
         .target(
             name: "MicYouWidget",
             dependencies: ["MicYouShared"],
+            swiftSettings: constValues,
             linkerSettings: linkSDKVersion + widgetEntryPoint + stripSymbols
         ),
     ]
