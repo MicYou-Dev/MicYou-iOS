@@ -76,6 +76,8 @@ final class AudioCapture: @unchecked Sendable {
     private var isRunning = false
     /// Stopped by an interruption or a failed restart, until a restart succeeds
     private var isInterrupted = false
+    /// The app's mute, mirrored to the system input mute only while recording from a Bluetooth headset
+    private var appMuted = false
 
     init() {
         notificationQueue.underlyingQueue = queue
@@ -130,18 +132,34 @@ final class AudioCapture: @unchecked Sendable {
         }
     }
 
-    /// Keeps the system input mute equal to the app's, so a press on the AirPods stem toggles from the right state
-    /// The system zeroes the samples while muted, the stream is silent then anyway
+    /// Keeps the system input mute equal to the app's while recording from a Bluetooth headset,
+    /// so a press on the AirPods stem toggles from the right state
     /// Set before capture starts it is stored and applied once the session is active
     func setSystemMuted(_ muted: Bool) {
         queue.async {
-            guard AVAudioApplication.shared.isInputMuted != muted else { return }
-            do {
-                try AVAudioApplication.shared.setInputMuted(muted)
-            } catch {
-                self.log.notice("Setting the system input mute failed: \(String(describing: error), privacy: .public)")
-            }
+            self.appMuted = muted
+            self.syncSystemMute()
         }
+    }
+
+    /// Every change of the system input mute plays the system's mute tone, which ignores the Ring/Silent
+    /// switch, so other inputs stay unmuted and the app's mute alone silences the stream
+    /// The system zeroes the samples while muted, the stream is silent then anyway
+    private func syncSystemMute() {
+        let muted = appMuted && Self.recordsFromBluetooth
+        guard AVAudioApplication.shared.isInputMuted != muted else { return }
+        do {
+            try AVAudioApplication.shared.setInputMuted(muted)
+        } catch {
+            log.notice("Setting the system input mute failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Headsets that have a stem or button to mute with, high quality AirPods recording included
+    private static var recordsFromBluetooth: Bool {
+        guard let port = AVAudioSession.sharedInstance().currentRoute.inputs.first else { return false }
+        if #available(iOS 26, *), port.bluetoothMicrophoneExtension != nil { return true }
+        return [.bluetoothHFP, .bluetoothLE, .bluetoothA2DP].contains(port.portType)
     }
 
     /// Follows the interface orientation, which only changes on iPad
@@ -193,6 +211,8 @@ final class AudioCapture: @unchecked Sendable {
         try startEngine(config)
         observeSession()
         isRunning = true
+        // The route is known now that the session is active
+        syncSystemMute()
     }
 
     private func stopOnQueue() {
@@ -210,7 +230,7 @@ final class AudioCapture: @unchecked Sendable {
         if config != nil {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
             // The mute is stored for the next session otherwise
-            try? AVAudioApplication.shared.setInputMuted(false)
+            if AVAudioApplication.shared.isInputMuted { try? AVAudioApplication.shared.setInputMuted(false) }
         }
         isRunning = false
         isInterrupted = false
@@ -442,8 +462,13 @@ final class AudioCapture: @unchecked Sendable {
             self?.scheduleRestart(force: true)
         })
         observers.append(center.addObserver(forName: AVAudioApplication.inputMuteStateChangeNotification, object: nil, queue: notificationQueue) { [weak self] note in
-            guard let muted = note.userInfo?[AVAudioApplication.muteStateKey] as? Bool else { return }
+            // Off Bluetooth the only changes are ours, unmuting the system while the app stays muted
+            guard let muted = note.userInfo?[AVAudioApplication.muteStateKey] as? Bool, Self.recordsFromBluetooth else { return }
             self?.onEvent?(.systemMute(muted))
+        })
+        // Putting AirPods on or taking them off decides whether the system mute follows the app's
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: session, queue: notificationQueue) { [weak self] _ in
+            self?.syncSystemMute()
         })
         // Fires when the input hardware changes, for example a headset is plugged in
         observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: notificationQueue) { [weak self] _ in
