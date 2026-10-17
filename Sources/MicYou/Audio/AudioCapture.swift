@@ -73,7 +73,6 @@ final class AudioCapture: @unchecked Sendable {
     private var pendingRestart: DispatchWorkItem?
     /// The pending restart follows an interruption or a request, not an echo of our own restart
     private var restartForced = false
-    private var lastRestart: Date?
     private var isRunning = false
     /// Stopped by an interruption or a failed restart, until a restart succeeds
     private var isInterrupted = false
@@ -343,8 +342,7 @@ final class AudioCapture: @unchecked Sendable {
         log.info("Capture started: \(port, privacy: .public) at \(Int(inputFormat.sampleRate)) Hz x\(inputFormat.channelCount), sending \(Int(config.sampleRate)) Hz x\(config.channels)")
     }
 
-    /// Coalesces bursts of notifications and ignores the ones our own restart causes
-    /// Forced restarts, after an interruption ends or on request, always run
+    /// Coalesces bursts of notifications, forced restarts, after an interruption ends or on request, always run
     private func scheduleRestart(force: Bool = false) {
         // The microphone belongs to someone else until the interruption ends
         if isInterrupted && !force { return }
@@ -359,8 +357,9 @@ final class AudioCapture: @unchecked Sendable {
         let forced = restartForced
         restartForced = false
         guard isRunning, let config else { return }
-        if !forced, let last = lastRestart, Date().timeIntervalSince(last) < 1 { return }
-        lastRestart = Date()
+        // A hardware change stops the engine, a still running one only saw our own session setup
+        // A time window would also swallow a real change right after a restart and leave capture dead
+        if !forced && engine.isRunning { return }
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         do {
