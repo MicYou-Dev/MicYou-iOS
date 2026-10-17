@@ -62,7 +62,7 @@ private struct LockScreenView: View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
                 Badge(state: state, size: 44)
-                TitleStack(serverName: serverName, subtitle: phaseText(state))
+                TitleStack(serverName: serverName, subtitle: state.statusText)
                     .layoutPriority(1)
                 Spacer(minLength: 8)
                 ElapsedText(state: state)
@@ -94,17 +94,13 @@ private struct TitleStack: View {
     }
 }
 
-/// Solid tinted circle with the status glyph, like the avatar in a call
+/// Status glyph on a circle in the phase's color
 private struct Badge: View {
     let state: State
     let size: CGFloat
 
     var body: some View {
-        Image(systemName: state.symbol)
-            .font(.system(size: size * 0.42, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(width: size, height: size)
-            .background(state.tint.gradient, in: Circle())
+        CircleSymbol(symbol: state.symbol, tint: state.tint, size: size)
     }
 }
 
@@ -119,19 +115,17 @@ private struct Glyph: View {
     }
 }
 
-/// Microphone and stream format while live, retry progress otherwise, then the two controls
-/// The input level is left out on purpose: every update makes the system crossfade the timer
+/// Microphone and stream format, then the two controls; the status line above already tells the
+/// phase and retry progress. The input level is left out on purpose: every update makes the
+/// system crossfade the timer
 private struct ControlRow: View {
     let state: State
 
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                if state.phase == .streaming, !state.input.isEmpty {
+                if !state.input.isEmpty {
                     Label(state.input, systemImage: state.inputSymbol)
-                        .font(.subheadline.weight(.medium))
-                } else if state.phase != .streaming {
-                    Text(progressText)
                         .font(.subheadline.weight(.medium))
                 }
                 if !state.detail.isEmpty {
@@ -145,13 +139,6 @@ private struct ControlRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             ActionButtons(state: state)
         }
-    }
-
-    private var progressText: String {
-        if state.phase == .reconnecting, state.attempt > 0 {
-            return L10n.Status.reconnectingAttempt(state.attempt, of: state.maxAttempts)
-        }
-        return phaseText(state)
     }
 }
 
@@ -184,10 +171,7 @@ private struct IslandDetails: View {
 
     /// For example "Streaming · iPhone Microphone" or "Reconnecting (2/6)…"
     private var status: String {
-        if state.phase == .reconnecting, state.attempt > 0 {
-            return L10n.Status.reconnectingAttempt(state.attempt, of: state.maxAttempts)
-        }
-        return L10n.Common.joined([phaseText(state), state.phase == .streaming ? state.input : ""])
+        L10n.Common.joined([state.statusText, state.phase == .streaming ? state.input : ""])
     }
 }
 
@@ -250,13 +234,15 @@ private extension StreamActivityAttributes.ContentState {
         case .interrupted: "pause.fill"
         }
     }
-}
 
-private func phaseText(_ state: State) -> String {
-    switch state.phase {
-    case .connecting: L10n.Status.connecting
-    case .reconnecting: L10n.Status.reconnecting
-    case .streaming: state.isMuted ? L10n.Status.muted : L10n.Status.streaming
-    case .interrupted: L10n.Status.interrupted
+    /// Phase with the retry progress while reconnecting, for example "Reconnecting (2/6)…"
+    var statusText: String {
+        switch phase {
+        case .connecting: L10n.Status.connecting
+        case .reconnecting:
+            attempt > 0 ? L10n.Status.reconnectingAttempt(attempt, of: maxAttempts) : L10n.Status.reconnecting
+        case .streaming: isMuted ? L10n.Status.muted : L10n.Status.streaming
+        case .interrupted: L10n.Status.interrupted
+        }
     }
 }

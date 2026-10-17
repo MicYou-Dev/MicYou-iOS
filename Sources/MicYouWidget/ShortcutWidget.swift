@@ -17,7 +17,7 @@ struct ShortcutWidget: Widget {
         }
         .configurationDisplayName(L10n.Widget.name)
         .description(L10n.Widget.description)
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -61,14 +61,19 @@ private struct ShortcutWidgetView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .widgetURL(DeepLink.toggle.url)
+        case .accessoryInline:
+            Label(L10n.App.name, systemImage: "mic.fill")
+                .widgetURL(DeepLink.toggle.url)
         case .systemMedium:
-            VStack(alignment: .leading, spacing: 12) {
+            // Title at the top, buttons centered in the space below it
+            VStack(alignment: .leading, spacing: 8) {
                 Title()
                 HStack(spacing: 10) {
                     ActionButton(intent: StartStreamingIntent(), title: L10n.Common.connect, symbol: "mic.fill", tint: .green)
                     ActionButton(intent: ToggleMuteIntent(), title: L10n.Common.mute, symbol: "mic.slash.fill", tint: .orange)
                     ActionButton(intent: StopStreamingIntent(), title: L10n.Common.disconnect, symbol: "xmark", tint: .red)
                 }
+                .frame(maxHeight: .infinity)
             }
         default:
             Button(intent: ToggleConnectionIntent()) {
@@ -82,11 +87,7 @@ private struct ShortcutWidgetView: View {
 private struct SmallContent: View {
     var body: some View {
         VStack(alignment: .leading) {
-            Image(systemName: "mic.fill")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.green.gradient, in: Circle())
+            CircleSymbol(symbol: "mic.fill", tint: .green, size: 44)
             Spacer(minLength: 0)
             Text(L10n.App.name)
                 .font(.headline)
@@ -115,11 +116,7 @@ private struct ActionButton<Intent: AppIntent>: View {
     var body: some View {
         Button(intent: intent) {
             VStack(spacing: 6) {
-                Image(systemName: symbol)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(tint.gradient, in: Circle())
+                CircleSymbol(symbol: symbol, tint: tint, size: 40)
                 Text(title)
                     .font(.caption)
                     .lineLimit(1)
