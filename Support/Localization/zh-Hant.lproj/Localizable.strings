@@ -219,7 +219,7 @@
 "credits.references.footer" = "開發與建置過程中參考或使用的相關專案與工具。";
 "credits.view-source" = "檢視原始碼";
 "credits.text-unavailable" = "無法讀取授權條款內容，請前往專案首頁檢視。";
-"credits.app.role" = "主程式與即時動態擴充功能。";
+"credits.app.role" = "主程式，以及小工具、控制中心按鈕與即時動態擴充功能。";
 "credits.protocol.role" = "負責協定編解碼、資料分幀與前向錯誤修正的內部 Swift 套件。";
 "credits.micyou.author" = "LanRhyme 及貢獻者";
 "credits.micyou.role" = "MicYou 桌面版與 Android 用戶端，本專案的通訊協定（Proto/network.proto）與用戶端連線邏輯移植自該專案。";
@@ -260,6 +260,10 @@
 "activity.input.built-in" = "%@ 麥克風";
 "activity.transport.udp" = "UDP";
 "activity.transport.tcp" = "TCP";
+
+"widget.description" = "在主畫面或鎖定畫面上連接、靜音或中斷連線。";
+"widget.hint" = "點一下以連接或中斷連線";
+
 "input.automatic" = "自動";
 "input.bottom" = "底部麥克風";
 "input.front" = "前置麥克風";

@@ -7,5 +7,8 @@ import WidgetKit
 struct MicYouWidgetBundle: WidgetBundle {
     var body: some Widget {
         StreamLiveActivity()
+        ShortcutWidget()
+        ConnectionControl()
+        MuteControl()
     }
 }

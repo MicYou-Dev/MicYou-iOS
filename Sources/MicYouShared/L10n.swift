@@ -312,6 +312,17 @@ public enum L10n {
         public static var tcp: String { string("activity.transport.tcp") }
     }
 
+    public enum Control {
+        public static var toggleName: LocalizedStringResource { resource("app.name") }
+        public static var toggleDescription: LocalizedStringResource { resource("intent.toggle.description") }
+    }
+
+    public enum Widget {
+        public static var name: LocalizedStringResource { resource("app.name") }
+        public static var description: LocalizedStringResource { resource("widget.description") }
+        public static var hint: String { string("widget.hint") }
+    }
+
     public enum Input {
         public static var automatic: String { string("input.automatic") }
         public static var bottom: String { string("input.bottom") }

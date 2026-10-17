@@ -219,7 +219,7 @@
 "credits.references.footer" = "开发与构建过程中参考或使用的相关项目与工具。";
 "credits.view-source" = "查看源代码";
 "credits.text-unavailable" = "无法读取许可证文本，请前往项目主页查看。";
-"credits.app.role" = "主应用与实时活动扩展。";
+"credits.app.role" = "主应用，以及小组件、控制中心按钮与实时活动扩展。";
 "credits.protocol.role" = "负责协议编解码、数据分帧与前向纠错的内部 Swift 包。";
 "credits.micyou.author" = "LanRhyme 及贡献者";
 "credits.micyou.role" = "MicYou 桌面端与 Android 客户端，本项目的通信协议（Proto/network.proto）与客户端连接逻辑移植自该项目。";
@@ -260,6 +260,10 @@
 "activity.input.built-in" = "%@ 麦克风";
 "activity.transport.udp" = "UDP";
 "activity.transport.tcp" = "TCP";
+
+"widget.description" = "在主屏幕或锁定屏幕上连接、静音或断开。";
+"widget.hint" = "轻点连接或断开";
+
 "input.automatic" = "自动";
 "input.bottom" = "底部麦克风";
 "input.front" = "前置麦克风";

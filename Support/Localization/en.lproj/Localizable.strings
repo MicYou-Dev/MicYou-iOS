@@ -219,7 +219,7 @@
 "credits.references.footer" = "Projects and tools referenced or used during development and building.";
 "credits.view-source" = "View Source";
 "credits.text-unavailable" = "Unable to load the license text. Please view it on the project page.";
-"credits.app.role" = "Main app and Live Activity extension.";
+"credits.app.role" = "Main app and the extension for widgets, Control Center buttons, and the Live Activity.";
 "credits.protocol.role" = "Internal Swift package for message encoding, framing, and forward error correction.";
 "credits.micyou.author" = "LanRhyme and contributors";
 "credits.micyou.role" = "MicYou desktop and Android apps. The protocol definition (Proto/network.proto) and client connection logic are ported from this project.";
@@ -260,6 +260,10 @@
 "activity.input.built-in" = "%@ Microphone";
 "activity.transport.udp" = "UDP";
 "activity.transport.tcp" = "TCP";
+
+"widget.description" = "Connect, mute, or disconnect from the Home Screen or Lock Screen.";
+"widget.hint" = "Tap to connect or disconnect";
+
 "input.automatic" = "Automatic";
 "input.bottom" = "Bottom Microphone";
 "input.front" = "Front Microphone";
