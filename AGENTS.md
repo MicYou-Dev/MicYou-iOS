@@ -32,7 +32,8 @@ swift test --package-path Packages/MicYouCore           # app logic tests (prese
 swift test --package-path Packages/MicYouProtocol --filter Framing/tcpHeaderIsBigEndian   # single test
 Tools/check-strings.py                                  # localization keys, format specifiers and unused keys across all three languages
 Tools/build-livecontainer.sh                            # release IPA plus a LiveContainer IPA without the widget
-Tools/verify-ipa.sh                                     # checks the extension is bundled and the SDK version is >= 26
+Tools/appintents-metadata.py                            # after xtool dev build, writes the App Intents index from const values; --check for staleness
+Tools/verify-ipa.sh                                     # checks the extension, the SDK version >= 26 and the App Intents index
 python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver, saves received PCM as WAV
 ```
 
@@ -47,8 +48,8 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver,
 - `MicYouProtocol` (separate package under `Packages/`): hand-written protobuf codec (`ProtoWire.swift`, no third-party deps), TCP `MicY` / UDP `MicU` framing, `AudioSequencer` numbering and XOR FEC, manual address parsing; upstream definition in `Proto/network.proto`
 - `MicYouCore` (separate package under `Packages/`, depends on `MicYouProtocol`): transport and codec choices, presets, `StreamOptions`, `ReconnectPolicy`, `SampleProcessor` and `PeakLimiter`, `MeterBallistics`, `InputPreference`, Bonjour display names
 - `MicYouShared`: `L10n`, `DeepLink`, `StreamActivityAttributes`, shared by the app and the widget
-- `MicYou`: the app; `MicYouWidget`: Live Activity and Dynamic Island
-- The widget shares no storage with the app and there is no App Group; every button routes back to the app through `micyou://` links (`DeepLink`)
+- `MicYou`: the app; `MicYouWidget`: Live Activity, Dynamic Island, Home and Lock Screen widget, Control Center buttons
+- The widget shares no storage with the app and there is no App Group; widget, Control Center and Live Activity buttons perform the intents in `MicYouShared/StreamIntents.swift`, which the system always runs in the app process through `IntentActions.handler` → `AppModel.handle(_:)`: stop and mute are `LiveActivityIntent`s run in the background, connecting uses `openAppWhenRun` because iOS refuses to activate the microphone from the background (tried `AudioRecordingIntent`, fails with `'!int'`); Lock Screen widgets, quick actions and `micyou://` links go through `DeepLink` → `AppModel.handle(_:)`
 
 ### Data flow
 
@@ -89,7 +90,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 - `sdkVersion` in `Package.swift` (default `27.1`, overridden in CI by `MICYOU_IOS_SDK_VERSION`) fixes the Mach-O SDK version via `-platform_version`; without it iOS runs the app in compatibility mode with no Liquid Glass; update it when the local Darwin SDK changes
 - Keep the `-u _main` linker flag on `MicYouWidget`, otherwise the widget `@main` is dead stripped; do not change it to `-e _main` either (assertion crash at launch)
 - No SwiftPM resource bundles: the icon, licenses and `.lproj` folders are copied to the `.app` root by `resources` in `xtool.yml`; the widget extension lists its own localization folders, so a new language must be added in both places
-- xtool does not run the App Intents metadata processor, so Shortcuts may not show the actions in `Intents/`; Live Activity buttons therefore use `Link` to open `micyou://`
+- xtool does not run the App Intents metadata processor; `Tools/appintents-metadata.py` writes the committed indexes for the app and the widget under `Resources/AppIntents/` from the build's `.swiftconstvalues` instead, so rerun and commit them after changing intents. It only supports intents without parameters and the `LiveActivityIntent` / `AudioRecordingIntent` system protocols, intent titles and descriptions must be string table keys written as literals (const values only record literals), all intents stay in one file, and `MicYouApp.init` must keep referencing `MicYouShortcuts` or the static archive members are not linked
 - `Resources/AppIcon/Assets.car` can only be compiled by `actool` on macOS; trigger the `compile-icon.yml` workflow manually and replace the file with its output
 - When upgrading xtool, update the version and SHA-256 in `.github/actions/setup-xtool/action.yml`
 

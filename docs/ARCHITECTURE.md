@@ -8,9 +8,9 @@
 | `MicYouCore` | 传输与编码选项、预设、`StreamOptions`、重连策略、采样处理与限幅、电平表动态、输入偏好，纯 Foundation 实现 | `MicYouProtocol` |
 | `MicYouShared` | 多语言文案 `L10n`、`DeepLink`、实时活动定义 `StreamActivityAttributes` | 无 |
 | `MicYou` | 主应用 | `MicYouProtocol`、`MicYouCore`、`MicYouShared` |
-| `MicYouWidget` | 锁屏实时活动、灵动岛 | `MicYouShared` |
+| `MicYouWidget` | 锁屏实时活动、灵动岛、主屏幕与锁屏小组件、控制中心按钮 | `MicYouShared` |
 
-小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，实时活动和灵动岛上的按钮都通过 `micyou://` 链接回到主应用处理。
+小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，实时活动、灵动岛、小组件和控制中心里的按钮执行 `MicYouShared` 里的 App Intents，系统在主应用进程里运行它们（静音和断开在后台启动主应用，连接会打开主应用），锁屏小组件则通过 `micyou://` 链接打开主应用。因此小组件和控制中心按钮读不到连接状态，图标固定不变。索引的生成方式见 [DEVELOPMENT.md](DEVELOPMENT.md#app-intents)。
 
 主应用内部按职责分目录。`Model` 只放设置项与 `StreamConfig` 这类值类型。不依赖 Apple 框架的逻辑放在 `MicYouCore`，这样可以在 Linux 上测试。点击连接开始传输时，`AppSettings.streamConfig` 会把当前设置固定成一份 `StreamConfig`（目标地址加 `StreamOptions`）传给会话层。传输中途修改设置默认只影响下一次连接；设置页会在设置与当前会话不一致时提供“立即重连以应用”，由 `AppModel.restart()` 在保留传输界面和实时活动的前提下重新连接。输入增益和麦克风选择则立即生效。界面和实时活动共用的编码名、传输方式等展示文字集中在 `Views/Common/StreamText.swift`。
 
@@ -70,7 +70,7 @@ idle -> connecting -> streaming <-> reconnecting(n)
 ## 网络提示与快捷操作
 
 - `NetworkMonitor` 用 `NWPathMonitor` 跟踪当前网络路径，判断逻辑放在 `MicYouCore` 的 `NetworkStatus`：有 Wi-Fi、有线或其他接口（VPN 可能经蜂窝网络连到电脑）算局域网，只有蜂窝网络或没有网络时，选择了通过网络连接的电脑就在首页提示，并提供“改用 USB”。关闭提示后，网络变化时会再次显示。
-- 主屏幕图标的长按快捷操作由 `QuickActions` 在代码里设置（`UIApplication.shortcutItems`），空闲时为“连接”并以副标题显示当前选择的电脑，连接中为“断开连接”和“静音”/“取消静音”。随连接状态更新，App 进入后台时也会刷新一次。每项的类型就是 `DeepLink` 的值，交给 `AppModel.handle(_:)` 处理，和实时活动、快捷指令走同一条路径。SwiftUI 没有快捷操作的回调，所以通过 `AppDelegate` 指定 `SceneDelegate` 来接收启动时和运行中触发的快捷操作。这种写法只依赖 UIKit，不需要 xtool 无法生成的 App Intents 元数据。
+- 主屏幕图标的长按快捷操作由 `QuickActions` 在代码里设置（`UIApplication.shortcutItems`），空闲时为“连接”并以副标题显示当前选择的电脑，连接中为“断开连接”和“静音”/“取消静音”。随连接状态更新，App 进入后台时也会刷新一次。每项的类型就是 `DeepLink` 的值，交给 `AppModel.handle(_:)` 处理，和实时活动、快捷指令走同一条路径。SwiftUI 没有快捷操作的回调，所以通过 `AppDelegate` 指定 `SceneDelegate` 来接收启动时和运行中触发的快捷操作。这种写法只依赖 UIKit，不需要 App Intents 索引。
 
 ## 实时活动
 

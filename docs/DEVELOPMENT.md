@@ -9,6 +9,7 @@
 | `swift test --package-path Packages/MicYouProtocol` | 运行协议库测试（可在 Linux 上直接跑） |
 | `swift test --package-path Packages/MicYouCore` | 运行核心逻辑测试（可在 Linux 上直接跑） |
 | `Tools/check-strings.py` | 检查三语文案的键名与格式占位符是否一致、有无缺失或未使用的键 |
+| `Tools/appintents-metadata.py` | 在 `xtool dev build` 之后由编译期常量生成 App Intents 索引，`--check` 检查提交的索引是否过期 |
 | `Tools/build-livecontainer.sh` | 生成去掉小组件扩展的 IPA，供 LiveContainer 使用 |
 | `python3 Tools/mock_receiver.py --mdns` | 在本机模拟桌面端接收，加 `--help` 查看全部参数 |
 
@@ -37,7 +38,15 @@ xtool 链接扩展时固定传入 `-e _NSExtensionMain`，导致 SwiftUI 小组�
 
 ### App Intents
 
-xtool 没法运行 Xcode 自带的 App Intents 元数据处理器，系统“快捷指令”里可能看不到 `Sources/MicYou/Intents` 定义的操作。因此实时活动按钮改用 `Link` 打开 `micyou://`。
+iOS 只从 `.app` 里的 `Metadata.appintents` 索引读取 App Intents。Xcode 在链接后用闭源的 `appintentsmetadataprocessor` 生成它，这个工具只能在 macOS 上运行，xtool 也不会调用。不过它的输入并不神秘：xtool 底层的 Swift Build 编译时已经为每个源文件写出 `.swiftconstvalues`（编译期常量，JSON 格式，Linux 上也有），`Tools/appintents-metadata.py` 读取这些文件，按 Xcode 26.6（工具版本 `17F113`）的格式写出 `extract.actionsdata` 和 `version.json`。用 [qyang-nj/llios](https://github.com/qyang-nj/llios/blob/main/articles/BuildAppIntents.md) 里 Xcode 生成的样本对照过，输出一致。
+
+- App 和小组件扩展各有一份索引，提交在 `Resources/AppIntents/<可执行文件名>/Metadata.appintents`，由 `xtool.yml` 分别复制到 `.app` 和 `.appex` 根目录，所以 `xtool dev run` 装的版本也带索引。改了意图之后先 `xtool dev build`，再运行 `Tools/appintents-metadata.py` 并提交结果；`Tools/verify-ipa.sh` 会用 release 构建的常量值检查提交的索引是否过期。
+- 意图定义在 App 和小组件共用的 `MicYouShared/StreamIntents.swift`，`MicYouShortcuts`（快捷指令短语）留在 App 里。两份索引都列出这些意图，并在 `mangledTypeNameByBundleIdentifier` 里写明两个 bundle，否则扩展里的按钮会因为找不到元数据而无效（这一点参考了 [cyberneel/xtool-on-linux](https://github.com/cyberneel/xtool-on-linux) 的真机结论，Xcode 自己的样本都是意图只在一个模块里的情况）。
+- 小组件按钮、控制中心按钮和实时活动按钮都用这些意图，`perform()` 总在 App 进程里执行，经 `IntentActions.handler` 交给 `AppModel.handle(_:)`。停止和静音遵循 `LiveActivityIntent`，系统在后台拉起 App 执行，不打开界面；索引里对应的系统协议是 `SessionStarting`，取自 Xcode 构建产物（`LinkMetadataDT` 框架里的对照表和其他项目的验证脚本）。开始传输和切换连接用 `openAppWhenRun` 先打开 App：试过 `AudioRecordingIntent` 在后台直接开始录音，连接和实时活动都起来了，但激活麦克风被系统拒绝（混音的 PlayAndRecord 会话算作后台开始播放，纯录音会话又不能打断系统声音的会话，错误码 `'!int'`），所以放弃了。
+- 常量值只记录字面量，所以意图的标题、描述和 `shortTitle` 直接写字符串表的键（如 `"intent.start.title"`），不走 `L10n`；`Tools/check-strings.py` 会扫描源码里这些 `intent.` 键。
+- 脚本只支持 MicYou 用到的部分：无参数的意图、`LiveActivityIntent` 与 `AudioRecordingIntent` 两种系统协议和一个 `AppShortcutsProvider`。遇到参数、实体、枚举、`@available` 等会直接报错退出，不会写出错误的索引。`perform` 返回 `OpensIntent`、`ReturnsValue` 等结果时 `outputFlags` 的取值也没有核实，同样不支持。
+- App 和 `MicYouShared` 都以静态库形式链接，没被引用的归档成员会整个被丢掉，系统即使读到索引也找不到类型。`MicYouApp.init` 里调用 `MicYouShortcuts.updateAppShortcutParameters()` 保证意图被链接进 App，小组件则因为按钮直接引用意图而链接进来；所有意图要放在同一个文件里。
+- 锁屏小组件不能放按钮，仍用 `widgetURL` 打开 `micyou://`；主屏幕快捷操作和 `micyou://` 链接也照旧走 `AppModel.handle(_:)`。
 
 ### 免费开发者账号限制
 
@@ -69,7 +78,7 @@ git push origin v1.2.0
 - 先跑一遍与 `check.yml` 相同的测试和本地化检查。
 - 把标签里的数字部分写入 `CFBundleShortVersionString`，把总提交数写入 `CFBundleVersion`（只在 CI 里改，不回写仓库）。
 - 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
-- 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、LiveContainer 包里不含扩展。
+- 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、App Intents 索引存在且没有过期、意图类型被链接进二进制、LiveContainer 包里不含扩展。
 - 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
 
 升级 xtool 时，需要同步修改 `.github/actions/setup-xtool/action.yml` 里的版本号和 SHA-256 摘要。摘要可以用 `gh` 查：
