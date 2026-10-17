@@ -26,11 +26,14 @@ let stripSymbols: [LinkerSetting] = [
 
 // Tools/appintents-metadata.py reads the conformances the compiler records in .swiftconstvalues.
 // Swift Build on Linux asks for them by itself, Xcode's leaves them out for package targets, so
-// the targets with intents ask explicitly, with the protocol list Swift Build uses
+// the targets with intents ask explicitly, with the protocol list Swift Build uses. The list goes
+// to the frontend directly: the driver's -const-gather-protocols-list only exists from Swift 6.4,
+// Xcode 26 rejects it
 let constValues: [SwiftSetting] = [
     .unsafeFlags([
         "-emit-const-values",
-        "-const-gather-protocols-list", "\(Context.packageDirectory)/Tools/appintents-protocols.json",
+        "-Xfrontend", "-const-gather-protocols-file",
+        "-Xfrontend", "\(Context.packageDirectory)/Tools/appintents-protocols.json",
     ]),
 ]
 
