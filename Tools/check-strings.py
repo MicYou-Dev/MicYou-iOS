@@ -13,6 +13,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LOCALIZATION = ROOT / "Support/Localization"
 L10N = ROOT / "Sources/MicYouShared/L10n.swift"
+# App Intents spell their keys out as literals so the compiler can record them
+SOURCES = ROOT / "Sources"
 BASE = "en"
 
 ENTRY = re.compile(r'^"((?:[^"\\]|\\.)+)"\s*=\s*"((?:[^"\\]|\\.)*)";\s*$')
@@ -67,6 +69,8 @@ def main():
                     problems.append(f"{language}/{table}: format arguments of {key} differ from {BASE}")
 
     used = set(re.findall(r'(?:string|format|resource)\("([^"]+)"', L10N.read_text(encoding="utf-8")))
+    for path in SOURCES.rglob("*.swift"):
+        used |= set(re.findall(r'"(intent\.[a-z0-9.-]+)"', path.read_text(encoding="utf-8")))
     strings = parse(LOCALIZATION / f"{BASE}.lproj/Localizable.strings")
     for key in sorted(used - strings.keys()):
         problems.append(f"L10n.swift: {key} is not in Localizable.strings")

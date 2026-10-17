@@ -254,6 +254,8 @@
 "intent.stop.description" = "Disconnects from the computer.";
 "intent.mute.title" = "Toggle Mute";
 "intent.mute.description" = "Mutes or unmutes your microphone while streaming.";
+"intent.toggle.title" = "Connect or Disconnect";
+"intent.toggle.description" = "Connects to the last used computer, or disconnects while streaming.";
 
 "activity.input.built-in" = "%@ Microphone";
 "activity.transport.udp" = "UDP";

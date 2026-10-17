@@ -9,6 +9,15 @@ struct MicYouApp: App {
     @State private var model = AppModel.shared
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // Intents from the widget, Control Center and Shortcuts run here, also when the system
+        // launched the app in the background for them
+        IntentActions.handler = { link in AppModel.shared.handle(link) }
+        // The app and MicYouShared are linked as static archives and nothing else refers to the
+        // shortcuts, so this call is also what keeps them and the intents in the binary
+        MicYouShortcuts.updateAppShortcutParameters()
+    }
+
     var body: some Scene {
         WindowGroup {
             HomeView()

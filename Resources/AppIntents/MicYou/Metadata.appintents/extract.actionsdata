@@ -1,0 +1,305 @@
+{
+    "actions": {
+        "StartStreamingIntent": {
+            "assistantDefinedSchemaTraits": [],
+            "assistantDefinedSchemas": [],
+            "authenticationPolicy": 0,
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "descriptionMetadata": {
+                "descriptionText": {
+                    "alternatives": [],
+                    "key": "intent.start.description"
+                },
+                "searchKeywords": []
+            },
+            "effectiveBundleIdentifiers": [],
+            "fullyQualifiedTypeName": "MicYouShared.StartStreamingIntent",
+            "identifier": "StartStreamingIntent",
+            "isAuthPolExplicit": false,
+            "isDiscoverable": true,
+            "mangledTypeName": "12MicYouShared20StartStreamingIntentV",
+            "mangledTypeNameByBundleIdentifier": {
+                "com.chouchiu.micyou": "12MicYouShared20StartStreamingIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared20StartStreamingIntentV"
+            },
+            "mangledTypeNameByBundleIdentifierV2": {
+                "com.chouchiu.micyou": "12MicYouShared20StartStreamingIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared20StartStreamingIntentV"
+            },
+            "mangledTypeNameV2": "12MicYouShared20StartStreamingIntentV",
+            "openAppWhenRun": true,
+            "outputFlags": 0,
+            "parameters": [],
+            "presentationStyle": 0,
+            "requiredCapabilities": [],
+            "supportedModes": 2,
+            "systemProtocolMetadata": [],
+            "systemProtocolMetadataV2": [],
+            "systemProtocols": [],
+            "title": {
+                "alternatives": [],
+                "key": "intent.start.title"
+            },
+            "typeSpecificMetadata": [],
+            "visibilityMetadata": {
+                "assistantOnly": false,
+                "isDiscoverable": true
+            }
+        },
+        "StopStreamingIntent": {
+            "assistantDefinedSchemaTraits": [],
+            "assistantDefinedSchemas": [],
+            "authenticationPolicy": 0,
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "descriptionMetadata": {
+                "descriptionText": {
+                    "alternatives": [],
+                    "key": "intent.stop.description"
+                },
+                "searchKeywords": []
+            },
+            "effectiveBundleIdentifiers": [],
+            "fullyQualifiedTypeName": "MicYouShared.StopStreamingIntent",
+            "identifier": "StopStreamingIntent",
+            "isAuthPolExplicit": false,
+            "isDiscoverable": true,
+            "mangledTypeName": "12MicYouShared19StopStreamingIntentV",
+            "mangledTypeNameByBundleIdentifier": {
+                "com.chouchiu.micyou": "12MicYouShared19StopStreamingIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared19StopStreamingIntentV"
+            },
+            "mangledTypeNameByBundleIdentifierV2": {
+                "com.chouchiu.micyou": "12MicYouShared19StopStreamingIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared19StopStreamingIntentV"
+            },
+            "mangledTypeNameV2": "12MicYouShared19StopStreamingIntentV",
+            "openAppWhenRun": false,
+            "outputFlags": 0,
+            "parameters": [],
+            "presentationStyle": 0,
+            "requiredCapabilities": [],
+            "supportedModes": 1,
+            "systemProtocolMetadata": [
+                "com.apple.link.systemProtocol.SessionStarting",
+                {
+                    "empty": {}
+                }
+            ],
+            "systemProtocolMetadataV2": [
+                "com.apple.link.systemProtocol.SessionStarting",
+                {
+                    "empty": {}
+                }
+            ],
+            "systemProtocols": [
+                "com.apple.link.systemProtocol.SessionStarting"
+            ],
+            "title": {
+                "alternatives": [],
+                "key": "intent.stop.title"
+            },
+            "typeSpecificMetadata": [],
+            "visibilityMetadata": {
+                "assistantOnly": false,
+                "isDiscoverable": true
+            }
+        },
+        "ToggleConnectionIntent": {
+            "assistantDefinedSchemaTraits": [],
+            "assistantDefinedSchemas": [],
+            "authenticationPolicy": 0,
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "descriptionMetadata": {
+                "descriptionText": {
+                    "alternatives": [],
+                    "key": "intent.toggle.description"
+                },
+                "searchKeywords": []
+            },
+            "effectiveBundleIdentifiers": [],
+            "fullyQualifiedTypeName": "MicYouShared.ToggleConnectionIntent",
+            "identifier": "ToggleConnectionIntent",
+            "isAuthPolExplicit": false,
+            "isDiscoverable": false,
+            "mangledTypeName": "12MicYouShared22ToggleConnectionIntentV",
+            "mangledTypeNameByBundleIdentifier": {
+                "com.chouchiu.micyou": "12MicYouShared22ToggleConnectionIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared22ToggleConnectionIntentV"
+            },
+            "mangledTypeNameByBundleIdentifierV2": {
+                "com.chouchiu.micyou": "12MicYouShared22ToggleConnectionIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared22ToggleConnectionIntentV"
+            },
+            "mangledTypeNameV2": "12MicYouShared22ToggleConnectionIntentV",
+            "openAppWhenRun": true,
+            "outputFlags": 0,
+            "parameters": [],
+            "presentationStyle": 0,
+            "requiredCapabilities": [],
+            "supportedModes": 2,
+            "systemProtocolMetadata": [],
+            "systemProtocolMetadataV2": [],
+            "systemProtocols": [],
+            "title": {
+                "alternatives": [],
+                "key": "intent.toggle.title"
+            },
+            "typeSpecificMetadata": [],
+            "visibilityMetadata": {
+                "assistantOnly": false,
+                "isDiscoverable": false
+            }
+        },
+        "ToggleMuteIntent": {
+            "assistantDefinedSchemaTraits": [],
+            "assistantDefinedSchemas": [],
+            "authenticationPolicy": 0,
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "descriptionMetadata": {
+                "descriptionText": {
+                    "alternatives": [],
+                    "key": "intent.mute.description"
+                },
+                "searchKeywords": []
+            },
+            "effectiveBundleIdentifiers": [],
+            "fullyQualifiedTypeName": "MicYouShared.ToggleMuteIntent",
+            "identifier": "ToggleMuteIntent",
+            "isAuthPolExplicit": false,
+            "isDiscoverable": true,
+            "mangledTypeName": "12MicYouShared16ToggleMuteIntentV",
+            "mangledTypeNameByBundleIdentifier": {
+                "com.chouchiu.micyou": "12MicYouShared16ToggleMuteIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared16ToggleMuteIntentV"
+            },
+            "mangledTypeNameByBundleIdentifierV2": {
+                "com.chouchiu.micyou": "12MicYouShared16ToggleMuteIntentV",
+                "com.chouchiu.micyou.MicYouWidget": "12MicYouShared16ToggleMuteIntentV"
+            },
+            "mangledTypeNameV2": "12MicYouShared16ToggleMuteIntentV",
+            "openAppWhenRun": false,
+            "outputFlags": 0,
+            "parameters": [],
+            "presentationStyle": 0,
+            "requiredCapabilities": [],
+            "supportedModes": 1,
+            "systemProtocolMetadata": [
+                "com.apple.link.systemProtocol.SessionStarting",
+                {
+                    "empty": {}
+                }
+            ],
+            "systemProtocolMetadataV2": [
+                "com.apple.link.systemProtocol.SessionStarting",
+                {
+                    "empty": {}
+                }
+            ],
+            "systemProtocols": [
+                "com.apple.link.systemProtocol.SessionStarting"
+            ],
+            "title": {
+                "alternatives": [],
+                "key": "intent.mute.title"
+            },
+            "typeSpecificMetadata": [],
+            "visibilityMetadata": {
+                "assistantOnly": false,
+                "isDiscoverable": true
+            }
+        }
+    },
+    "assistantEntities": [],
+    "assistantIntentNegativePhrases": [],
+    "assistantIntents": [],
+    "autoShortcutProviderMangledName": "6MicYou0aB9ShortcutsV",
+    "autoShortcuts": [
+        {
+            "actionIdentifier": "StartStreamingIntent",
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "phraseTemplates": [
+                {
+                    "alternatives": [],
+                    "key": "Start ${applicationName}"
+                },
+                {
+                    "alternatives": [],
+                    "key": "Connect ${applicationName}"
+                }
+            ],
+            "shortTitle": {
+                "alternatives": [],
+                "key": "intent.start.title"
+            },
+            "systemImageName": "mic.fill"
+        },
+        {
+            "actionIdentifier": "StopStreamingIntent",
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "phraseTemplates": [
+                {
+                    "alternatives": [],
+                    "key": "Stop ${applicationName}"
+                }
+            ],
+            "shortTitle": {
+                "alternatives": [],
+                "key": "intent.stop.title"
+            },
+            "systemImageName": "stop.fill"
+        },
+        {
+            "actionIdentifier": "ToggleMuteIntent",
+            "availabilityAnnotations": {
+                "LNPlatformNameWildcard": {
+                    "introducedVersion": "*"
+                }
+            },
+            "phraseTemplates": [
+                {
+                    "alternatives": [],
+                    "key": "Mute ${applicationName}"
+                }
+            ],
+            "shortTitle": {
+                "alternatives": [],
+                "key": "intent.mute.title"
+            },
+            "systemImageName": "mic.slash.fill"
+        }
+    ],
+    "entities": {},
+    "enums": [],
+    "generator": {
+        "name": "xcode-tools",
+        "version": "17F113"
+    },
+    "negativePhrases": [],
+    "queries": {},
+    "shortcutTileColor": 14,
+    "version": 1
+}

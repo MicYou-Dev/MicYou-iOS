@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import ActivityKit
+import AppIntents
 import MicYouShared
 import SwiftUI
 import WidgetKit
@@ -142,7 +143,7 @@ private struct ControlRow: View {
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .frame(maxWidth: .infinity, alignment: .leading)
-            ActionLinks(state: state)
+            ActionButtons(state: state)
         }
     }
 
@@ -177,7 +178,7 @@ private struct IslandDetails: View {
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .frame(maxWidth: .infinity, alignment: .leading)
-            ActionLinks(state: state)
+            ActionButtons(state: state)
         }
     }
 
@@ -190,26 +191,28 @@ private struct IslandDetails: View {
     }
 }
 
-/// Links open the app through its URL scheme, App Intent buttons need metadata xtool cannot generate
-private struct ActionLinks: View {
+/// Live Activity intents run in the app without opening it
+private struct ActionButtons: View {
     let state: State
 
     var body: some View {
         HStack(spacing: 10) {
             // Works like the mute toggle in the Phone app: inverted while muted
-            Link(destination: DeepLink.toggleMute.url) {
+            Button(intent: ToggleMuteIntent()) {
                 Image(systemName: "mic.slash.fill")
                     .frame(width: 40, height: 40)
                     .foregroundStyle(state.isMuted ? AnyShapeStyle(.background) : AnyShapeStyle(.primary))
                     .background(state.isMuted ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary), in: Circle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel(state.isMuted ? L10n.Common.unmute : L10n.Common.mute)
-            Link(destination: DeepLink.disconnect.url) {
+            Button(intent: StopStreamingIntent()) {
                 Image(systemName: "xmark")
                     .frame(width: 40, height: 40)
                     .foregroundStyle(.white)
                     .background(.red, in: Circle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel(L10n.Common.disconnect)
         }
         .font(.body.weight(.semibold))

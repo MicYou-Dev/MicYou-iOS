@@ -254,6 +254,8 @@
 "intent.stop.description" = "中斷與電腦的連線。";
 "intent.mute.title" = "切換靜音";
 "intent.mute.description" = "傳輸時將麥克風靜音或取消靜音。";
+"intent.toggle.title" = "連接或中斷連線";
+"intent.toggle.description" = "連接上次使用的電腦，傳輸時則中斷連線。";
 
 "activity.input.built-in" = "%@ 麥克風";
 "activity.transport.udp" = "UDP";

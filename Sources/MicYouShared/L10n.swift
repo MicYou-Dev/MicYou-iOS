@@ -301,10 +301,6 @@ public enum L10n {
     }
 
     public enum Intent {
-        public static var startTitle: LocalizedStringResource { resource("intent.start.title") }
-        public static var startDescription: LocalizedStringResource { resource("intent.start.description") }
-        public static var stopTitle: LocalizedStringResource { resource("intent.stop.title") }
-        public static var stopDescription: LocalizedStringResource { resource("intent.stop.description") }
         public static var muteTitle: LocalizedStringResource { resource("intent.mute.title") }
         public static var muteDescription: LocalizedStringResource { resource("intent.mute.description") }
     }

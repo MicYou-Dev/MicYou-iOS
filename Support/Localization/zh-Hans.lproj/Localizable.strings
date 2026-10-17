@@ -254,6 +254,8 @@
 "intent.stop.description" = "断开与电脑的连接。";
 "intent.mute.title" = "切换静音";
 "intent.mute.description" = "传输时将麦克风静音或取消静音。";
+"intent.toggle.title" = "连接或断开";
+"intent.toggle.description" = "连接上次使用的电脑，传输时则断开连接。";
 
 "activity.input.built-in" = "%@ 麦克风";
 "activity.transport.udp" = "UDP";
