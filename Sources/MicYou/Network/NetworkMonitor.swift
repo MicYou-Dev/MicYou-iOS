@@ -13,6 +13,8 @@ final class NetworkMonitor {
     private(set) var status: NetworkStatus = .local
     /// The status whose warning was closed, it shows again once the network changes
     private var dismissed: NetworkStatus?
+    /// Called on the main actor after the status changed
+    @ObservationIgnored var onChange: ((NetworkStatus) -> Void)?
 
     @ObservationIgnored private let monitor = NWPathMonitor()
     @ObservationIgnored private let log = Logger.micyou("model")
@@ -43,5 +45,6 @@ final class NetworkMonitor {
         log.info("Network changed: \(String(describing: status), privacy: .public)")
         self.status = status
         dismissed = nil
+        onChange?(status)
     }
 }

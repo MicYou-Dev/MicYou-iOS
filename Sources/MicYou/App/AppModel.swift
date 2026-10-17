@@ -115,6 +115,7 @@ final class AppModel {
         NotificationCenter.default.addObserver(forName: UIApplication.willTerminateNotification, object: nil, queue: .main) { _ in
             LiveActivityController.endAllBeforeExit()
         }
+        network.onChange = { [weak self] status in self?.networkChanged(status) }
     }
 
     var isActive: Bool {
@@ -525,6 +526,15 @@ final class AppModel {
             guard !Task.isCancelled, let self, case .reconnecting = self.phase else { return }
             self.openSession()
         }
+    }
+
+    /// Back on the local network while waiting for the next attempt, which may still be seconds away
+    private func networkChanged(_ status: NetworkStatus) {
+        guard status == .local, case .reconnecting = phase, session == nil, let config = currentConfig, !config.link.isUSB else { return }
+        log.info("Network is back, reconnecting now")
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        openSession()
     }
 
     // MARK: Side effects
