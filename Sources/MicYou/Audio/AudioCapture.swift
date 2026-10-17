@@ -35,8 +35,8 @@ enum CaptureError: LocalizedError {
 /// Thread safety: session and engine work runs on a private serial queue, the tap on an AVAudioEngine thread,
 /// and the two share the converter, gain and handler under a lock
 final class AudioCapture: @unchecked Sendable {
-    /// PCM bytes and the RMS level of the block in dBFS
-    typealias Handler = @Sendable (_ pcm: Data, _ levelDB: Float) -> Void
+    /// PCM bytes, the RMS level of the block in dBFS and whether the limiter had to catch a peak
+    typealias Handler = @Sendable (_ pcm: Data, _ levelDB: Float, _ limited: Bool) -> Void
 
     enum Event: Sendable {
         /// A call or another app took the microphone, no audio arrives until it is resumed
@@ -404,7 +404,7 @@ final class AudioCapture: @unchecked Sendable {
 
         let count = Int(out.frameLength) * Int(format.channelCount)
         let result = processor.process(UnsafeBufferPointer(start: samples, count: count), gain: gain, duplicate: upmix)
-        handler(result.pcm, result.levelDB)
+        handler(result.pcm, result.levelDB, result.limited)
     }
 
     /// A converter output buffer, allocated again only when the format changes or a block is larger than before

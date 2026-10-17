@@ -47,6 +47,10 @@
 "status.round-trip" = "往返延遲";
 "status.packet-loss" = "丟包率";
 "status.muted-detail" = "已暫停向電腦傳送聲音，連線仍保持開啟。";
+"status.too-loud" = "輸入過載，聲音可能失真。";
+"status.too-quiet" = "輸入音量偏低，如果電腦端聽不清楚，可以調高增益。";
+"status.lower-gain" = "降低增益";
+"status.raise-gain" = "調高增益";
 "status.push-to-talk-detail" = "已開啟按住說話，按住下方按鈕即可說話。";
 "status.reconnect-detail" = "麥克風保持開啟，重新連線後將自動恢復傳輸。";
 "status.interrupted-detail" = "通話或其他 App 正在使用麥克風，結束後將自動恢復傳輸。";

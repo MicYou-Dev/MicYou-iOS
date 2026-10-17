@@ -47,6 +47,10 @@
 "status.round-trip" = "Round Trip";
 "status.packet-loss" = "Packet Loss";
 "status.muted-detail" = "Audio is muted while the connection stays open.";
+"status.too-loud" = "The input is clipping and may sound distorted.";
+"status.too-quiet" = "The input is quiet. If the computer can barely hear you, raise the gain.";
+"status.lower-gain" = "Lower Gain";
+"status.raise-gain" = "Raise Gain";
 "status.push-to-talk-detail" = "Push to Talk is on. Hold the button below to talk.";
 "status.reconnect-detail" = "The microphone stays active and streaming will resume once reconnected.";
 "status.interrupted-detail" = "A call or another app is using the microphone. Streaming resumes when it's done.";

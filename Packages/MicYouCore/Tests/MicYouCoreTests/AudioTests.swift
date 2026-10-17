@@ -5,11 +5,11 @@ import Testing
 @testable import MicYouCore
 
 @Suite struct Samples {
-    private func run(_ samples: [Float], gain: Float = 1, duplicate: Bool = false) -> (pcm: [Int16], levelDB: Float) {
+    private func run(_ samples: [Float], gain: Float = 1, duplicate: Bool = false) -> (pcm: [Int16], levelDB: Float, limited: Bool) {
         var processor = SampleProcessor()
         let result = samples.withUnsafeBufferPointer { processor.process($0, gain: gain, duplicate: duplicate) }
         let pcm = result.pcm.withUnsafeBytes { raw in raw.bindMemory(to: Int16.self).map { Int16(littleEndian: $0) } }
-        return (pcm, result.levelDB)
+        return (pcm, result.levelDB, result.limited)
     }
 
     @Test func silenceReportsTheFloor() {
@@ -37,6 +37,8 @@ import Testing
         let result = run(Array(repeating: 0.8, count: 100), gain: SampleProcessor.linearGain(dB: 24))
         let ceiling = Int16((PeakLimiter.ceiling * 32767).rounded())
         #expect(result.pcm.allSatisfy { abs(Int($0)) <= Int(ceiling) })
+        #expect(result.limited)
+        #expect(!run([0.5, -0.5]).limited)
     }
 }
 

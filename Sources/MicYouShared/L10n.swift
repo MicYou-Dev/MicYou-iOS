@@ -83,6 +83,10 @@ public enum L10n {
         public static var roundTrip: String { string("status.round-trip") }
         public static var packetLoss: String { string("status.packet-loss") }
         public static var mutedDetail: String { string("status.muted-detail") }
+        public static var tooLoud: String { string("status.too-loud") }
+        public static var tooQuiet: String { string("status.too-quiet") }
+        public static var lowerGain: String { string("status.lower-gain") }
+        public static var raiseGain: String { string("status.raise-gain") }
         public static var pushToTalkDetail: String { string("status.push-to-talk-detail") }
         public static var reconnectDetail: String { string("status.reconnect-detail") }
         public static var interruptedDetail: String { string("status.interrupted-detail") }

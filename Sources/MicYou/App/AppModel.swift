@@ -54,6 +54,8 @@ final class AppModel {
     }
     /// Smoothed input level in dBFS
     private(set) var levelDB: Float = -160
+    /// A gain that would suit the input better, while audio is reaching the computer
+    private(set) var gainAdvice: GainAdvisor.Advice?
     private(set) var throughput = 0
     /// Link quality reported by the desktop, nil until it sends some, older desktops never do
     private(set) var linkStats: StatsMessage?
@@ -87,6 +89,7 @@ final class AppModel {
     @ObservationIgnored private var currentConfig: StreamConfig?
     @ObservationIgnored private var reconnectTask: Task<Void, Never>?
     @ObservationIgnored private var hasStreamed = false
+    @ObservationIgnored private var gainAdvisor = GainAdvisor()
     /// Set while capture is running or starting, a stale start that fails later is ignored
     @ObservationIgnored private var captureToken: UUID?
     /// Identifies the current connect, so one that waited on the permission prompt can tell it was superseded
@@ -240,6 +243,7 @@ final class AppModel {
         throughput = 0
         linkStats = nil
         levelDB = -160
+        resetGainAdvice()
         captureStatus = .running
     }
 
@@ -301,6 +305,42 @@ final class AppModel {
     func setInputGain(_ dB: Double) {
         settings.inputGainDB = dB
         capture.setGain(dB: dB)
+        // Measured with the old gain
+        resetGainAdvice()
+    }
+
+    /// Moves the gain one step the way the advice points
+    func applyGainAdvice() {
+        guard let advice = gainAdvice else { return }
+        let range = AppSettings.inputGainRange
+        let step = advice == .lower ? -Self.gainAdviceStep : Self.gainAdviceStep
+        log.info("Gain \(advice == .lower ? "lowered" : "raised", privacy: .public) on advice")
+        setInputGain(min(max(settings.inputGainDB + step, range.lowerBound), range.upperBound))
+    }
+
+    private static let gainAdviceStep = 6.0
+
+    private func resetGainAdvice() {
+        gainAdvisor.reset()
+        gainAdvice = nil
+    }
+
+    /// A meter update from capture, about 30 a second
+    private func levelChanged(_ level: Float, limited: Bool) {
+        guard isActive else { return }
+        levelDB = level
+        // Only audio that reaches the computer says anything about the gain
+        guard phase == .streaming, !isMuted, captureStatus == .running else { return resetGainAdvice() }
+        let advice = gainAdvisor.record(levelDB: level, limited: limited, at: ProcessInfo.processInfo.systemUptime)
+        let range = AppSettings.inputGainRange
+        // Nothing to suggest once the slider is at its end
+        let applicable = switch advice {
+        case .lower: settings.inputGainDB > range.lowerBound
+        case .raise: settings.inputGainDB < range.upperBound
+        case nil: false
+        }
+        let shown = applicable ? advice : nil
+        if shown != gainAdvice { gainAdvice = shown }
     }
 
     /// Applies immediately while streaming
@@ -458,11 +498,9 @@ final class AppModel {
             stereoOrientation: Self.stereoOrientation
         )
         capture.setGain(dB: settings.inputGainDB)
-        let handler: AudioCapture.Handler = { [weak self] pcm, level in
-            if let smoothed = sink.push(pcm, level: level) {
-                Task { @MainActor in
-                    if self?.isActive == true { self?.levelDB = smoothed }
-                }
+        let handler: AudioCapture.Handler = { [weak self] pcm, level, limited in
+            if let meter = sink.push(pcm, level: level, limited: limited) {
+                Task { @MainActor in self?.levelChanged(meter.level, limited: meter.limited) }
             }
         }
         let onEvent: AudioCapture.EventHandler = { [weak self] event in
@@ -490,11 +528,13 @@ final class AppModel {
         case .interrupted:
             captureStatus = .interrupted
             levelDB = -160
+            resetGainAdvice()
         case .resumed:
             captureStatus = .running
         case .resumeFailed:
             captureStatus = .resumeFailed
             levelDB = -160
+            resetGainAdvice()
         case .systemMute(let value):
             // Our own changes echo back with the value already set
             guard isMuted != value else { return }

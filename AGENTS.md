@@ -46,7 +46,7 @@ python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver,
 ### Modules (see `Package.swift`)
 
 - `MicYouProtocol` (separate package under `Packages/`): hand-written protobuf codec (`ProtoWire.swift`, no third-party deps), TCP `MicY` / UDP `MicU` framing, `AudioSequencer` numbering and XOR FEC, manual address parsing; upstream definition in `Proto/network.proto`
-- `MicYouCore` (separate package under `Packages/`, depends on `MicYouProtocol`): transport and codec choices, presets, `StreamOptions`, `ReconnectPolicy`, `SampleProcessor` and `PeakLimiter`, `MeterBallistics`, `InputPreference`, Bonjour display names
+- `MicYouCore` (separate package under `Packages/`, depends on `MicYouProtocol`): transport and codec choices, presets, `StreamOptions`, `ReconnectPolicy`, `SampleProcessor` and `PeakLimiter`, `GainAdvisor`, `MeterBallistics`, `InputPreference`, Bonjour display names
 - `MicYouShared`: `L10n`, `DeepLink`, `StreamActivityAttributes`, shared by the app and the widget
 - `MicYou`: the app; `MicYouWidget`: Live Activity, Dynamic Island, Home and Lock Screen widget, Control Center buttons
 - The widget shares no storage with the app and there is no App Group; widget, Control Center and Live Activity buttons perform the intents in `MicYouShared/StreamIntents.swift`, which the system always runs in the app process through `IntentActions.handler` → `AppModel.handle(_:)`: stop and mute are `LiveActivityIntent`s run in the background, connecting uses `openAppWhenRun` because iOS refuses to activate the microphone from the background (tried `AudioRecordingIntent`, fails with `'!int'`); Lock Screen widgets, quick actions and `micyou://` links go through `DeepLink` → `AppModel.handle(_:)`

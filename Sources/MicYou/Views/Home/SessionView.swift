@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import AVFoundation
+import MicYouCore
 import MicYouShared
 import SwiftUI
 
@@ -35,6 +36,7 @@ struct SessionView: View {
         .animation(Motion.state, value: model.isMuted)
         .animation(Motion.state, value: model.notice)
         .animation(Motion.state, value: model.captureStatus)
+        .animation(Motion.state, value: model.gainAdvice)
     }
 
     @ViewBuilder
@@ -75,6 +77,8 @@ struct SessionView: View {
                     if model.isMuted {
                         caption(settings.pushToTalk ? L10n.Status.pushToTalkDetail : L10n.Status.mutedDetail,
                                 systemImage: "mic.slash.fill", color: .orange)
+                    } else if let advice = model.gainAdvice {
+                        gainAdviceCaption(advice)
                     } else {
                         MeterScale()
                     }
@@ -82,6 +86,24 @@ struct SessionView: View {
             }
         }
         .frame(minHeight: 96, alignment: .top)
+    }
+
+    /// Takes the place of the scale, with a button that moves the gain slider below one step
+    @ViewBuilder
+    private func gainAdviceCaption(_ advice: GainAdvisor.Advice) -> some View {
+        switch advice {
+        case .lower:
+            caption(L10n.Status.tooLoud, systemImage: "exclamationmark.triangle.fill", color: .red)
+        case .raise:
+            caption(L10n.Status.tooQuiet, systemImage: "speaker.wave.1.fill", color: .blue)
+        }
+        Button(advice == .lower ? L10n.Status.lowerGain : L10n.Status.raiseGain,
+               systemImage: advice == .lower ? "minus" : "plus") {
+            model.applyGainAdvice()
+        }
+        .glassButtonStyle()
+        .controlSize(.small)
+        .transition(.opacity)
     }
 
     private var resumeButton: some View {

@@ -31,22 +31,26 @@ public struct SampleProcessor: Sendable {
     public init() {}
 
     /// Applies the linear gain and the limiter, writing each sample twice when `duplicate` is set,
-    /// which turns mono hardware into a stereo stream. Returns the PCM and the RMS level in dBFS
-    public mutating func process(_ samples: UnsafeBufferPointer<Float>, gain: Float, duplicate: Bool) -> (pcm: Data, levelDB: Float) {
+    /// which turns mono hardware into a stereo stream. Returns the PCM, the RMS level in dBFS and
+    /// whether the gain pushed any sample past the limiter's ceiling
+    public mutating func process(_ samples: UnsafeBufferPointer<Float>, gain: Float, duplicate: Bool) -> (pcm: Data, levelDB: Float, limited: Bool) {
         let copies = duplicate ? 2 : 1
         var data = Data(count: samples.count * 2 * copies)
         var sumSquares: Float = 0
+        var limited = false
         data.withUnsafeMutableBytes { raw in
             let dst = raw.bindMemory(to: Int16.self)
             for i in 0..<samples.count {
-                let y = limiter.process(samples[i] * gain)
+                let x = samples[i] * gain
+                if abs(x) > PeakLimiter.ceiling { limited = true }
+                let y = limiter.process(x)
                 sumSquares += y * y
                 let pcm = Int16(max(-32768, min(32767, (y * 32767).rounded()))).littleEndian
                 for c in 0..<copies { dst[i * copies + c] = pcm }
             }
         }
-        guard !samples.isEmpty else { return (data, Self.silence) }
-        return (data, Self.dBFS(rms: (sumSquares / Float(samples.count)).squareRoot()))
+        guard !samples.isEmpty else { return (data, Self.silence, false) }
+        return (data, Self.dBFS(rms: (sumSquares / Float(samples.count)).squareRoot()), limited)
     }
 
     public static func dBFS(rms: Float) -> Float {
