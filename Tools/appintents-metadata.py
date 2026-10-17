@@ -52,9 +52,21 @@ class Unsupported(Exception):
     pass
 
 
-def objects_dir(configuration, module):
-    return (ROOT / ".build/out/Intermediates.noindex/MicYou.build" / f"{configuration}-iphoneos"
-            / f"{module}-t.build/Objects-normal/arm64")
+def const_values_dirs(configuration, module):
+    # Swift Build (Linux) keeps one file per source or a -primary file per module, SwiftPM's
+    # native build (macOS CI) one file per module
+    return [
+        ROOT / ".build/out/Intermediates.noindex/MicYou.build" / f"{configuration}-iphoneos"
+        / f"{module}-t.build/Objects-normal/arm64",
+        ROOT / ".build/arm64-apple-ios" / configuration.lower() / f"{module}.build",
+    ]
+
+
+def const_values_files(configuration, module):
+    # A checkout that used both build systems has both, the newest build is the one to index
+    builds = [files for files in (sorted(directory.glob("*.swiftconstvalues"))
+                                  for directory in const_values_dirs(configuration, module)) if files]
+    return max(builds, key=lambda files: max(path.stat().st_mtime for path in files), default=[])
 
 
 def conforms(entry, protocol):
@@ -253,9 +265,10 @@ def main():
     for bundle, (_, modules) in BUNDLES.items():
         files = []
         for module in modules:
-            found = sorted(objects_dir(args.configuration, module).glob("*.swiftconstvalues"))
+            found = const_values_files(args.configuration, module)
             if not found:
-                sys.exit(f"No .swiftconstvalues in {objects_dir(args.configuration, module)}, run xtool dev build first")
+                searched = " or ".join(str(path.relative_to(ROOT)) for path in const_values_dirs(args.configuration, module))
+                sys.exit(f"No .swiftconstvalues for {module} in {searched}, run xtool dev build first")
             files += found
         entries = [entry for path in files for entry in json.loads(path.read_text(encoding="utf-8"))]
         try:
