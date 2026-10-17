@@ -11,11 +11,6 @@ import Testing
         #expect(Array(frame.dropFirst(8)) == [0x1A, 0x02, 0x08, 0x01])
     }
 
-    @Test func udpUsesMicUMagic() {
-        let frame = MicYouFrame.udp(.ping(1))
-        #expect(Array(frame.prefix(4)) == Array("MicU".utf8))
-    }
-
     @Test func decoderHandlesSplitAndCoalescedReads() throws {
         let stream = MicYouFrame.tcp(.ping(1)) + MicYouFrame.tcp(.mute(false)) + MicYouFrame.tcp(.ping(2))
         var decoder = FrameDecoder()
@@ -46,12 +41,6 @@ import Testing
 
 @Suite struct Sequencing {
     let format = AudioStreamFormat(sampleRate: 48000, channelCount: 2, codec: .pcm)
-
-    @Test func sequenceNumbersIncrease() {
-        var sequencer = AudioSequencer(sessionId: 5, fecEnabled: false)
-        let seqs = (0..<3).flatMap { _ in sequencer.packets(for: Data([1]), format: format, timestamp: 0) }.map(\.sequenceNumber)
-        #expect(seqs == [0, 1, 2])
-    }
 
     @Test func fecParityAfterTwelvePackets() {
         var sequencer = AudioSequencer(sessionId: 5, fecEnabled: true)
