@@ -43,6 +43,7 @@
 "status.input-level" = "Input Level";
 "status.transport" = "Transport";
 "status.fec" = "FEC";
+"status.latency" = "Latency";
 "status.round-trip" = "Round Trip";
 "status.packet-loss" = "Packet Loss";
 "status.muted-detail" = "Audio is muted while the connection stays open.";

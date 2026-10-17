@@ -43,6 +43,7 @@
 "status.input-level" = "輸入音量";
 "status.transport" = "傳輸";
 "status.fec" = "糾錯";
+"status.latency" = "延遲";
 "status.round-trip" = "往返延遲";
 "status.packet-loss" = "丟包率";
 "status.muted-detail" = "已暫停向電腦傳送聲音，連線仍保持開啟。";

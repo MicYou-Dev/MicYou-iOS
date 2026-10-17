@@ -207,6 +207,7 @@ final class ControlChannel: @unchecked Sendable {
         if var stats = message.stats {
             // Shown as is, a misbehaving desktop must not put "NaN %" or a negative time on screen
             stats.rttMs = max(0, stats.rttMs)
+            stats.latencyMs = max(0, stats.latencyMs)
             stats.packetLoss = stats.packetLoss.isFinite ? min(max(stats.packetLoss, 0), 1) : 0
             onEvent(.stats(stats))
         }

@@ -79,6 +79,7 @@ public enum L10n {
         public static var transport: String { string("status.transport") }
         /// Short form of forward error correction for the stats tile
         public static var fec: String { string("status.fec") }
+        public static var latency: String { string("status.latency") }
         public static var roundTrip: String { string("status.round-trip") }
         public static var packetLoss: String { string("status.packet-loss") }
         public static var mutedDetail: String { string("status.muted-detail") }

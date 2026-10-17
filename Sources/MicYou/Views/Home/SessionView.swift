@@ -269,7 +269,12 @@ private struct StreamStats: View {
             // Desktops that measure the link report it once a second, older ones never do
             if let stats = model.linkStats {
                 GridRow {
-                    StatTile(label: L10n.Status.roundTrip, value: L10n.Unit.ms(Int(stats.rttMs)), isNumeric: true)
+                    // The desktop's estimate of the whole delay, its buffer included, desktops before it only know the round trip
+                    if stats.latencyMs > 0 {
+                        StatTile(label: L10n.Status.latency, value: L10n.Unit.ms(Int(stats.latencyMs)), isNumeric: true)
+                    } else {
+                        StatTile(label: L10n.Status.roundTrip, value: L10n.Unit.ms(Int(stats.rttMs)), isNumeric: true)
+                    }
                     StatTile(label: L10n.Status.packetLoss,
                              value: Double(stats.packetLoss).formatted(.percent.precision(.fractionLength(1))), isNumeric: true)
                 }

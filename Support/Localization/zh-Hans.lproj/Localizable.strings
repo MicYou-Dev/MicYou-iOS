@@ -43,6 +43,7 @@
 "status.input-level" = "输入电平";
 "status.transport" = "传输";
 "status.fec" = "纠错";
+"status.latency" = "延迟";
 "status.round-trip" = "往返延迟";
 "status.packet-loss" = "丢包率";
 "status.muted-detail" = "已暂停向电脑发送声音，连接仍保持开启。";

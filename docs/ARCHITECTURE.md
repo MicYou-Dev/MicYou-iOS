@@ -25,7 +25,7 @@ AVAudioEngine 输入 tap（音频线程，约 20 ms 一块）
   -> 网络发送         默认走 UDP（TCP 端口 + 1），“仅 TCP”模式下走 ControlChannel
 ```
 
-`ControlChannel` 维护 TCP 连接，负责握手、发首帧 `connect`、回复心跳、双向同步静音、转发桌面端每秒发来的链路统计（往返延迟和丢包率，显示在传输界面），并在连续 5 秒收不到 `ping` 时判定断线。选择“USB 数据线”时，`StreamConfig.link` 为 `.usb`，`ControlChannel` 改为在回环地址上监听，等桌面端通过 usbmuxd 连进来后再执行同样的客户端握手；这种连接只能走 TCP，`StreamOptions.overUSB` 会把传输方式固定为“仅 TCP”。“仅 TCP”模式下音频也走这条连接；当发送缓冲积压超过 128 KiB 时会直接丢弃新音频包，避免网络卡顿时延迟越积越大。
+`ControlChannel` 维护 TCP 连接，负责握手、发首帧 `connect`、回复心跳、双向同步静音、转发桌面端每秒发来的链路统计（端到端延迟和丢包率，显示在传输界面；不发端到端延迟的旧版桌面端显示往返延迟。数值在收到时夹到合法范围），并在连续 5 秒收不到 `ping` 时判定断线。选择“USB 数据线”时，`StreamConfig.link` 为 `.usb`，`ControlChannel` 改为在回环地址上监听，等桌面端通过 usbmuxd 连进来后再执行同样的客户端握手；这种连接只能走 TCP，`StreamOptions.overUSB` 会把传输方式固定为“仅 TCP”。“仅 TCP”模式下音频也走这条连接；当发送缓冲积压超过 128 KiB 时会直接丢弃新音频包，避免网络卡顿时延迟越积越大。
 
 选中的是 Bonjour 搜到的电脑时，连接直接用实例名构造 `NWEndpoint.service`，交给 `NWConnection` 自己解析，不等 `NWBrowser` 的搜索结果。这样从快捷指令、链接冷启动，或开启“打开时自动连接”时，App 刚启动也能立刻连上；解析失败会提示找不到电脑。
 
