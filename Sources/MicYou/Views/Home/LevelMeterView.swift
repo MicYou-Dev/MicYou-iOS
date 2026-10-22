@@ -39,8 +39,8 @@ struct LevelMeterView: View {
         }
         .accessibilityElement()
         .accessibilityLabel(L10n.Status.inputLevel)
-        // The meter bottoms out at -60 dB, silence would otherwise read as -160
-        .accessibilityValue(L10n.Unit.dB(Int(max(levelDB, -60).rounded())))
+        // The meter bottoms out at its floor, silence would otherwise read as -160
+        .accessibilityValue(L10n.Unit.dB(Int(max(levelDB, MeterBallistics.floor).rounded())))
     }
 
     private func segmentCount(for level: Float) -> Int {

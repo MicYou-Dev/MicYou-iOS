@@ -42,10 +42,8 @@ import Testing
         #expect(try AppRelease(githubJSON: Data(noBody.utf8)).notes == nil)
     }
 
-    @Test func rejectsPrereleasesAndOtherTags() {
-        let prerelease = #"{"tag_name":"v2.0.0","html_url":"https://example.com","prerelease":true}"#
+    @Test func rejectsOtherTags() {
         let protocolTag = #"{"tag_name":"Protocol-2.0.0-1","html_url":"https://example.com"}"#
-        #expect(throws: (any Error).self) { try AppRelease(githubJSON: Data(prerelease.utf8)) }
         #expect(throws: (any Error).self) { try AppRelease(githubJSON: Data(protocolTag.utf8)) }
     }
 

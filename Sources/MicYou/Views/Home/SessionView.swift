@@ -92,7 +92,7 @@ struct SessionView: View {
                 caption(L10n.Status.reconnectDetail, systemImage: "antenna.radiowaves.left.and.right", color: .blue)
             } else {
                 // Capture keeps running while connecting, the meter only moves once audio reaches the computer
-                LevelMeterView(levelDB: isLive ? model.levelDB : -160)
+                LevelMeterView(levelDB: isLive ? model.levelDB : SampleProcessor.silence)
                     .frame(height: 44)
                     .opacity(model.isMuted || model.captureStatus != .running ? 0.4 : 1)
                 switch model.captureStatus {

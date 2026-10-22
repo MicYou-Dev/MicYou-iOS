@@ -10,12 +10,14 @@ import UIKit
 enum Diagnostics {
     static var version: String { info("CFBundleShortVersionString") }
     static var build: String { info("CFBundleVersion") }
+    /// "MicYou 1.2.0 (345)"
+    static var appVersion: String { "MicYou \(version) (\(build))" }
 
     /// App, system and device on one line, for reports that do not need the settings
     @MainActor
     static var summary: String {
         let device = UIDevice.current
-        return "MicYou \(version) (\(build)), \(device.systemName) \(device.systemVersion), \(machine)"
+        return "\(appVersion), \(device.systemName) \(device.systemVersion), \(machine)"
     }
 
     @MainActor
@@ -32,7 +34,7 @@ enum Diagnostics {
         // The port type rather than the port name, Bluetooth names often carry the owner's name
         let input = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portType.rawValue ?? "none"
         var lines = [
-            "MicYou \(version) (\(build))\(hasExtensions ? "" : ", without extensions")",
+            "\(appVersion)\(hasExtensions ? "" : ", without extensions")",
             "\(device.systemName) \(device.systemVersion), \(machine)",
             "Language: \(Locale.preferredLanguages.first ?? "?")",
             "Connection: \(selection), \(phase(model.phase))\(model.captureStatus == .running ? "" : ", microphone interrupted")",

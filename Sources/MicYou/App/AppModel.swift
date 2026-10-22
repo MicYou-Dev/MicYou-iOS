@@ -53,7 +53,7 @@ final class AppModel {
         didSet { if isMuted != oldValue { capture.setSystemMuted(isMuted) } }
     }
     /// Smoothed input level in dBFS
-    private(set) var levelDB: Float = -160
+    private(set) var levelDB = SampleProcessor.silence
     /// A gain that would suit the input better, while audio is reaching the computer
     private(set) var gainAdvice: GainAdvisor.Advice?
     private(set) var throughput = 0
@@ -242,8 +242,7 @@ final class AppModel {
         remoteAddress = nil
         throughput = 0
         linkStats = nil
-        levelDB = -160
-        resetGainAdvice()
+        clearLevel()
         captureStatus = .running
     }
 
@@ -323,6 +322,12 @@ final class AppModel {
     private func resetGainAdvice() {
         gainAdvisor.reset()
         gainAdvice = nil
+    }
+
+    /// No audio arrives for now, the meter drops and the gain advice starts over
+    private func clearLevel() {
+        levelDB = SampleProcessor.silence
+        resetGainAdvice()
     }
 
     /// A meter update from capture, about 30 a second
@@ -527,14 +532,12 @@ final class AppModel {
         switch event {
         case .interrupted:
             captureStatus = .interrupted
-            levelDB = -160
-            resetGainAdvice()
+            clearLevel()
         case .resumed:
             captureStatus = .running
         case .resumeFailed:
             captureStatus = .resumeFailed
-            levelDB = -160
-            resetGainAdvice()
+            clearLevel()
         case .systemMute(let value):
             // Our own changes echo back with the value already set
             guard isMuted != value else { return }

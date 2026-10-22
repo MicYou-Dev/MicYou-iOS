@@ -4,6 +4,7 @@ import MicYouCore
 import MicYouProtocol
 import MicYouShared
 import SwiftUI
+import os
 
 enum ProjectLinks {
     static let repository = URL(string: "https://github.com/MicYou-Dev/MicYou-iOS")!
@@ -199,7 +200,7 @@ struct AboutView: View {
         return Section {
             Button {
                 if case .available(let release) = updates.state {
-                    if release.notes != nil { shownRelease = release } else { openURL(release.page) }
+                    release.show(notes: $shownRelease, openURL: openURL)
                 } else {
                     updates.check()
                 }
@@ -254,7 +255,10 @@ struct AboutView: View {
                 Result { try LogExport.write(header: header) }
             }.value
             isExportingLogs = false
-            if case .success(let url) = result { ShareSheet.present([url]) }
+            switch result {
+            case .success(let url): ShareSheet.present([url])
+            case .failure(let error): Logger.micyou("model").error("Exporting logs failed: \(String(describing: error), privacy: .public)")
+            }
         }
     }
 }
@@ -288,7 +292,7 @@ private struct AboutHeader: View {
         .accessibilityElement(children: .combine)
         .contextMenu {
             Button(L10n.About.copy, systemImage: "doc.on.doc") {
-                UIPasteboard.general.string = "MicYou \(Diagnostics.version) (\(Diagnostics.build))"
+                UIPasteboard.general.string = Diagnostics.appVersion
             }
         }
     }

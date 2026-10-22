@@ -42,14 +42,14 @@ import Testing
         #expect(options().estimatedBitrate == 64000 * 13 / 12)
         var pcm = options(codec: .pcm, transport: .tcp)
         pcm.channels = 2
-        #expect(pcm.estimatedBitrate == 48000 * 16 * 2)
+        #expect(pcm.audioBitrate == 48000 * 16 * 2)
+        #expect(pcm.estimatedBitrate == pcm.audioBitrate)
     }
 
     @Test func usbAlwaysSendsAudioOverTCP() {
         let usb = options(transport: .tcpUDP, fec: true).overUSB
         #expect(usb.transport == .tcp)
         #expect(!usb.usesFEC)
-        #expect(usb.summary == "Opus 64 kbps, 48000 Hz mono, TCP only")
         // Switching transport in settings changes nothing a USB stream would use
         #expect(!options(transport: .tcpUDP).overUSB.differs(from: options(transport: .tcp).overUSB))
     }

@@ -56,14 +56,12 @@ public struct AppRelease: Equatable, Identifiable, Sendable {
         let tag_name: String
         let html_url: URL
         let body: String?
-        let draft: Bool?
-        let prerelease: Bool?
     }
 
-    /// From the GitHub `releases/latest` API, which already skips drafts and prereleases
+    /// From the GitHub `releases/latest` API, which never returns drafts or prereleases
     public init(githubJSON data: Data) throws {
         let payload = try JSONDecoder().decode(Payload.self, from: data)
-        guard payload.draft != true, payload.prerelease != true, let version = AppVersion(payload.tag_name) else {
+        guard let version = AppVersion(payload.tag_name) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Not an app release: \(payload.tag_name)"))
         }
         let notes = payload.body.map(ReleaseNotes.init(markdown:))

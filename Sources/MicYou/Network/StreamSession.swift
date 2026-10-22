@@ -81,8 +81,8 @@ final class StreamSession: @unchecked Sendable {
     /// Fed from the capture thread with PCM in the configured rate and channel count
     func push(_ pcm: Data) {
         queue.async { [self] in
-            guard ready, !finished else { return }
-            guard !muted else { return }
+            // Finishing clears ready, so nothing is sent after the session ended
+            guard ready, !muted else { return }
             for payload in encode(pcm) {
                 let now = Int64(Date().timeIntervalSince1970 * 1000)
                 for packet in sequencer.packets(for: payload, format: format, timestamp: now) {

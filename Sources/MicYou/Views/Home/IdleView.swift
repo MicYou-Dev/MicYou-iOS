@@ -102,7 +102,7 @@ struct IdleView: View {
     }
 
     private func view(_ release: AppRelease) {
-        if release.notes != nil { shownRelease = release } else { openURL(release.page) }
+        release.show(notes: $shownRelease, openURL: openURL)
     }
 
     private var isFailed: Bool {
@@ -266,15 +266,7 @@ private struct TargetCard: View {
     }
 
     private var title: String {
-        switch model.selection {
-        case .discovered(let name):
-            // A remembered computer keeps its name while the search is still running
-            return ServiceName.displayName(name)
-        case .manual:
-            return settings.manualTarget?.host ?? L10n.Home.noTarget
-        case .usb:
-            return L10n.Home.usbName
-        }
+        model.selectedName ?? L10n.Home.noTarget
     }
 
     private var subtitle: String? {
@@ -352,8 +344,7 @@ private struct FormatSummary: View {
 
     /// PCM shows its raw 16 bit rate so the bandwidth difference is visible
     private var codecDetail: String {
-        let bitrate = settings.codec == .opus ? settings.opusBitrate : sampleRate * 16 * (settings.stereo ? 2 : 1)
-        return L10n.Unit.kbps(bitrate / 1000)
+        L10n.Unit.kbps(settings.streamOptions.audioBitrate / 1000)
     }
 
     /// USB only carries TCP, whatever the transport setting says

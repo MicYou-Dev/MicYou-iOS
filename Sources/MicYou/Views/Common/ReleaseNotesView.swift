@@ -221,3 +221,10 @@ extension View {
     }
 }
 
+extension AppRelease {
+    /// Its notes in the sheet that `releaseNotesSheet` presents, or the release page when it has none
+    @MainActor
+    func show(notes sheet: Binding<AppRelease?>, openURL: OpenURLAction) {
+        if notes != nil { sheet.wrappedValue = self } else { openURL(page) }
+    }
+}

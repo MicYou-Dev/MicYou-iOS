@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import Foundation
+import MicYouCore
 
 /// Hands PCM from the capture thread to the current session and throttles level updates
 /// The session is swapped on reconnect while capture keeps running
 final class SessionSink: @unchecked Sendable {
     private let lock = NSLock()
     private var session: StreamSession?
-    private var peak: Float = -160
+    private var peak = SampleProcessor.silence
     private var limited = false
     private var lastPost: TimeInterval = 0
     private let postInterval: TimeInterval = 1.0 / 30
@@ -27,7 +28,7 @@ final class SessionSink: @unchecked Sendable {
             if now - lastPost >= postInterval {
                 lastPost = now
                 value = (peak, self.limited)
-                peak = -160
+                peak = SampleProcessor.silence
                 self.limited = false
             }
             return (self.session, value)
