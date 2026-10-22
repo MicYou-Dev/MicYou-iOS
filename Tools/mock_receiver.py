@@ -19,11 +19,18 @@ import wave
 
 TCP_MAGIC = 0x4D696359
 UDP_MAGIC = 0x4D696355
+HEADER = 8
+UDP_MAX_DATAGRAM = 1472
+FEC_GROUP_SIZE = 12
+# Wire types 1 and 5, fixed64 and fixed32
+FIXED_SIZES = {1: 8, 5: 4}
 
 
 def varint(buf, i):
     shift = result = 0
     while True:
+        if i >= len(buf):
+            raise ValueError("truncated varint")
         b = buf[i]
         i += 1
         result |= (b & 0x7F) << shift
@@ -40,13 +47,14 @@ def fields(buf):
         field, wt = key >> 3, key & 7
         if wt == 0:
             value, i = varint(buf, i)
-        elif wt == 2:
-            n, i = varint(buf, i)
+        elif wt in FIXED_SIZES or wt == 2:
+            if wt == 2:
+                n, i = varint(buf, i)
+            else:
+                n = FIXED_SIZES[wt]
+            if i + n > len(buf):
+                raise ValueError(f"field {field} runs past the end")
             value, i = buf[i:i + n], i + n
-        elif wt == 1:
-            value, i = buf[i:i + 8], i + 8
-        elif wt == 5:
-            value, i = buf[i:i + 4], i + 4
         else:
             raise ValueError(f"wire type {wt}")
         yield field, wt, value
@@ -127,7 +135,8 @@ class Stats:
                 return
             if a.get("fec"):
                 self.fec += 1
-                assert len(a["lengths"]) == 12, a["lengths"]
+                if len(a["lengths"]) != FEC_GROUP_SIZE:
+                    print(f"  ! FEC packet lists {len(a['lengths'])} lengths, expected {FEC_GROUP_SIZE}")
                 return
             seq = a.get("seq", 0)
             if self.last_seq is not None and seq != self.last_seq + 1:
@@ -163,20 +172,27 @@ class Stats:
 
 
 def udp_loop(sock, stats, peer):
+    # Runs for the whole process, a bad datagram is reported and skipped rather than ending the thread
     while True:
         data, addr = sock.recvfrom(65536)
         if peer[0] and addr[0] != peer[0]:
             print(f"  ! UDP from {addr[0]}, TCP peer is {peer[0]}")
             continue
-        magic, length = struct.unpack(">II", data[:8])
-        if magic != UDP_MAGIC or length != len(data) - 8:
-            print(f"  ! bad UDP datagram magic={magic:#x} len={length}/{len(data) - 8}")
+        if len(data) < HEADER:
+            print(f"  ! UDP datagram of {len(data)} bytes is shorter than the header")
             continue
-        if len(data) > 1472:
-            print(f"  ! datagram of {len(data)} bytes exceeds 1472")
-        for f, _, v in fields(data[8:]):
-            if f == 1:
-                stats.audio(v, "udp")
+        magic, length = struct.unpack(">II", data[:HEADER])
+        if magic != UDP_MAGIC or length != len(data) - HEADER:
+            print(f"  ! bad UDP datagram magic={magic:#x} len={length}/{len(data) - HEADER}")
+            continue
+        if len(data) > UDP_MAX_DATAGRAM:
+            print(f"  ! datagram of {len(data)} bytes exceeds {UDP_MAX_DATAGRAM}")
+        try:
+            for f, _, v in fields(data[HEADER:]):
+                if f == 1:
+                    stats.audio(v, "udp")
+        except ValueError as e:
+            print(f"  ! malformed UDP payload: {e}")
 
 
 def recv_exact(conn, n):
@@ -221,7 +237,7 @@ def serve_client(conn, addr, stats, args, peer):
     first = True
     try:
         while True:
-            magic, length = struct.unpack(">II", recv_exact(conn, 8))
+            magic, length = struct.unpack(">II", recv_exact(conn, HEADER))
             if magic != TCP_MAGIC:
                 print(f"  bad magic {magic:#x}")
                 return
@@ -252,8 +268,10 @@ def serve_client(conn, addr, stats, args, peer):
                 with stats.lock:
                     kbps = stats.bytes * 8 / (now - started) / 1000
                     print(f"  packets={stats.packets} fec={stats.fec} lost={stats.lost} payload={kbps:.0f} kbps")
-    except (ConnectionError, OSError, socket.timeout) as e:
+    except OSError as e:
         print(f"  disconnected: {e}")
+    except ValueError as e:
+        print(f"  malformed frame, closing: {e}")
     finally:
         alive[0] = False
         conn.close()
@@ -282,12 +300,21 @@ def main():
     tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     tcp.bind(("0.0.0.0", args.port))
     tcp.listen(1)
+    publisher = None
     if args.mdns:
-        subprocess.Popen(["avahi-publish", "-s", f"MicYou ({args.name or socket.gethostname() + '-mock'})", "_micyou._tcp", str(args.port)])
+        name = f"MicYou ({args.name or socket.gethostname() + '-mock'})"
+        publisher = subprocess.Popen(["avahi-publish", "-s", name, "_micyou._tcp", str(args.port)])
     print(f"listening on tcp/{args.port} udp/{args.port + 1}")
-    while True:
-        conn, addr = tcp.accept()
-        serve_client(conn, addr, stats, args, peer)
+    try:
+        while True:
+            conn, addr = tcp.accept()
+            serve_client(conn, addr, stats, args, peer)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # The advert would otherwise outlive the receiver and the app would list a computer that is gone
+        if publisher:
+            publisher.terminate()
 
 
 if __name__ == "__main__":
