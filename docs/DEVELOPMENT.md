@@ -89,7 +89,7 @@ git push origin v1.2.0
 - 把标签里的数字部分写入 `CFBundleShortVersionString`，把总提交数写入 `CFBundleVersion`（只在 CI 里改，不回写仓库）。
 - 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
 - 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、两个 bundle 都有合法的隐私清单、App Intents 索引存在且没有过期、索引列出的每个意图类型都被链接进两个二进制、LiveContainer 包里不含扩展。
-- 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
+- 收集上一个 `v*` 标签以来的提交标题作为发布说明，附上致谢段，创建 GitHub Release。
 - `APPSTORE_ENABLED` 仓库变量为 `true` 时，签名 TestFlight IPA 并上传，见 `docs/APPSTORE.md`。
 
 ### TestFlight 包
@@ -145,6 +145,7 @@ pymobiledevice3 developer dvt launch --userspace "<Bundle ID> -welcomeShown NO -
 - `-welcomeShown NO`：打开首次启动欢迎页。
 - `-tourShown NO`：打开首页引导。
 - `-MicYouTourStep 3`：让首页引导直接跳到第 3 步（仅 Debug 构建生效）。
+- `-MicYouReleaseNotesPreview YES`：启动后直接弹出一份示例更新说明，用来查看更新日志和致谢卡片的样式（仅 Debug 构建生效）。
 - `-host 192.168.1.5`：预先填入手动连接地址，让首页“连接”按钮显示为可点击状态。
 
 README 用的截图放在 `docs/screenshots/`，分辨率统一缩放到 `660 × 1434`。锁屏实时活动与灵动岛只裁出组件本身，截图前注意避开通知横幅。

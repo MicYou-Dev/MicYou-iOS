@@ -93,7 +93,7 @@ idle -> connecting -> streaming <-> reconnecting(n)
 - `UpdateChecker` 与安卓端、桌面端一样从 GitHub Releases 获取最新版本：先请求 `releases/latest` API，失败或被限流（每个 IP 每小时 60 次）时改为对 `github.com/.../releases/latest` 发 `HEAD` 请求，从跳转后的地址里解析标签。
 - 版本比较、响应解析和“每天最多一次”的间隔放在 `MicYouCore` 的 `AppUpdate.swift`，可在 Linux 上测试；`Protocol-2.0.0-1` 这类非应用版本的标签会被忽略。
 - 开启“自动检查更新”（默认开启）时，App 回到前台会按间隔检查；发现新版本后首页空闲时显示提示卡片，关闭后同一版本不再提示。侧载的 App 无法自行安装更新，所以只打开对应的发布页。
-- 点首页卡片的“查看”或关于页的下载按钮时，先弹出 `ReleaseNotesView` 展示更新日志，底部按钮再跳转发布页。`ReleaseNotes` 把 API 返回的 `body` 拆成标题、列表项和段落，并去掉 `release.yml` 写入的 “Files” 段；只剩一个标题（“Changes”）时也一并省略。列表项开头的 `feat:`、`fix:` 等提交类型会拆出来，用 App 自己的本地化文案显示成彩色标签。行内的代码、强调和链接交给视图里的 `AttributedString(markdown:)` 渲染。走网页跳转兜底时拿不到正文，仍直接打开发布页。
+- 点首页卡片的“查看”或关于页的下载按钮时，先弹出 `ReleaseNotesView` 展示更新日志，底部按钮再跳转发布页。`ReleaseNotes` 把 API 返回的 `body` 拆成标题、列表项和段落，并去掉 `release.yml` 写入的 “Files” 段；只剩一个标题（“Changes”）时也一并省略。列表项开头的 `feat:`、`fix:` 等提交类型会拆出来，用 App 自己的本地化文案显示成彩色标签。“Acknowledgements”（或 “Thanks”）段的内容拆成单独的致谢块，视图把它们合成一张粉色卡片放在最上面，标题换成 App 自己的“致谢”文案。行内的代码、强调和链接交给视图里的 `AttributedString(markdown:)` 渲染。走网页跳转兜底时拿不到正文，仍直接打开发布页。
 - iOS 18 起且 App 语言不是英文时，sheet 左上角有“翻译”按钮，通过 Translation 框架的 `translationTask` 把每条描述原地译成 App 语言，可切回原文；提交类型标签不参与翻译。`translationTask` 只在 iOS 18 存在，所以放在私有的 `NotesTranslation` 修饰器里，视图只拿到一个“翻译一段字符串”的函数，iOS 17 上不加修饰器也不显示按钮。在 Linux 上构建时跨模块 overlay 不会自动生效，需要显式 `import _Translation_SwiftUI`，并用 `@preconcurrency import Translation` 绕过 `TranslationSession` 不是 `Sendable` 的检查。
 
 ## 布局与 iPad

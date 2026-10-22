@@ -97,6 +97,7 @@
 "home.update.kind.style" = "界面";
 "home.update.kind.docs" = "文档";
 "home.update.kind.chore" = "其他";
+"home.update.thanks" = "致谢";
 
 "settings.applies-next-time" = "连接和音频设置将在下次连接时生效。";
 "settings.reconnect-to-apply" = "立即重连以应用";

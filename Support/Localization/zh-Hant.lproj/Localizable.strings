@@ -97,6 +97,7 @@
 "home.update.kind.style" = "介面";
 "home.update.kind.docs" = "文件";
 "home.update.kind.chore" = "其他";
+"home.update.thanks" = "致謝";
 
 "settings.applies-next-time" = "連線和音訊設定將在下次連線時生效。";
 "settings.reconnect-to-apply" = "立即重新連線以套用";

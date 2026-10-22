@@ -100,4 +100,4 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 
 ## Device debugging
 
-USB screenshots and launch: `pymobiledevice3 developer dvt screenshot --userspace shot.png`; `pymobiledevice3 developer dvt launch --userspace "<Bundle ID> <args>"`, with launch arguments `-welcomeShown NO`, `-tourShown NO`, `-MicYouTourStep 3` (Debug only), `-host 192.168.1.5`; README screenshots are scaled to `660 × 1434` and stored in `docs/screenshots/`
+USB screenshots and launch: `pymobiledevice3 developer dvt screenshot --userspace shot.png`; `pymobiledevice3 developer dvt launch --userspace "<Bundle ID> <args>"`, with launch arguments `-welcomeShown NO`, `-tourShown NO`, `-MicYouTourStep 3` and `-MicYouReleaseNotesPreview YES` (Debug only, the latter opens sample release notes), `-host 192.168.1.5`; README screenshots are scaled to `660 × 1434` and stored in `docs/screenshots/`

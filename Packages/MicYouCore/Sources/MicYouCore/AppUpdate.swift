@@ -90,11 +90,13 @@ public struct ReleaseNotes: Equatable, Sendable {
         /// A list item, with the commit type split off when it starts with one such as "feat: "
         case item(String, kind: ChangeKind? = nil)
         case paragraph(String)
+        /// A line of the acknowledgements section, whose heading the view replaces with its own
+        case thanks(String)
 
         /// Without the commit type, so only the description goes to the translator
         public var text: String {
             switch self {
-            case .heading(let text), .item(let text, _), .paragraph(let text): text
+            case .heading(let text), .item(let text, _), .paragraph(let text), .thanks(let text): text
             }
         }
     }
@@ -119,14 +121,18 @@ public struct ReleaseNotes: Equatable, Sendable {
 
     /// Sections about the downloads themselves, the release page explains them next to the files
     static let hiddenSections: Set<String> = ["files"]
+    /// Sections that thank people, shown apart from the changes
+    static let thanksSections: Set<String> = ["acknowledgements", "acknowledgments", "thanks"]
 
     public init(markdown: String) {
         var blocks: [Block] = []
         var paragraph: [String] = []
         var hidden = false
+        var thanks = false
 
         func flush() {
-            if !paragraph.isEmpty { blocks.append(.paragraph(paragraph.joined(separator: " "))) }
+            let text = paragraph.joined(separator: " ")
+            if !paragraph.isEmpty { blocks.append(thanks ? .thanks(text) : .paragraph(text)) }
             paragraph = []
         }
 
@@ -136,18 +142,26 @@ public struct ReleaseNotes: Equatable, Sendable {
                 flush()
                 let title = line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)
                 hidden = Self.hiddenSections.contains(title.lowercased())
-                if !hidden, !title.isEmpty { blocks.append(.heading(title)) }
+                thanks = Self.thanksSections.contains(title.lowercased())
+                if !hidden, !thanks, !title.isEmpty { blocks.append(.heading(title)) }
             } else if hidden {
                 continue
             } else if line.isEmpty {
                 flush()
             } else if let marker = line.first, "-*+".contains(marker), line.dropFirst().first == " " {
                 flush()
-                let change = ChangeKind.split(line.dropFirst(2).trimmingCharacters(in: .whitespaces))
-                blocks.append(.item(change.text, kind: change.kind))
+                let text = line.dropFirst(2).trimmingCharacters(in: .whitespaces)
+                if thanks {
+                    blocks.append(.thanks(text))
+                } else {
+                    let change = ChangeKind.split(text)
+                    blocks.append(.item(change.text, kind: change.kind))
+                }
             } else if raw.first?.isWhitespace == true, paragraph.isEmpty, case .item(let text, let kind) = blocks.last {
                 // An indented line continues the item above it
                 blocks[blocks.count - 1] = .item(text + " " + line, kind: kind)
+            } else if raw.first?.isWhitespace == true, paragraph.isEmpty, case .thanks(let text) = blocks.last {
+                blocks[blocks.count - 1] = .thanks(text + " " + line)
             } else {
                 paragraph.append(line)
             }

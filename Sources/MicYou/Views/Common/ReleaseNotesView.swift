@@ -34,9 +34,16 @@ struct ReleaseNotesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
+                    // All lines of the section in one card, above the changes so it is seen first
+                    if !thanksIndices.isEmpty {
+                        ThanksCard(lines: thanksIndices.map(text(at:)))
+                            .padding(.bottom, 4)
+                    }
                     ForEach(Array(notes.blocks.enumerated()), id: \.offset) { index, block in
-                        blockView(block, text: showsTranslation ? translated[index] ?? block.text : block.text)
-                            .padding(.top, index > 0 && block.isHeading ? 12 : 0)
+                        if !block.isThanks {
+                            blockView(block, text: text(at: index))
+                                .padding(.top, index > 0 && block.isHeading ? 12 : 0)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,6 +95,14 @@ struct ReleaseNotesView: View {
         .presentationDetents([.medium, .large])
     }
 
+    private func text(at index: Int) -> String {
+        showsTranslation ? translated[index] ?? notes.blocks[index].text : notes.blocks[index].text
+    }
+
+    private var thanksIndices: [Int] {
+        notes.blocks.indices.filter { notes.blocks[$0].isThanks }
+    }
+
     private func toggleTranslation() {
         if !translated.isEmpty {
             showsTranslation.toggle()
@@ -128,7 +143,7 @@ struct ReleaseNotesView: View {
                 Text(kind.map { Self.label($0) + Self.inline(text) } ?? Self.inline(text))
                     .fixedSize(horizontal: false, vertical: true)
             }
-        case .paragraph:
+        case .paragraph, .thanks:
             Text(Self.inline(text))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -151,7 +166,7 @@ struct ReleaseNotesView: View {
     }
 
     /// Code spans, emphasis and links inside a line, the raw text if it is not valid Markdown
-    private static func inline(_ text: String) -> AttributedString {
+    static func inline(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
         return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
     }
@@ -160,6 +175,34 @@ struct ReleaseNotesView: View {
 private extension ReleaseNotes.Block {
     var isHeading: Bool {
         if case .heading = self { true } else { false }
+    }
+
+    var isThanks: Bool {
+        if case .thanks = self { true } else { false }
+    }
+}
+
+/// The acknowledgements of a release, set apart from the changes in a tinted card
+private struct ThanksCard: View {
+    let lines: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // In the app's language, the translator only sees the lines below
+            Label(L10n.Home.releaseThanks, systemImage: "heart.fill")
+                .font(.headline)
+                .foregroundStyle(.pink)
+                .accessibilityAddTraits(.isHeader)
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                Text(ReleaseNotesView.inline(line))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .tint(.pink)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.pink.opacity(0.12), in: .rect(cornerRadius: 16))
+        .accessibilityElement(children: .contain)
     }
 }
 

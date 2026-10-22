@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import MicYouCore
 import MicYouShared
 import SwiftUI
 
@@ -11,6 +12,8 @@ struct HomeView: View {
     @State private var showSettings = false
     @State private var showWelcome = false
     @State private var tourStep: TourStep?
+    /// Sample notes from -MicYouReleaseNotesPreview, debug builds only
+    @State private var previewRelease: AppRelease?
 
     var body: some View {
         FillingScrollView { isWide in
@@ -98,6 +101,10 @@ struct HomeView: View {
             WelcomeView()
         }
         .onAppear(perform: presentWelcomeIfNeeded)
+        #if DEBUG
+        .releaseNotesSheet($previewRelease)
+        .onAppear { previewRelease = Self.releaseNotesPreview }
+        #endif
     }
 
     /// The idle screen is showing with nothing on top of it, and the tour has not been seen yet
@@ -115,6 +122,31 @@ struct HomeView: View {
     }
     #else
     private static let firstTourStep = TourStep.computer
+    #endif
+
+    #if DEBUG
+    /// For checking the notes sheet on a device, which only appears for a newer release:
+    /// launch with -MicYouReleaseNotesPreview YES to open it with notes shaped like release.yml writes them
+    private static var releaseNotesPreview: AppRelease? {
+        guard UserDefaults.standard.bool(forKey: "MicYouReleaseNotesPreview") else { return nil }
+        let markdown = """
+        ## Changes
+
+        - feat: suggest lowering or raising the input gain
+        - fix: clamp the round trip and packet loss the desktop reports
+        - style: polish widgets for tinted Home Screens
+        - refactor: drop redundant state and pass-through helpers
+
+        ## Acknowledgements
+
+        - Thanks to [@ShirazuNagisa](https://github.com/ShirazuNagisa) for bringing MicYou to TestFlight with their paid Apple Developer account
+
+        ## Files
+
+        - `MicYou-*.ipa` unsigned
+        """
+        return AppRelease(version: AppVersion("9.9.9")!, page: ProjectLinks.releases, notes: ReleaseNotes(markdown: markdown))
+    }
     #endif
 
     private func finishTour() {

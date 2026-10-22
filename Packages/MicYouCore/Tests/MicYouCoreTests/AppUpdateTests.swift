@@ -105,6 +105,15 @@ import Testing
         ])
     }
 
+    @Test func acknowledgementsLeaveTheChanges() {
+        let body = "## Changes\n\n- feat: a\n\n## Acknowledgements\n\n- Thanks to [@someone](https://example.com)\n  for the account\n\nAnd everyone else.\n\n## Files\n\n- x"
+        #expect(ReleaseNotes(markdown: body).blocks == [
+            .item("a", kind: .feat),
+            .thanks("Thanks to [@someone](https://example.com) for the account"),
+            .thanks("And everyone else."),
+        ])
+    }
+
     @Test func emptyBody() {
         #expect(ReleaseNotes(markdown: "").isEmpty)
         #expect(ReleaseNotes(markdown: "## Files\n- a").isEmpty)

@@ -97,6 +97,7 @@
 "home.update.kind.style" = "Design";
 "home.update.kind.docs" = "Docs";
 "home.update.kind.chore" = "Other";
+"home.update.thanks" = "Thanks";
 
 "settings.applies-next-time" = "Connection and audio settings take effect the next time you connect.";
 "settings.reconnect-to-apply" = "Reconnect Now to Apply";

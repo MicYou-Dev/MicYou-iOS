@@ -133,6 +133,11 @@ jobs:
             echo
             git log --no-merges --pretty='- %s' "$RANGE"
             echo
+            # English like the rest, the app translates the notes from English
+            echo "## Acknowledgements"
+            echo
+            echo "- Thanks to [@ShirazuNagisa](https://github.com/ShirazuNagisa) for bringing MicYou to TestFlight with their paid Apple Developer account"
+            echo
             echo "## Files"
             echo
             echo "- \`MicYou-*.ipa\` unsigned, sign and install with AltStore, SideStore, Sideloadly or xtool"

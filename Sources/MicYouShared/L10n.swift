@@ -135,6 +135,7 @@ public enum L10n {
         public static var design: String { string("home.update.kind.style") }
         public static var documentation: String { string("home.update.kind.docs") }
         public static var otherChange: String { string("home.update.kind.chore") }
+        public static var releaseThanks: String { string("home.update.thanks") }
     }
 
     public enum Settings {
