@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Signs the unsigned xtool IPA for App Store Connect with the distribution
-# certificate and the two App Store provisioning profiles in signing/profiles
+# Signs the IPA from Tools/build-testflight.sh for App Store Connect with the distribution
+# certificate and the two App Store provisioning profiles in signing/profiles, needs macOS
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-IPA_IN="${IPA_IN:-xtool/MicYou.ipa}"
+IPA_IN="${IPA_IN:-xtool/MicYou-TestFlight.ipa}"
 IPA_OUT="${IPA_OUT:-xtool/MicYou-AppStore.ipa}"
 CERT_P12="${CERT_P12:-signing/distribution.p12}"
 MAIN_PROFILE="${MAIN_PROFILE:-signing/profiles/MicYou-AppStore.mobileprovision}"
@@ -69,18 +69,6 @@ extract_entitlements() {
   /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' "$work/profile.plist" > "$2"
 }
 
-# TestFlight rejects a build number that was already uploaded for this version
-if [[ -n "${BUILD_NUMBER:-}" ]]; then
-  [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]] || {
-    echo "BUILD_NUMBER must be numeric" >&2
-    exit 1
-  }
-  for plist in "$app/Info.plist" "$widget/Info.plist"; do
-    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$plist"
-  done
-  echo "Set CFBundleVersion to $BUILD_NUMBER"
-fi
-
 extract_entitlements "$MAIN_PROFILE" "$work/app.entitlements"
 extract_entitlements "$WIDGET_PROFILE" "$work/widget.entitlements"
 
@@ -93,7 +81,7 @@ check_bundle_id() {
   actual="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$bundle/Info.plist")"
   [[ "$actual" == "$expected" ]] || {
     echo "$label bundle ID is $actual, profile expects $expected" >&2
-    echo "Update xtool.yml and the App Intents metadata, then rebuild the IPA" >&2
+    echo "Build it with Tools/build-testflight.sh and the matching TESTFLIGHT_BUNDLE_ID" >&2
     exit 1
   }
 }

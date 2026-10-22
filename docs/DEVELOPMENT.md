@@ -68,7 +68,7 @@ App Store 和 TestFlight 要求每个 bundle 用 `PrivacyInfo.xcprivacy` 声明�
 仓库里有两个构建工作流，都在 macOS runner 上使用 Xcode 自带的 SDK 和固定版本的 xtool（校验 SHA-256），不依赖外部的 Darwin SDK：
 
 - `.github/workflows/build.yml`：推送到 `swiftui` 分支或提 PR 时触发，产物保留 14 天。因为 GitHub Actions 里由 tag 触发的构建只能读取默认分支存下的缓存，这个工作流也负责把构建缓存热好（冷启动编译大约要 10 分钟，命中缓存后只编译改动部分）。
-- `.github/workflows/release.yml`：推送 `v*` 标签时触发，自动跑检查、构建 IPA 并发布到 GitHub Releases。也可以在 Actions 页面手动触发，手动运行时只构建不发版，IPA 留在构建产物里，方便发版前验证。
+- `.github/workflows/release.yml`：推送 `v*` 标签时触发，自动跑检查、构建 IPA 并发布到 GitHub Releases。也可以在 Actions 页面手动触发，手动运行时只构建不发版，IPA 留在构建产物里，方便发版前验证；勾选 TestFlight 选项时还会上传 TestFlight。
 
 两个工作流共用 `.github/actions/setup-xtool` 和 `Tools/verify-ipa.sh`。`Package.swift` 里修正 SDK 版本的链接参数在 macOS 上同样需要（xtool 在两边都会把部署目标写成 SDK 版本），CI 会通过环境变量 `MICYOU_IOS_SDK_VERSION` 传入当前 Xcode 的 SDK 版本。
 
@@ -89,6 +89,7 @@ git push origin v1.2.0
 - 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
 - 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、两个 bundle 都有合法的隐私清单、App Intents 索引存在且没有过期、意图类型被链接进二进制、LiveContainer 包里不含扩展。
 - 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
+- `APPSTORE_ENABLED` 仓库变量为 `true` 时，签名 TestFlight IPA 并上传，见 `docs/APPSTORE.md`。
 
 ### TestFlight 包
 
@@ -98,7 +99,7 @@ git push origin v1.2.0
 - 构建完成后才在包里改 Bundle ID，并同步替换两份 App Intents 索引里的 ID，所以 `xtool.yml` 和提交的索引始终是侧载用的 `com.chouchiu.micyou`。
 - App Store Connect 会检查 Xcode 写入每个 bundle 的 `DTXcode`、`DTSDKName` 等字段，xtool 不会写。脚本从本次构建所用的 SDK 读取真实值并补上（Linux 上读 xtool 的 Darwin SDK，macOS 上读 `xcode-select` 选中的 Xcode，也可以用 `XCODE_DEVELOPER` 指定）。二进制记录的 SDK 版本和这个 SDK 不一致时直接报错，避免写入与实际不符的值。`BuildMachineOSBuild` 是 Mac 的系统构建号，只在 macOS 上写入。
 - 小组件的 `CFBundleSupportedPlatforms` 和 `UIDeviceFamily` 由 Xcode 自动添加，xtool 不会，所以直接写在 `Support/Widget-Info.plist` 里。
-- 包未签名。上传前要用 App Store 发布证书和两个 Bundle ID 各自的描述文件重新签名（先签小组件再签 App）。
+- 包未签名。`Tools/sign-ipa.sh` 在 macOS 上用发布证书和两份 App Store 描述文件签名（先签小组件再签 App）。`release.yml` 发布 GitHub Release 后会签名并上传 TestFlight；设置 `TESTFLIGHT_IPA` 时脚本不再构建，而是转换这个已有的 IPA 并保留其构建号，`release.yml` 就是这样用的。配置见 `docs/APPSTORE.md`。
 
 升级 xtool 时，需要同步修改 `.github/actions/setup-xtool/action.yml` 里的版本号和 SHA-256 摘要。摘要可以用 `gh` 查：
 

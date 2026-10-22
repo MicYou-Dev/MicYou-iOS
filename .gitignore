@@ -8,3 +8,5 @@ __pycache__/
 /.bsp
 promo/
 desktop.png
+# Signing material for Tools/sign-ipa.sh, see docs/APPSTORE.md
+/signing

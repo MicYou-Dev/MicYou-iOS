@@ -7,12 +7,18 @@
 # App Store Connect checks are added from the SDK the build used
 # Usage: Tools/build-testflight.sh, TESTFLIGHT_BUNDLE_ID overrides the identifier, TESTFLIGHT_BUILD the build number,
 # XCODE_DEVELOPER the Xcode Developer folder when it is not the selected Xcode or xtool's Darwin SDK
+# TESTFLIGHT_IPA converts a release IPA that is already built instead, release.yml uses it and keeps its build number
 set -euo pipefail
 cd "$(dirname "$0")/.."
 BUNDLE_ID=${TESTFLIGHT_BUNDLE_ID:-com.nagishirazu.micyou}
+IPA=${TESTFLIGHT_IPA:-}
 # App Store Connect rejects an upload whose build number is not higher than the last one
-BUILD=${TESTFLIGHT_BUILD:-$(git rev-list --count HEAD)}
-if ! [[ "$BUILD" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+if [ -n "$IPA" ]; then
+    BUILD=${TESTFLIGHT_BUILD:-}
+else
+    BUILD=${TESTFLIGHT_BUILD:-$(git rev-list --count HEAD)}
+fi
+if [ -n "$BUILD" ] && ! [[ "$BUILD" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
     echo "error: build number $BUILD is not up to three dot separated integers" >&2
     exit 1
 fi
@@ -27,11 +33,14 @@ fi
 # Only macOS knows its own build, Xcode writes it as BuildMachineOSBuild
 MACHINE_BUILD=$( [ "$(uname)" = Darwin ] && sw_vers -buildVersion || true)
 
-xtool dev build -c release --ipa
+if [ -z "$IPA" ]; then
+    xtool dev build -c release --ipa
+    IPA=xtool/MicYou.ipa
+fi
 
 payload=$(mktemp -d)
 trap 'rm -rf "$payload"' EXIT
-unzip -q xtool/MicYou.ipa -d "$payload"
+unzip -q "$IPA" -d "$payload"
 python3 - "$payload/Payload/MicYou.app" "$BUNDLE_ID" "$BUILD" "$XCODE_DEVELOPER" "$MACHINE_BUILD" <<'EOF'
 import json
 import plistlib
@@ -96,7 +105,8 @@ for bundle, executable in [(app, "MicYou"), (widget, "MicYouWidget")]:
     plist = plistlib.loads(path.read_bytes())
     plist["CFBundleIdentifier"] = ids[plist["CFBundleIdentifier"]]
     # The widget must carry the same build number as the app
-    plist["CFBundleVersion"] = build
+    if build:
+        plist["CFBundleVersion"] = build
     plist.update(build_keys)
     path.write_bytes(plistlib.dumps(plist))
     # The index names the bundles that may perform each intent
@@ -107,7 +117,7 @@ for bundle, executable in [(app, "MicYou"), (widget, "MicYouWidget")]:
     if old_id in text:
         fail(f"{index} still names {old_id}")
     index.write_text(text)
-    print(f"{bundle.name}: {plist['CFBundleIdentifier']} ({build}), {settings['CanonicalName']}, Xcode {xcode['DTXcodeBuild']}")
+    print(f"{bundle.name}: {plist['CFBundleIdentifier']} ({plist['CFBundleVersion']}), {settings['CanonicalName']}, Xcode {xcode['DTXcodeBuild']}")
 EOF
 
 # Compressed like the release IPA

@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 iOS client for MicYou: streams the phone microphone over the LAN to the MicYou 2.x desktop app. Swift 6 + SwiftUI, built with [xtool](https://github.com/xtool-org/xtool), no Xcode project, compiles and signs on both Linux and macOS
 
-Detailed docs (in Chinese): `docs/ARCHITECTURE.md` (modules, threading, state machine, motion, localization), `docs/DEVELOPMENT.md` (xtool pitfalls, CI and releases, debugging, screenshots), `docs/PROTOCOL.md` (wire protocol with the desktop app)
+Detailed docs (in Chinese): `docs/ARCHITECTURE.md` (modules, threading, state machine, motion, localization), `docs/DEVELOPMENT.md` (xtool pitfalls, CI and releases, debugging, screenshots), `docs/PROTOCOL.md` (wire protocol with the desktop app), `docs/APPSTORE.md` (TestFlight signing and upload)
 
 ## Eight honors and eight shames
 
@@ -33,6 +33,7 @@ swift test --package-path Packages/MicYouProtocol --filter Framing/tcpHeaderIsBi
 Tools/check-strings.py                                  # localization keys, format specifiers and unused keys across all three languages
 Tools/build-livecontainer.sh                            # release IPA plus a LiveContainer IPA without the widget
 Tools/build-testflight.sh                               # unsigned TestFlight IPA with bundle ID com.nagishirazu.micyou and the commit count as build number
+Tools/sign-ipa.sh                                       # macOS only, signs the TestFlight IPA with the files in signing/ (docs/APPSTORE.md)
 Tools/appintents-metadata.py                            # after xtool dev build, writes the App Intents index from const values; --check for staleness
 Tools/verify-ipa.sh                                     # checks the extension, the SDK version >= 26 and the App Intents index
 python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver, saves received PCM as WAV
