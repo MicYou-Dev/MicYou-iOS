@@ -6,6 +6,10 @@ the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version. See LICENSE for the full text.
 
+As an additional permission under section 7 of the GPL, this program may be
+distributed through the Apple App Store and TestFlight. See LICENSE-EXCEPTION
+for its terms.
+
 This project communicates with the MicYou desktop receiver and contains material
 derived from or based on the following GPL-3.0 licensed projects:
 

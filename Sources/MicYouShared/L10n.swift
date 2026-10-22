@@ -236,6 +236,7 @@ public enum L10n {
         public static var acknowledgements: String { string("about.acknowledgements") }
         public static var license: String { string("about.license") }
         public static var notice: String { string("about.notice") }
+        public static var licenseException: String { string("about.license-exception") }
         public static var footer: String { string("about.footer") }
     }
 

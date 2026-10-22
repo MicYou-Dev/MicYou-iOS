@@ -1,0 +1,37 @@
+                                MicYou for iOS
+           Additional Permission under GNU GPL Version 3, Section 7
+
+Copyright (C) 2026 ChouChiu and MicYou contributors
+
+The GNU General Public License, version 3 ("GPLv3") does not permit conveying a
+covered work under further restrictions (section 10), and section 6 requires
+"Installation Information" when object code is conveyed in a User Product. The
+terms of service of the Apple App Store and TestFlight, and the technical
+measures those channels apply, impose such restrictions and do not let
+recipients install modified versions.
+
+As an additional permission under section 7 of the GPLv3, ChouChiu and MicYou
+contributors, as the copyright holders of this program, grant you permission
+to convey this program, and works based on it, in object code form through
+the Apple App Store, TestFlight, or another distribution channel operated by
+Apple Inc., notwithstanding:
+
+  (a) any term of service, usage rule, digital rights management, or
+      device-restriction measure that channel applies to the work; and
+
+  (b) the Installation Information requirement of section 6, to the extent the
+      channel neither supplies that information nor permits the work to supply
+      it.
+
+This permission covers only conveying the work through the channels named
+above. It does not relieve you of any other obligation under the GPLv3: when
+you convey the work or a work based on it, its complete Corresponding Source
+must still be available under the GPLv3, including this permission, at no
+charge. The Corresponding Source of every version the copyright holders
+distribute this way is published at https://github.com/MicYou-Dev/MicYou-iOS.
+This permission does not let you combine the work with code under a license
+the GPLv3 does not allow.
+
+If you modify this program, you may extend this permission to your version,
+but you are not obliged to do so. As section 7 allows, you may also remove it
+from copies you convey.

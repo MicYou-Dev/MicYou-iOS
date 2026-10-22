@@ -182,4 +182,4 @@ docs/                     协议、架构与开发文档
 
 ## 许可
 
-采用 GPL-3.0-or-later 许可证，详见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
+采用 GPL-3.0-or-later 许可证，附加一条允许通过 App Store 与 TestFlight 分发的例外条款（GPL-3.0 第 7 条），详见 [LICENSE](LICENSE)、[LICENSE-EXCEPTION](LICENSE-EXCEPTION) 与 [NOTICE](NOTICE)。

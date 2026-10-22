@@ -28,6 +28,11 @@ struct AcknowledgementsView: View {
                 } label: {
                     RowLabel(title: L10n.About.notice, detail: "NOTICE", systemImage: "c.circle.fill", color: .gray)
                 }
+                NavigationLink {
+                    LicenseTextView(title: L10n.About.licenseException, file: "LICENSE-EXCEPTION")
+                } label: {
+                    RowLabel(title: L10n.About.licenseException, detail: "LICENSE-EXCEPTION", systemImage: "checkmark.seal.fill", color: .gray)
+                }
             } footer: {
                 Text(L10n.About.footer)
             }

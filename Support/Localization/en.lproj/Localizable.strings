@@ -194,7 +194,8 @@
 "about.acknowledgements" = "Licenses and Acknowledgements";
 "about.license" = "GNU General Public License v3.0";
 "about.notice" = "Copyright Notice";
-"about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
+"about.license-exception" = "App Store Exception";
+"about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later, with an additional permission for distribution through the App Store and TestFlight. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
 
 "welcome.title" = "Welcome to MicYou";
 "welcome.subtitle" = "Use your iPhone as your computer's microphone in three steps.";

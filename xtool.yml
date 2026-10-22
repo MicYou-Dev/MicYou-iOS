@@ -12,6 +12,7 @@ resources:
 - Resources/AppIntents/MicYou/Metadata.appintents
 # Shown in full on the licenses page
 - LICENSE
+- LICENSE-EXCEPTION
 - NOTICE
 - Support/Localization/en.lproj
 - Support/Localization/zh-Hans.lproj

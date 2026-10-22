@@ -194,7 +194,8 @@
 "about.acknowledgements" = "開源授權與致謝";
 "about.license" = "GNU 通用公眾授權條款 v3.0";
 "about.notice" = "版權聲明";
-"about.footer" = "MicYou iOS 版是基於 GPL 3.0 或更新版本發佈的自由軟體，通訊協定與用戶端邏輯移植自 LanRhyme 及貢獻者開發的 MicYou。";
+"about.license-exception" = "App Store 例外條款";
+"about.footer" = "MicYou iOS 版是基於 GPL 3.0 或更新版本發佈的自由軟體，並附加允許透過 App Store 與 TestFlight 散佈的例外條款，通訊協定與用戶端邏輯移植自 LanRhyme 及貢獻者開發的 MicYou。";
 
 "welcome.title" = "歡迎使用 MicYou";
 "welcome.subtitle" = "只需三步，把 iPhone 當作電腦麥克風使用。";
