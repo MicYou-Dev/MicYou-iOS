@@ -8,7 +8,7 @@
   <br>
 
   <a href="https://github.com/MicYou-Dev/MicYou-iOS/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/MicYou-Dev/MicYou-iOS?logo=github&label=release"></a>
-  <img alt="iOS 18+" src="https://img.shields.io/badge/iOS-18%2B-000000?logo=apple&logoColor=white">
+  <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-000000?logo=apple&logoColor=white">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-blue"></a>
   <a href="https://qm.qq.com/q/V16hPpWPKO"><img alt="QQ" src="https://img.shields.io/badge/QQ-995452107-12B7F5?style=flat&logo=qq&logoColor=white"></a>
   <a href="https://t.me/MicYouChannel"><img alt="TG" src="https://img.shields.io/badge/Telegram-@MicYouChannel-2CA5E0?style=flat&logo=telegram&logoColor=white"></a>
@@ -30,7 +30,7 @@
 - 与电脑端双向同步静音状态，也可开启“按住说话”。断线后支持自动重连（最多 6 次），重连期间后台录音不会中断；通话等占用麦克风结束后会自动恢复。
 - 可设置打开 App 时自动连接；传输时可切换到黑屏模式，屏幕保持常亮但几乎不耗电。
 - 支持锁屏与后台持续传输，可在锁屏实时活动和灵动岛查看连接状态、当前麦克风与音频格式，并直接静音或断开。
-- 支持控制中心按钮（也可绑定到操作按钮）、主屏幕与锁屏小组件、快捷指令和 `micyou://` URL。小组件和控制中心按钮不显示连接状态；连接会打开 App，静音和断开在后台执行，不会打开 App。
+- 支持控制中心按钮（iOS 18 起，也可绑定到操作按钮）、主屏幕与锁屏小组件、快捷指令和 `micyou://` URL。小组件和控制中心按钮不显示连接状态；连接会打开 App，静音和断开在后台执行，不会打开 App。
 - 首次启动配有欢迎页与首页操作引导，并提供官网快速开始与常见问题入口（可在“关于”页重新查看）。“关于”页可导出本次运行的日志，方便反馈问题，也可以检查更新（默认每天自动检查一次，发现新版本会在首页提示）。
 - 提供简体中文、繁体中文和英文界面。
 
@@ -50,7 +50,7 @@
 
 ## 安装
 
-需要 iOS 18.0 或更高版本，请在 [GitHub Releases](https://github.com/MicYou-Dev/MicYou-iOS/releases/latest) 下载：
+需要 iOS 17.0 或更高版本（控制中心按钮和更新日志翻译需要 iOS 18），请在 [GitHub Releases](https://github.com/MicYou-Dev/MicYou-iOS/releases/latest) 下载：
 
 | 文件 | 说明 |
 | --- | --- |

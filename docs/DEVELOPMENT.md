@@ -17,9 +17,9 @@
 
 ### SDK 版本与液态玻璃
 
-链接器 `lld` 默认会把部署目标（`18.0`）写进 Mach-O `LC_BUILD_VERSION` 的 SDK 版本字段。iOS 看到旧 SDK 版本号后会按兼容模式运行应用，没有液态玻璃效果。
+链接器 `lld` 默认会把部署目标（`17.0`）写进 Mach-O `LC_BUILD_VERSION` 的 SDK 版本字段。iOS 看到旧 SDK 版本号后会按兼容模式运行应用，没有液态玻璃效果。
 
-`Package.swift` 里通过链接参数 `-platform_version ios 18.0 <sdkVersion>` 修正了这个问题。更换本机的 Darwin SDK 后记得同步更新 `sdkVersion`，可以用下面两条命令核对：
+`Package.swift` 里通过链接参数 `-platform_version ios 17.0 <sdkVersion>` 修正了这个问题。更换本机的 Darwin SDK 后记得同步更新 `sdkVersion`，可以用下面两条命令核对：
 
 ```bash
 xtool sdk status

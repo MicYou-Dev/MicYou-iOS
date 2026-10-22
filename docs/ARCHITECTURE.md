@@ -8,7 +8,7 @@
 | `MicYouCore` | 传输与编码选项、预设、`StreamOptions`、重连策略、采样处理与限幅、电平表动态、输入偏好，纯 Foundation 实现 | `MicYouProtocol` |
 | `MicYouShared` | 多语言文案 `L10n`、`DeepLink`、实时活动定义 `StreamActivityAttributes` | 无 |
 | `MicYou` | 主应用 | `MicYouProtocol`、`MicYouCore`、`MicYouShared` |
-| `MicYouWidget` | 锁屏实时活动、灵动岛、主屏幕与锁屏小组件、控制中心按钮 | `MicYouShared` |
+| `MicYouWidget` | 锁屏实时活动、灵动岛、主屏幕与锁屏小组件、控制中心按钮（iOS 18 起） | `MicYouShared` |
 
 小组件不和主应用共享存储，也不需要配置 App Group：实时活动由主应用直接通过 ActivityKit 请求和更新，实时活动、灵动岛、小组件和控制中心里的按钮执行 `MicYouShared` 里的 App Intents，系统在主应用进程里运行它们（静音和断开在后台启动主应用，连接会打开主应用），锁屏小组件则通过 `micyou://` 链接打开主应用。因此小组件和控制中心按钮读不到连接状态，图标固定不变。索引的生成方式见 [DEVELOPMENT.md](DEVELOPMENT.md#app-intents)。
 
@@ -94,7 +94,7 @@ idle -> connecting -> streaming <-> reconnecting(n)
 - 版本比较、响应解析和“每天最多一次”的间隔放在 `MicYouCore` 的 `AppUpdate.swift`，可在 Linux 上测试；`Protocol-2.0.0-1` 这类非应用版本的标签会被忽略。
 - 开启“自动检查更新”（默认开启）时，App 回到前台会按间隔检查；发现新版本后首页空闲时显示提示卡片，关闭后同一版本不再提示。侧载的 App 无法自行安装更新，所以只打开对应的发布页。
 - 点首页卡片的“查看”或关于页的下载按钮时，先弹出 `ReleaseNotesView` 展示更新日志，底部按钮再跳转发布页。`ReleaseNotes` 把 API 返回的 `body` 拆成标题、列表项和段落，并去掉 `release.yml` 写入的 “Files” 段；只剩一个标题（“Changes”）时也一并省略。列表项开头的 `feat:`、`fix:` 等提交类型会拆出来，用 App 自己的本地化文案显示成彩色标签。行内的代码、强调和链接交给视图里的 `AttributedString(markdown:)` 渲染。走网页跳转兜底时拿不到正文，仍直接打开发布页。
-- App 语言不是英文时，sheet 左上角有“翻译”按钮，通过 Translation 框架的 `translationTask` 把每条描述原地译成 App 语言，可切回原文；提交类型标签不参与翻译。在 Linux 上构建时跨模块 overlay 不会自动生效，需要显式 `import _Translation_SwiftUI`，并用 `@preconcurrency import Translation` 绕过 `TranslationSession` 不是 `Sendable` 的检查。
+- iOS 18 起且 App 语言不是英文时，sheet 左上角有“翻译”按钮，通过 Translation 框架的 `translationTask` 把每条描述原地译成 App 语言，可切回原文；提交类型标签不参与翻译。`translationTask` 只在 iOS 18 存在，所以放在私有的 `NotesTranslation` 修饰器里，视图只拿到一个“翻译一段字符串”的函数，iOS 17 上不加修饰器也不显示按钮。在 Linux 上构建时跨模块 overlay 不会自动生效，需要显式 `import _Translation_SwiftUI`，并用 `@preconcurrency import Translation` 绕过 `TranslationSession` 不是 `Sendable` 的检查。
 
 ## 动效
 

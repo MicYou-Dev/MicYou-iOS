@@ -23,7 +23,7 @@ jobs:
             --app-icon MicYou --include-all-app-icons \
             --development-region en \
             --target-device iphone --target-device ipad \
-            --minimum-deployment-target 18.0 \
+            --minimum-deployment-target 17.0 \
             --platform iphoneos \
             --compile out \
             Resources/AppIcon/MicYou.icon

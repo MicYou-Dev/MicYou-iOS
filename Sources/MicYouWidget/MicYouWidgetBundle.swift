@@ -8,7 +8,9 @@ struct MicYouWidgetBundle: WidgetBundle {
     var body: some Widget {
         StreamLiveActivity()
         ShortcutWidget()
-        ConnectionControl()
-        MuteControl()
+        if #available(iOS 18, *) {
+            ConnectionControl()
+            MuteControl()
+        }
     }
 }

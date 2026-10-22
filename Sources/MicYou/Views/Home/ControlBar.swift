@@ -48,7 +48,7 @@ struct ControlBar: View {
             // Mic gets its slash drawn on rather than swapped
             Image(systemName: model.isMuted ? "mic.slash.fill" : "mic.fill")
                 .font(.title2)
-                .contentTransition(.symbolEffect(.replace.magic(fallback: .replace)))
+                .contentTransition(.magicReplace)
                 .foregroundStyle(model.isMuted ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
                 .frame(width: 56, height: 56)
                 // One surface for both states, so the orange tint fades in instead of the button being replaced

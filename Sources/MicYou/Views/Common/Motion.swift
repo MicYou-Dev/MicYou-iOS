@@ -37,6 +37,18 @@ extension AnyTransition {
     }
 }
 
+extension ContentTransition {
+    /// Symbols that share a shape morph into each other, such as a slash drawn on, from iOS 18;
+    /// a plain replace before that and between unrelated symbols
+    static var magicReplace: ContentTransition {
+        if #available(iOS 18, *) {
+            .symbolEffect(.replace.magic(fallback: .replace))
+        } else {
+            .symbolEffect(.replace)
+        }
+    }
+}
+
 extension View {
     /// The transition, or a plain fade when Reduce Motion is on
     func adaptiveTransition(_ transition: AnyTransition, reduced: AnyTransition = .opacity) -> some View {

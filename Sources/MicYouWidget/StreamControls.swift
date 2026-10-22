@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Control Center buttons, also offered for the Action button. Their Live Activity intents run
 // in the app without opening it. Without an App Group the controls cannot read the app's state,
-// so their icons stay the same
+// so their icons stay the same. Control Center controls exist from iOS 18
 
 import AppIntents
 import MicYouShared
 import SwiftUI
 import WidgetKit
 
+@available(iOS 18, *)
 struct ConnectionControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "com.chouchiu.micyou.toggle") {
@@ -20,6 +21,7 @@ struct ConnectionControl: ControlWidget {
     }
 }
 
+@available(iOS 18, *)
 struct MuteControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "com.chouchiu.micyou.toggle-mute") {

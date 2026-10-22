@@ -105,7 +105,7 @@ private struct HeroButton: View {
             VStack(spacing: 10) {
                 Image(systemName: systemImage)
                     .font(.system(size: 40, weight: .medium))
-                    .contentTransition(.symbolEffect(.replace.magic(fallback: .replace)))
+                    .contentTransition(.magicReplace)
                 Text(title)
                     .contentTransition(.opacity)
                     .font(.title3.weight(.semibold))

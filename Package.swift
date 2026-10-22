@@ -9,7 +9,7 @@ import PackageDescription
 // the Xcode it selected through MICYOU_IOS_SDK_VERSION
 let sdkVersion = Context.environment["MICYOU_IOS_SDK_VERSION"] ?? "27.1"
 let linkSDKVersion: [LinkerSetting] = [
-    .unsafeFlags(["-Xlinker", "-platform_version", "-Xlinker", "ios", "-Xlinker", "18.0", "-Xlinker", sdkVersion]),
+    .unsafeFlags(["-Xlinker", "-platform_version", "-Xlinker", "ios", "-Xlinker", "17.0", "-Xlinker", sdkVersion]),
 ]
 
 // xtool links extensions with -e _NSExtensionMain, which leaves the SwiftUI @main widget
@@ -40,7 +40,7 @@ let constValues: [SwiftSetting] = [
 let package = Package(
     name: "MicYou",
     platforms: [
-        .iOS(.v18),
+        .iOS(.v17),
         .macOS(.v15),
     ],
     products: [
