@@ -154,7 +154,7 @@
 
 "about.title" = "關於";
 "about.version.value" = "版本 %1$@（%2$@）";
-"about.tagline" = "把 iPhone 當作電腦的麥克風";
+"about.tagline" = "把 %@ 當作電腦的麥克風";
 "about.copy" = "拷貝";
 "about.protocol" = "協定";
 "about.protocol.value" = "MicYou 2.x";
@@ -198,11 +198,11 @@
 "about.footer" = "MicYou iOS 版是基於 GPL 3.0 或更新版本發佈的自由軟體，並附加允許透過 App Store 與 TestFlight 散佈的例外條款，通訊協定與用戶端邏輯移植自 LanRhyme 及貢獻者開發的 MicYou。";
 
 "welcome.title" = "歡迎使用 MicYou";
-"welcome.subtitle" = "只需三步，把 iPhone 當作電腦麥克風使用。";
+"welcome.subtitle" = "只需三步，把 %@ 當作電腦麥克風使用。";
 "welcome.desktop.title" = "設定電腦端";
 "welcome.desktop.text" = "在電腦上安裝 MicYou 桌面版和虛擬音效卡（Windows 可用 VB-CABLE，macOS 可用 BlackHole，Linux 無需另外安裝）。";
 "welcome.network.title" = "透過 Wi-Fi 或 USB 連線";
-"welcome.network.text" = "在電腦版選擇 Wi-Fi 模式，然後在手機上選取附近的電腦或手動輸入 IP 位址；也可以接上傳輸線，並在電腦版選擇 USB 模式。最後點一下「連線」。";
+"welcome.network.text" = "在電腦版選擇 Wi-Fi 模式，然後在 App 中選取附近的電腦或手動輸入 IP 位址；也可以接上傳輸線，並在電腦版選擇 USB 模式。最後點一下「連線」。";
 "welcome.apps.title" = "在軟體中選擇麥克風";
 "welcome.apps.text" = "在語音、會議或遊戲軟體中，將麥克風輸入裝置設為虛擬音效卡（如 CABLE Output 或 BlackHole 2ch）。";
 "welcome.start" = "開始使用";
@@ -278,3 +278,5 @@
 
 "dim.button" = "黑屏模式";
 "dim.wake" = "輕點任意位置喚醒";
+
+"menu.stream" = "傳輸";

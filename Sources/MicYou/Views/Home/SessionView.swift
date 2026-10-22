@@ -10,33 +10,63 @@ import SwiftUI
 struct SessionView: View {
     @Environment(AppModel.self) private var model
     @Environment(AppSettings.self) private var settings
+    /// Two columns in landscape on iPad: time and level on the left, stream facts and gain on the right
+    let isWide: Bool
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer(minLength: 0)
-            VStack(spacing: 6) {
-                target
-                ElapsedTime(since: model.streamingSince, isLive: model.phase == .streaming)
-            }
-            levelSlot
-            if let notice = model.notice {
-                NoticeCard(text: notice, kind: .info) {
-                    withAnimation(Motion.state) { model.notice = nil }
+        Group {
+            if isWide {
+                HStack(spacing: HomeLayout.columnSpacing) {
+                    VStack(spacing: 24) {
+                        header
+                        levelSlot
+                    }
+                    .frame(maxWidth: .infinity)
+                    VStack(spacing: 24) {
+                        details
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .adaptiveTransition(.notice)
+                .frame(maxHeight: .infinity)
+            } else {
+                VStack(spacing: 24) {
+                    Spacer(minLength: 0)
+                    header
+                    levelSlot
+                    details
+                    Spacer(minLength: 0)
+                }
             }
-            StreamStats()
-                .opacity(model.phase == .streaming ? 1 : 0.5)
-            InputGainControl()
-                .padding(16)
-                .background(.card, in: .rect(cornerRadius: 16))
-            Spacer(minLength: 0)
         }
         .animation(Motion.state, value: model.phase)
         .animation(Motion.state, value: model.isMuted)
         .animation(Motion.state, value: model.notice)
         .animation(Motion.state, value: model.captureStatus)
         .animation(Motion.state, value: model.gainAdvice)
+    }
+
+    /// Where the audio goes and how long it has been going
+    private var header: some View {
+        VStack(spacing: 6) {
+            target
+            ElapsedTime(since: model.streamingSince, isLive: model.phase == .streaming, isLarge: isWide)
+        }
+    }
+
+    /// A message, the stream facts and input gain
+    @ViewBuilder
+    private var details: some View {
+        if let notice = model.notice {
+            NoticeCard(text: notice, kind: .info) {
+                withAnimation(Motion.state) { model.notice = nil }
+            }
+            .adaptiveTransition(.notice)
+        }
+        StreamStats()
+            .opacity(model.phase == .streaming ? 1 : 0.5)
+        InputGainControl()
+            .padding(16)
+            .background(.card, in: .rect(cornerRadius: 16))
     }
 
     @ViewBuilder
@@ -199,6 +229,8 @@ extension AppModel {
 struct ElapsedTime: View {
     let since: Date?
     let isLive: Bool
+    /// Bigger in the two column layout, where the time has a column of its own
+    var isLarge = false
     /// Follows Dynamic Type, the minimum scale factor still fits long sessions on one line
     @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 76
 
@@ -212,7 +244,7 @@ struct ElapsedTime: View {
                 .contentTransition(.numericText(countsDown: false))
                 .adaptiveAnimation(.smooth(duration: 0.35), value: text)
         }
-        .font(.system(size: size, weight: .medium))
+        .font(.system(size: isLarge ? size * 1.4 : size, weight: .medium))
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.5)

@@ -196,7 +196,8 @@ public enum L10n {
     public enum About {
         public static var title: String { string("about.title") }
         public static func versionValue(_ short: String, build: String) -> String { format("about.version.value", short, build) }
-        public static var tagline: String { string("about.tagline") }
+        /// `device` is the device model, such as iPhone or iPad
+        public static func tagline(_ device: String) -> String { format("about.tagline", device) }
         public static var copy: String { string("about.copy") }
         public static var protocolLabel: String { string("about.protocol") }
         public static var protocolValue: String { string("about.protocol.value") }
@@ -242,7 +243,8 @@ public enum L10n {
 
     public enum Welcome {
         public static var title: String { string("welcome.title") }
-        public static var subtitle: String { string("welcome.subtitle") }
+        /// `device` is the device model, such as iPhone or iPad
+        public static func subtitle(_ device: String) -> String { format("welcome.subtitle", device) }
         public static var desktopTitle: String { string("welcome.desktop.title") }
         public static var desktopText: String { string("welcome.desktop.text") }
         public static var networkTitle: String { string("welcome.network.title") }
@@ -340,5 +342,10 @@ public enum L10n {
     public enum Dim {
         public static var button: String { string("dim.button") }
         public static var wake: String { string("dim.wake") }
+    }
+
+    public enum Menu {
+        /// The menu bar menu with the session commands on iPad
+        public static var stream: String { string("menu.stream") }
     }
 }

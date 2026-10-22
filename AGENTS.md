@@ -32,6 +32,7 @@ swift test --package-path Packages/MicYouCore           # app logic tests (prese
 swift test --package-path Packages/MicYouProtocol --filter Framing/tcpHeaderIsBigEndian   # single test
 Tools/check-strings.py                                  # localization keys, format specifiers and unused keys across all three languages
 Tools/build-livecontainer.sh                            # release IPA plus a LiveContainer IPA without the widget
+Tools/build-testflight.sh                               # unsigned TestFlight IPA with bundle ID com.nagishirazu.micyou and the commit count as build number
 Tools/appintents-metadata.py                            # after xtool dev build, writes the App Intents index from const values; --check for staleness
 Tools/verify-ipa.sh                                     # checks the extension, the SDK version >= 26 and the App Intents index
 python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver, saves received PCM as WAV
@@ -76,6 +77,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 ## Conventions
 
 - User-visible strings go only through `Sources/MicYouShared/L10n.swift`; to add one: add the key to all three `Support/Localization/*.lproj/Localizable.strings` → add a property in `L10n.swift` → run `Tools/check-strings.py`; full sentences end with a period, buttons and short labels have no punctuation
+- The home screen has a single column layout and, for landscape windows at least 860 pt wide (iPad), a two column one chosen by `HomeLayout.isWide`; `IdleView` and `SessionView` build both from the same subviews, so check both after changing either. Icon only buttons keep their title in a `Label` with `.iconOnly` for VoiceOver and the keyboard shortcut list
 - Display text shared by the UI and the Live Activity (codec names, transport modes) lives in `Views/Common/StreamText.swift`
 - Settings explain themselves with a toggle subtitle or a `SettingHint` under the row, which follows the current choice; a conflicting combination gets a warning hint with a button that fixes it. Avoid long section footers
 - Animation durations and curves come from `Motion` in `Views/Common/Motion.swift`; appear and disappear with `adaptiveTransition` / `adaptiveAnimation` (they respect Reduce Motion)

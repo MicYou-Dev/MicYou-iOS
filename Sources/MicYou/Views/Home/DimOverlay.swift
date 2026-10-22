@@ -50,6 +50,8 @@ struct DimOverlay: View {
         .ignoresSafeArea()
         .contentShape(.rect)
         .onTapGesture { model.setDimmed(false) }
+        // Lets touches through while it fades out, a quick tap on the dim button right after waking would land here
+        .allowsHitTesting(model.isDimmed)
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         .accessibilityElement(children: .combine)

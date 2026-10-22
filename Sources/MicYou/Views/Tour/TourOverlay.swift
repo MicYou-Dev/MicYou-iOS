@@ -59,6 +59,10 @@ struct TourOverlay: View {
     private static let padding: CGFloat = 8
     /// Corner radius of the cards on the home screen
     private static let cardRadius: CGFloat = 22
+    /// Widest the explanation card gets
+    private static let cardWidth: CGFloat = 400
+    /// Room between the card and the screen edges
+    private static let margin: CGFloat = 16
 
     var body: some View {
         GeometryReader { proxy in
@@ -67,6 +71,9 @@ struct TourOverlay: View {
                 let radius = step.isRound ? min(rect.width, rect.height) / 2 : Self.cardRadius + Self.padding
                 // The card goes on whichever side of the spotlight has more room
                 let below = proxy.size.height - rect.maxY >= rect.minY
+                // Centered under the control as far as the screen allows, which matters with two columns on iPad
+                let room = max(0, (proxy.size.width - 2 * Self.margin - Self.cardWidth) / 2)
+                let shift = min(max(rect.midX - proxy.size.width / 2, -room), room)
 
                 ZStack(alignment: .top) {
                     Spotlight(rect: rect, cornerRadius: radius)
@@ -77,24 +84,25 @@ struct TourOverlay: View {
                     VStack(spacing: 0) {
                         if below {
                             Color.clear.frame(height: rect.maxY + 14)
-                            card(step)
+                            card(step, shift: shift)
                             Spacer(minLength: 0)
                         } else {
                             Spacer(minLength: 0)
-                            card(step)
+                            card(step, shift: shift)
                             Color.clear.frame(height: proxy.size.height - rect.minY + 14)
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, Self.margin)
                 }
             }
         }
         .ignoresSafeArea()
     }
 
-    private func card(_ step: TourStep) -> some View {
+    private func card(_ step: TourStep, shift: CGFloat) -> some View {
         TourCard(step: step, skip: finish, advance: advance)
-            .frame(maxWidth: 400)
+            .frame(maxWidth: Self.cardWidth)
+            .offset(x: shift)
             .id(step)
             .transition(.opacity)
     }

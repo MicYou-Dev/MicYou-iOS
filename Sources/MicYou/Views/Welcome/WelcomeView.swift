@@ -18,7 +18,7 @@ struct WelcomeView: View {
                     Text(L10n.Welcome.title)
                         .font(.largeTitle.bold())
                         .accessibilityAddTraits(.isHeader)
-                    Text(L10n.Welcome.subtitle)
+                    Text(L10n.Welcome.subtitle(UIDevice.current.model))
                         .font(.body)
                         .foregroundStyle(.secondary)
                 }
@@ -42,7 +42,7 @@ struct WelcomeView: View {
             .padding(.horizontal, 32)
             .padding(.top, 48)
             .padding(.bottom, 24)
-            .frame(maxWidth: 520)
+            .frame(maxWidth: Self.maxWidth)
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -67,7 +67,27 @@ struct WelcomeView: View {
             .padding(.horizontal, 24)
             .padding(.top, 12)
             .padding(.bottom, 8)
+            // As wide as the steps above, not the whole sheet on iPad
+            .frame(maxWidth: Self.maxWidth)
+            .frame(maxWidth: .infinity)
             .background(.bar)
+        }
+        .welcomeSheetSizing()
+    }
+
+    /// Widest the steps and buttons get
+    private static let maxWidth: CGFloat = 520
+}
+
+private extension View {
+    /// The larger page sheet on iPad, the default form sheet is too short for all three steps in landscape
+    /// Same full height sheet as before on iPhone
+    @ViewBuilder
+    func welcomeSheetSizing() -> some View {
+        if #available(iOS 18, *) {
+            presentationSizing(.page)
+        } else {
+            self
         }
     }
 }

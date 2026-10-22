@@ -271,7 +271,7 @@ private struct AboutHeader: View {
                 .padding(.bottom, 6)
             Text(L10n.App.name)
                 .font(.title2.bold())
-            Text(L10n.About.tagline)
+            Text(L10n.About.tagline(UIDevice.current.model))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

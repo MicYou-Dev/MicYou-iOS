@@ -13,7 +13,7 @@
   <a href="https://qm.qq.com/q/V16hPpWPKO"><img alt="QQ" src="https://img.shields.io/badge/QQ-995452107-12B7F5?style=flat&logo=qq&logoColor=white"></a>
   <a href="https://t.me/MicYouChannel"><img alt="TG" src="https://img.shields.io/badge/Telegram-@MicYouChannel-2CA5E0?style=flat&logo=telegram&logoColor=white"></a>
 
-  <p>把 iPhone 当作电脑麦克风使用的 iOS 客户端</p>
+  <p>把 iPhone 或 iPad 当作电脑麦克风使用的 iOS 客户端</p>
 
   配合 <a href="https://github.com/MicYou-Dev/MicYou">MicYou</a> 桌面端 2.x 使用 · SwiftUI · 局域网无线传输 · 支持锁屏与后台运行
 
@@ -32,6 +32,7 @@
 - 支持锁屏与后台持续传输，可在锁屏实时活动和灵动岛查看连接状态、当前麦克风与音频格式，并直接静音或断开。
 - 支持控制中心按钮（iOS 18 起，也可绑定到操作按钮）、主屏幕与锁屏小组件、快捷指令和 `micyou://` URL。小组件和控制中心按钮不显示连接状态；连接会打开 App，静音和断开在后台执行，不会打开 App。
 - 首次启动配有欢迎页与首页操作引导，并提供官网快速开始与常见问题入口（可在“关于”页重新查看）。“关于”页可导出本次运行的日志，方便反馈问题，也可以检查更新（默认每天自动检查一次，发现新版本会在首页提示）。
+- 适配 iPad：横屏时首页改为双栏；接上键盘后可用 ⌘↩ 连接或断开、⇧⌘M 静音、⌘K 选择电脑、⌘, 打开设置，iPadOS 26 的菜单栏里也有对应的“传输”菜单。
 - 提供简体中文、繁体中文和英文界面。
 
 ## 截图
