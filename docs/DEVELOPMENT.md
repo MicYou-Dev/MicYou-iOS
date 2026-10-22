@@ -11,6 +11,7 @@
 | `Tools/check-strings.py` | 检查三语文案的键名与格式占位符是否一致、有无缺失或未使用的键 |
 | `Tools/appintents-metadata.py` | 在 `xtool dev build` 之后由编译期常量生成 App Intents 索引，`--check` 检查提交的索引是否过期 |
 | `Tools/build-livecontainer.sh` | 生成去掉小组件扩展的 IPA，供 LiveContainer 使用 |
+| `Tools/build-testflight.sh` | 生成 Bundle ID 为 `com.nagishirazu.micyou` 的未签名 TestFlight IPA |
 | `python3 Tools/mock_receiver.py --mdns` | 在本机模拟桌面端接收，加 `--help` 查看全部参数 |
 
 ## xtool 注意事项
@@ -88,6 +89,16 @@ git push origin v1.2.0
 - 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
 - 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、两个 bundle 都有合法的隐私清单、App Intents 索引存在且没有过期、意图类型被链接进二进制、LiveContainer 包里不含扩展。
 - 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
+
+### TestFlight 包
+
+`Tools/build-testflight.sh` 生成 `xtool/MicYou-TestFlight.ipa`，与 release IPA 相比只改了 Bundle ID 和构建号：App 为 `com.nagishirazu.micyou`，小组件为 `com.nagishirazu.micyou.MicYouWidget`（可用环境变量 `TESTFLIGHT_BUNDLE_ID` 覆盖）。Linux 和 macOS 上都能运行。
+
+- 构建号和 `release.yml` 一样取提交数（`git rev-list --count HEAD`），App 和小组件写入同一个值。App Store Connect 要求每次上传的构建号都比上一次大，同一提交重复上传时可用 `TESTFLIGHT_BUILD` 指定，如 `123.1`。
+- 构建完成后才在包里改 Bundle ID，并同步替换两份 App Intents 索引里的 ID，所以 `xtool.yml` 和提交的索引始终是侧载用的 `com.chouchiu.micyou`。
+- App Store Connect 会检查 Xcode 写入每个 bundle 的 `DTXcode`、`DTSDKName` 等字段，xtool 不会写。脚本从本次构建所用的 SDK 读取真实值并补上（Linux 上读 xtool 的 Darwin SDK，macOS 上读 `xcode-select` 选中的 Xcode，也可以用 `XCODE_DEVELOPER` 指定）。二进制记录的 SDK 版本和这个 SDK 不一致时直接报错，避免写入与实际不符的值。`BuildMachineOSBuild` 是 Mac 的系统构建号，只在 macOS 上写入。
+- 小组件的 `CFBundleSupportedPlatforms` 和 `UIDeviceFamily` 由 Xcode 自动添加，xtool 不会，所以直接写在 `Support/Widget-Info.plist` 里。
+- 包未签名。上传前要用 App Store 发布证书和两个 Bundle ID 各自的描述文件重新签名（先签小组件再签 App）。
 
 升级 xtool 时，需要同步修改 `.github/actions/setup-xtool/action.yml` 里的版本号和 SHA-256 摘要。摘要可以用 `gh` 查：
 

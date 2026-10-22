@@ -32,6 +32,7 @@ swift test --package-path Packages/MicYouCore           # app logic tests (prese
 swift test --package-path Packages/MicYouProtocol --filter Framing/tcpHeaderIsBigEndian   # single test
 Tools/check-strings.py                                  # localization keys, format specifiers and unused keys across all three languages
 Tools/build-livecontainer.sh                            # release IPA plus a LiveContainer IPA without the widget
+Tools/build-testflight.sh                               # unsigned TestFlight IPA with bundle ID com.nagishirazu.micyou and the commit count as build number
 Tools/appintents-metadata.py                            # after xtool dev build, writes the App Intents index from const values; --check for staleness
 Tools/verify-ipa.sh                                     # checks the extension, the SDK version >= 26 and the App Intents index
 python3 Tools/mock_receiver.py --mdns --toggle-mute 5   # fake desktop receiver, saves received PCM as WAV
