@@ -78,7 +78,11 @@ if not sdk.is_dir():
     fail(f"no iPhoneOS SDK in {developer}, set XCODE_DEVELOPER")
 settings = json.loads((sdk / "SDKSettings.json").read_text())
 sdk_build = plistlib.loads((sdk / "System/Library/CoreServices/SystemVersion.plist").read_bytes())["ProductBuildVersion"]
-xcode = plistlib.loads((developer.parent / "Info.plist").read_bytes())
+# Xcode's own Info.plist names the Xcode that built Xcode, one build earlier and unreleased, and App Store
+# Connect then treats the app as built with a beta; version.plist has this Xcode's version and build
+xcode = plistlib.loads((developer.parent / "version.plist").read_bytes())
+version = [int(part) for part in xcode["CFBundleShortVersionString"].split(".")] + [0, 0]
+xcode_version = f"{version[0]:02d}{version[1]}{version[2]}"  # 26.6 is 2660, 26.0.1 is 2601
 build_keys = {
     "DTCompiler": "com.apple.compilers.llvm.clang.1_0",
     "DTPlatformBuild": sdk_build,
@@ -86,8 +90,8 @@ build_keys = {
     "DTPlatformVersion": settings["Version"],
     "DTSDKBuild": sdk_build,
     "DTSDKName": settings["CanonicalName"],
-    "DTXcode": xcode["DTXcode"],
-    "DTXcodeBuild": xcode["DTXcodeBuild"],
+    "DTXcode": xcode_version,
+    "DTXcodeBuild": xcode["ProductBuildVersion"],
 }
 if machine_build:
     build_keys["BuildMachineOSBuild"] = machine_build
@@ -117,7 +121,7 @@ for bundle, executable in [(app, "MicYou"), (widget, "MicYouWidget")]:
     if old_id in text:
         fail(f"{index} still names {old_id}")
     index.write_text(text)
-    print(f"{bundle.name}: {plist['CFBundleIdentifier']} ({plist['CFBundleVersion']}), {settings['CanonicalName']}, Xcode {xcode['DTXcodeBuild']}")
+    print(f"{bundle.name}: {plist['CFBundleIdentifier']} ({plist['CFBundleVersion']}), {settings['CanonicalName']}, Xcode {xcode['CFBundleShortVersionString']} {xcode['ProductBuildVersion']}")
 EOF
 
 # Compressed like the release IPA
