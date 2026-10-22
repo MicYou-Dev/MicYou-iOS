@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Checks the IPAs from build-livecontainer.sh, needs macOS for PlistBuddy and vtool
 # The widget must survive linking (see docs/DEVELOPMENT.md), carry the app's version,
-# the binary must record an SDK with Liquid Glass, the App Intents index must match this build
+# the binary must record an SDK with Liquid Glass, both bundles must carry a privacy manifest,
+# the App Intents index must match this build
 # and the intents must be linked, and the LiveContainer IPA must have no extensions
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -32,6 +33,7 @@ sdk=$(xcrun vtool -show-build "$app/MicYou" | awk '/sdk/ { print $2; exit }')
 
 for bundle in "$app" "$widget"; do
     test -f "$bundle/Metadata.appintents/extract.actionsdata" || fail "App Intents index missing in $(basename "$bundle")"
+    plutil -lint "$bundle/PrivacyInfo.xcprivacy" >/dev/null || fail "Privacy manifest missing or invalid in $(basename "$bundle")"
 done
 python3 Tools/appintents-metadata.py --configuration Release --check || fail "App Intents index is out of date, run Tools/appintents-metadata.py and commit it"
 # Release strips local symbols, the type names stay in the Swift metadata

@@ -48,6 +48,14 @@ iOS 只从 `.app` 里的 `Metadata.appintents` 索引读取 App Intents。Xcode 
 - App 和 `MicYouShared` 都以静态库形式链接，没被引用的归档成员会整个被丢掉，系统即使读到索引也找不到类型。`MicYouApp.init` 里调用 `MicYouShortcuts.updateAppShortcutParameters()` 保证意图被链接进 App，小组件则因为按钮直接引用意图而链接进来；所有意图要放在同一个文件里。
 - 锁屏小组件不能放按钮，仍用 `widgetURL` 打开 `micyou://`；主屏幕快捷操作和 `micyou://` 链接也照旧走 `AppModel.handle(_:)`。
 
+### 隐私清单
+
+App Store 和 TestFlight 要求每个 bundle 用 `PrivacyInfo.xcprivacy` 声明追踪、收集的数据和用到的「需要说明理由的 API」。两份清单提交在 `Resources/Privacy/<可执行文件名>/PrivacyInfo.xcprivacy`，同样由 `xtool.yml` 复制到 `.app` 和 `.appex` 根目录。
+
+- 不追踪、不收集数据：音频只发给局域网或 USB 上用户自己的电脑，检查更新只请求 GitHub API，日志由用户自己导出分享。App Store Connect 的隐私标签对应填「不收集数据」。
+- App 声明两类 API：`UserDefaults`（`CA92.1`，只读写本 App 的设置）和系统启动时间（`35F9.1`，`ProcessInfo.systemUptime` 与 `DispatchTime` 用来计算电平节流、增益建议和心跳超时的时间间隔）。小组件不用这些 API，清单里列表为空。
+- 用到新的同类 API（文件时间戳、磁盘空间、键盘列表等）时，记得在对应的清单里补上类别和理由，理由代码查 Apple 文档「Describing use of required reason API」。
+
 ### 免费开发者账号限制
 
 - 免费账号每 7 天最多只能创建 10 个 App ID（删掉旧的也不会退还额度），主应用和小组件扩展各占 1 个。
@@ -78,7 +86,7 @@ git push origin v1.2.0
 - 先跑一遍与 `check.yml` 相同的测试和本地化检查。
 - 把标签里的数字部分写入 `CFBundleShortVersionString`，把总提交数写入 `CFBundleVersion`（只在 CI 里改，不回写仓库）。
 - 生成未签名的 `MicYou-<版本>.ipa`、去掉小组件的 `MicYou-<版本>-LiveContainer.ipa` 和 `SHA256SUMS.txt`。release 构建在链接时去掉本地符号和调试信息（`Package.swift` 里的 `stripSymbols`），二进制体积减半，代价是崩溃日志里应用自己的栈帧只显示地址；xtool 打出的 IPA 不压缩，`Tools/build-livecontainer.sh` 会重新压缩一遍，下载体积也减半。
-- 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、App Intents 索引存在且没有过期、意图类型被链接进二进制、LiveContainer 包里不含扩展。
+- 用 `Tools/verify-ipa.sh` 检查完整包里有小组件扩展、二进制记录的 SDK 版本不低于 26（否则没有液态玻璃）、两个 bundle 都有合法的隐私清单、App Intents 索引存在且没有过期、意图类型被链接进二进制、LiveContainer 包里不含扩展。
 - 收集上一个 `v*` 标签以来的提交标题作为发布说明，创建 GitHub Release。
 
 升级 xtool 时，需要同步修改 `.github/actions/setup-xtool/action.yml` 里的版本号和 SHA-256 摘要。摘要可以用 `gh` 查：

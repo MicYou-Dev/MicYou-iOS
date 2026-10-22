@@ -10,6 +10,8 @@ resources:
 - Resources/AppIcon/MicYou76x76@2x~ipad.png
 # App Intents index written by Tools/appintents-metadata.py, xtool cannot run Xcode's processor
 - Resources/AppIntents/MicYou/Metadata.appintents
+# Privacy manifest: no tracking, no collected data, and the reasons for required reason APIs
+- Resources/Privacy/MicYou/PrivacyInfo.xcprivacy
 # Shown in full on the licenses page
 - LICENSE
 - LICENSE-EXCEPTION
@@ -23,6 +25,7 @@ extensions:
   resources:
   # Its own App Intents index, for the intents its buttons and controls perform
   - Resources/AppIntents/MicYouWidget/Metadata.appintents
+  - Resources/Privacy/MicYouWidget/PrivacyInfo.xcprivacy
   - Support/Localization/en.lproj
   - Support/Localization/zh-Hans.lproj
   - Support/Localization/zh-Hant.lproj
