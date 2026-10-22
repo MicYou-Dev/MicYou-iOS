@@ -154,7 +154,7 @@
 
 "about.title" = "关于";
 "about.version.value" = "版本 %1$@（%2$@）";
-"about.tagline" = "把 iPhone 当作电脑的麦克风";
+"about.tagline" = "把 %@ 当作电脑的麦克风";
 "about.copy" = "拷贝";
 "about.protocol" = "协议";
 "about.protocol.value" = "MicYou 2.x";
@@ -198,11 +198,11 @@
 "about.footer" = "MicYou iOS 版是基于 GPL 3.0 或更高版本发布的自由软件，并附加允许通过 App Store 与 TestFlight 分发的例外条款，通信协议与客户端逻辑移植自 LanRhyme 及贡献者开发的 MicYou。";
 
 "welcome.title" = "欢迎使用 MicYou";
-"welcome.subtitle" = "只需三步，把 iPhone 当作电脑麦克风使用。";
+"welcome.subtitle" = "只需三步，把 %@ 当作电脑麦克风使用。";
 "welcome.desktop.title" = "配置电脑端";
 "welcome.desktop.text" = "在电脑上安装 MicYou 桌面端和虚拟声卡（Windows 可用 VB-CABLE，macOS 可用 BlackHole，Linux 无需额外安装）。";
 "welcome.network.title" = "通过 Wi-Fi 或 USB 连接";
-"welcome.network.text" = "在电脑端选择 Wi-Fi 模式，然后在手机上选择附近的电脑或手动输入 IP 地址；也可以连接数据线，并在电脑端选择 USB 模式。最后轻点“连接”。";
+"welcome.network.text" = "在电脑端选择 Wi-Fi 模式，然后在 App 中选择附近的电脑或手动输入 IP 地址；也可以连接数据线，并在电脑端选择 USB 模式。最后轻点“连接”。";
 "welcome.apps.title" = "在软件中选择麦克风";
 "welcome.apps.text" = "在语音、会议或游戏软件中，将麦克风输入设备设为虚拟声卡（如 CABLE Output 或 BlackHole 2ch）。";
 "welcome.start" = "开始使用";

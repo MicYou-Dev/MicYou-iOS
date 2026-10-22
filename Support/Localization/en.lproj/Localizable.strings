@@ -154,7 +154,7 @@
 
 "about.title" = "About";
 "about.version.value" = "Version %1$@ (%2$@)";
-"about.tagline" = "Use your iPhone as a microphone for your computer";
+"about.tagline" = "Use your %@ as a microphone for your computer";
 "about.copy" = "Copy";
 "about.protocol" = "Protocol";
 "about.protocol.value" = "MicYou 2.x";
@@ -198,7 +198,7 @@
 "about.footer" = "MicYou for iOS is free software released under the GPL 3.0 or later, with an additional permission for distribution through the App Store and TestFlight. Its protocol implementation is ported from MicYou by LanRhyme and contributors.";
 
 "welcome.title" = "Welcome to MicYou";
-"welcome.subtitle" = "Use your iPhone as your computer's microphone in three steps.";
+"welcome.subtitle" = "Use your %@ as your computer's microphone in three steps.";
 "welcome.desktop.title" = "Set Up Your Computer";
 "welcome.desktop.text" = "Install the MicYou desktop app and a virtual audio device (such as VB-CABLE on Windows or BlackHole on macOS; none needed on Linux).";
 "welcome.network.title" = "Connect over Wi-Fi or USB";
