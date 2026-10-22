@@ -76,6 +76,7 @@ States `idle → connecting → streaming ⇄ reconnecting(n) → failed`; recon
 ## Conventions
 
 - User-visible strings go only through `Sources/MicYouShared/L10n.swift`; to add one: add the key to all three `Support/Localization/*.lproj/Localizable.strings` → add a property in `L10n.swift` → run `Tools/check-strings.py`; full sentences end with a period, buttons and short labels have no punctuation
+- The home screen has a single column layout and, for landscape windows at least 860 pt wide (iPad), a two column one chosen by `HomeLayout.isWide`; `IdleView` and `SessionView` build both from the same subviews, so check both after changing either
 - Display text shared by the UI and the Live Activity (codec names, transport modes) lives in `Views/Common/StreamText.swift`
 - Settings explain themselves with a toggle subtitle or a `SettingHint` under the row, which follows the current choice; a conflicting combination gets a warning hint with a button that fixes it. Avoid long section footers
 - Animation durations and curves come from `Motion` in `Views/Common/Motion.swift`; appear and disappear with `adaptiveTransition` / `adaptiveAnimation` (they respect Reduce Motion)

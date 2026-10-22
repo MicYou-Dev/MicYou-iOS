@@ -96,6 +96,15 @@ idle -> connecting -> streaming <-> reconnecting(n)
 - 点首页卡片的“查看”或关于页的下载按钮时，先弹出 `ReleaseNotesView` 展示更新日志，底部按钮再跳转发布页。`ReleaseNotes` 把 API 返回的 `body` 拆成标题、列表项和段落，并去掉 `release.yml` 写入的 “Files” 段；只剩一个标题（“Changes”）时也一并省略。列表项开头的 `feat:`、`fix:` 等提交类型会拆出来，用 App 自己的本地化文案显示成彩色标签。行内的代码、强调和链接交给视图里的 `AttributedString(markdown:)` 渲染。走网页跳转兜底时拿不到正文，仍直接打开发布页。
 - iOS 18 起且 App 语言不是英文时，sheet 左上角有“翻译”按钮，通过 Translation 框架的 `translationTask` 把每条描述原地译成 App 语言，可切回原文；提交类型标签不参与翻译。`translationTask` 只在 iOS 18 存在，所以放在私有的 `NotesTranslation` 修饰器里，视图只拿到一个“翻译一段字符串”的函数，iOS 17 上不加修饰器也不显示按钮。在 Linux 上构建时跨模块 overlay 不会自动生效，需要显式 `import _Translation_SwiftUI`，并用 `@preconcurrency import Translation` 绕过 `TranslationSession` 不是 `Sendable` 的检查。
 
+## 布局与 iPad
+
+- iPhone 只支持竖屏；iPad 通过 `UISupportedInterfaceOrientations~ipad` 支持全部方向，立体声方向随界面旋转（见上文）。
+- 首页由 `FillingScrollView` 按窗口尺寸决定布局：默认单栏，最宽 `HomeLayout.maxWidth`（520pt）并居中；窗口横向且不窄于 860pt（如 iPad 横屏）时，把 `isWide` 传给 `IdleView` 和 `SessionView` 改为双栏，最宽 `HomeLayout.wideMaxWidth`。分屏、台前调度里的窄窗口和 iPad 竖屏仍是单栏。
+  - 待机页：左栏是目标电脑、提示卡片和传输格式，右栏是连接按钮。按钮用自定义对齐 `heroCenter` 与左栏中线对齐，下方的提示文字不参与对齐。
+  - 传输页：左栏是计时（放大 1.4 倍）和电平，右栏是提示、传输信息和输入增益。底部控制栏两种布局都保持单栏宽度。
+  - 两种布局用的是同一组子视图，调整其中一处时要同时检查另一种。
+- 首页引导的说明卡片在水平方向尽量对准被高亮的控件，不超出屏幕边缘，双栏时不会停在屏幕正中。
+
 ## 动效
 
 - 动画时长与曲线统一放在 `Views/Common/Motion.swift` 的 `Motion` 中（如 `swap`、`notice`、`bottomBar`），不在各个视图里手写 `.smooth` 或时长。

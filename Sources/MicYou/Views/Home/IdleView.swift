@@ -9,55 +9,36 @@ struct IdleView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var shownRelease: AppRelease?
+    /// Two columns in landscape on iPad: the cards on the left, the connect button on the right
+    let isWide: Bool
     let openPicker: () -> Void
     let openSettings: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
-            TargetCard(action: openPicker)
-                .tourTarget(.computer)
-            if case .failed(let message) = model.phase {
-                NoticeCard(title: L10n.Status.failed, text: message, kind: .error) {
-                    withAnimation(Motion.state) { model.clearError() }
+        Group {
+            if isWide {
+                // The button lines up with the middle of the cards, the hint below it does not count
+                HStack(alignment: .heroCenter, spacing: HomeLayout.columnSpacing) {
+                    VStack(spacing: 20) {
+                        targetCard
+                        notice
+                        FormatSummary(action: openSettings)
+                    }
+                    .frame(maxWidth: .infinity)
+                    hero
+                        .frame(maxWidth: .infinity)
                 }
-                .adaptiveTransition(.notice)
-            } else if let notice = model.notice {
-                NoticeCard(text: notice, kind: .info) {
-                    withAnimation(Motion.state) { model.notice = nil }
+                .frame(maxHeight: .infinity)
+            } else {
+                VStack(spacing: 20) {
+                    targetCard
+                    notice
+                    Spacer(minLength: 16)
+                    hero
+                    Spacer(minLength: 16)
+                    FormatSummary(action: openSettings)
                 }
-                .adaptiveTransition(.notice)
-            } else if model.showsNetworkWarning {
-                NoticeCard(
-                    title: model.network.status == .offline ? L10n.Home.offline : L10n.Home.notOnWiFi,
-                    text: L10n.Home.networkText, kind: .info,
-                    action: (L10n.Home.useUSB, { withAnimation(Motion.state) { model.selection = .usb } })
-                ) {
-                    withAnimation(Motion.state) { model.network.dismissWarning() }
-                }
-                .adaptiveTransition(.notice)
-            } else if let release = model.updates.notice {
-                NoticeCard(
-                    title: L10n.Home.updateTitle(release.version.description), text: L10n.Home.updateText, kind: .info,
-                    action: (L10n.Home.viewUpdate, { view(release) })
-                ) {
-                    withAnimation(Motion.state) { model.updates.dismissNotice() }
-                }
-                .adaptiveTransition(.notice)
             }
-            Spacer(minLength: 16)
-            VStack(spacing: 24) {
-                HeroButton(title: heroTitle, systemImage: heroSymbol, isProminent: model.canConnect, action: heroAction)
-                    .tourTarget(.connect)
-                // Kept in the layout while hidden so the button does not shift
-                Text(L10n.Home.hint)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .opacity(showsHint ? 1 : 0)
-                    .accessibilityHidden(!showsHint)
-            }
-            Spacer(minLength: 16)
-            FormatSummary(action: openSettings)
         }
         .animation(Motion.state, value: model.phase)
         .animation(Motion.state, value: model.canConnect)
@@ -65,6 +46,59 @@ struct IdleView: View {
         .animation(Motion.state, value: model.showsNetworkWarning)
         .animation(Motion.state, value: model.updates.notice)
         .releaseNotesSheet($shownRelease)
+    }
+
+    private var targetCard: some View {
+        TargetCard(action: openPicker)
+            .tourTarget(.computer)
+    }
+
+    /// The most important of the error, a message, the network warning or an update
+    @ViewBuilder
+    private var notice: some View {
+        if case .failed(let message) = model.phase {
+            NoticeCard(title: L10n.Status.failed, text: message, kind: .error) {
+                withAnimation(Motion.state) { model.clearError() }
+            }
+            .adaptiveTransition(.notice)
+        } else if let notice = model.notice {
+            NoticeCard(text: notice, kind: .info) {
+                withAnimation(Motion.state) { model.notice = nil }
+            }
+            .adaptiveTransition(.notice)
+        } else if model.showsNetworkWarning {
+            NoticeCard(
+                title: model.network.status == .offline ? L10n.Home.offline : L10n.Home.notOnWiFi,
+                text: L10n.Home.networkText, kind: .info,
+                action: (L10n.Home.useUSB, { withAnimation(Motion.state) { model.selection = .usb } })
+            ) {
+                withAnimation(Motion.state) { model.network.dismissWarning() }
+            }
+            .adaptiveTransition(.notice)
+        } else if let release = model.updates.notice {
+            NoticeCard(
+                title: L10n.Home.updateTitle(release.version.description), text: L10n.Home.updateText, kind: .info,
+                action: (L10n.Home.viewUpdate, { view(release) })
+            ) {
+                withAnimation(Motion.state) { model.updates.dismissNotice() }
+            }
+            .adaptiveTransition(.notice)
+        }
+    }
+
+    private var hero: some View {
+        VStack(spacing: 24) {
+            HeroButton(title: heroTitle, systemImage: heroSymbol, isProminent: model.canConnect, action: heroAction)
+                .tourTarget(.connect)
+                .alignmentGuide(.heroCenter) { $0[VerticalAlignment.center] }
+            // Kept in the layout while hidden so the button does not shift
+            Text(L10n.Home.hint)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .opacity(showsHint ? 1 : 0)
+                .accessibilityHidden(!showsHint)
+        }
     }
 
     private func view(_ release: AppRelease) {
@@ -88,6 +122,15 @@ struct IdleView: View {
     private func heroAction() {
         if model.canConnect { model.toggleConnection() } else { openPicker() }
     }
+}
+
+private extension VerticalAlignment {
+    /// The middle of the connect button in the two column layout, the middle of the view elsewhere
+    enum HeroCenter: AlignmentID {
+        static func defaultValue(in context: ViewDimensions) -> CGFloat { context[VerticalAlignment.center] }
+    }
+
+    static let heroCenter = VerticalAlignment(HeroCenter.self)
 }
 
 /// The large round button in the middle of the idle screen

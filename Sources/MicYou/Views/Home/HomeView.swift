@@ -13,7 +13,7 @@ struct HomeView: View {
     @State private var tourStep: TourStep?
 
     var body: some View {
-        FillingScrollView {
+        FillingScrollView { isWide in
             VStack(spacing: 20) {
                 HomeHeader(openSettings: { showSettings = true }, dim: model.isActive ? { model.setDimmed(true) } : nil) {
                     ZStack(alignment: .leading) {
@@ -33,10 +33,10 @@ struct HomeView: View {
                 // The leaving side fades out first, so the glass of both screens is never blended for long
                 ZStack {
                     if model.isActive {
-                        SessionView()
+                        SessionView(isWide: isWide)
                             .adaptiveTransition(.swap(scale: 0.96))
                     } else {
-                        IdleView(openPicker: { showPicker = true }, openSettings: { showSettings = true })
+                        IdleView(isWide: isWide, openPicker: { showPicker = true }, openSettings: { showSettings = true })
                             .adaptiveTransition(.swap(scale: 1.04))
                     }
                 }
@@ -141,6 +141,18 @@ struct HomeView: View {
 enum HomeLayout {
     /// Widest the home screen content gets, about a large phone in portrait
     static let maxWidth: CGFloat = 520
+    /// Widest the two column layout gets
+    static let wideMaxWidth: CGFloat = 1040
+    /// Room between the two columns
+    static let columnSpacing: CGFloat = 40
+    /// Room between the content and the sides of the window, more with two columns
+    static func margin(isWide: Bool) -> CGFloat { isWide ? 32 : 20 }
+
+    /// Landscape windows with room for two phone like columns, such as an iPad in landscape
+    /// Narrow windows in Split View or Stage Manager keep the single column
+    static func isWide(_ size: CGSize) -> Bool {
+        size.width > size.height && size.width >= 860
+    }
 }
 
 /// Title or status on the left and the settings button on the right
@@ -180,17 +192,18 @@ struct HomeHeader<Leading: View>: View {
 }
 
 /// Fills the screen when the content is short and scrolls when it is not, such as on small phones or at large text sizes
-/// On iPad the content keeps a phone like width in the middle instead of stretching
+/// On iPad the content keeps a phone like width in the middle instead of stretching, or splits into two columns in landscape
 struct FillingScrollView<Content: View>: View {
-    @ViewBuilder var content: Content
+    @ViewBuilder var content: (_ isWide: Bool) -> Content
 
     var body: some View {
         GeometryReader { proxy in
+            let isWide = HomeLayout.isWide(proxy.size)
             ScrollView {
-                content
-                    .padding(.horizontal, 20)
+                content(isWide)
+                    .padding(.horizontal, HomeLayout.margin(isWide: isWide))
                     .padding(.vertical, 8)
-                    .frame(maxWidth: HomeLayout.maxWidth, minHeight: proxy.size.height)
+                    .frame(maxWidth: isWide ? HomeLayout.wideMaxWidth : HomeLayout.maxWidth, minHeight: proxy.size.height)
                     .frame(maxWidth: .infinity)
             }
             .scrollBounceBehavior(.basedOnSize)
