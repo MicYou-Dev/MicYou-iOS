@@ -9,24 +9,33 @@ struct StreamCommands: Commands {
 
     var body: some Commands {
         CommandMenu(L10n.Menu.stream) {
-            Button(connectTitle) {
-                model.toggleConnection()
-            }
-            .keyboardShortcut(.return, modifiers: .command)
-            .disabled(!model.isActive && !model.canConnect)
-
-            // Command M minimizes the window on iPadOS 26
-            Button(model.isMuted ? L10n.Common.unmute : L10n.Common.mute) {
-                model.toggleMute()
-            }
-            .keyboardShortcut("m", modifiers: [.command, .shift])
-            .disabled(!model.isActive)
-
-            Button(L10n.Dim.button) {
-                model.setDimmed(true)
-            }
-            .disabled(!model.isActive || model.isDimmed)
+            StreamMenuItems(model: model)
         }
+    }
+}
+
+/// A view rather than the commands body, so titles and disabled states follow the model like any other view
+private struct StreamMenuItems: View {
+    let model: AppModel
+
+    var body: some View {
+        Button(connectTitle) {
+            model.toggleConnection()
+        }
+        .keyboardShortcut(.return, modifiers: .command)
+        .disabled(!model.isActive && !model.canConnect)
+
+        // Command M minimizes the window on iPadOS 26
+        Button(model.isMuted ? L10n.Common.unmute : L10n.Common.mute) {
+            model.toggleMute()
+        }
+        .keyboardShortcut("m", modifiers: [.command, .shift])
+        .disabled(!model.isActive)
+
+        Button(L10n.Dim.button) {
+            model.setDimmed(true)
+        }
+        .disabled(!model.isActive || model.isDimmed)
     }
 
     private var connectTitle: String {
