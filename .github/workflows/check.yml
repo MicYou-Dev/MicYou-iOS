@@ -32,7 +32,8 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: Packages/*/.build
-          key: swiftpm-${{ runner.os }}-swift6.2-${{ hashFiles('Packages/**/*.swift') }}
+          # Only the sources, the key is computed again after the tests and .build is written by root in the container
+          key: swiftpm-${{ runner.os }}-swift6.2-${{ hashFiles('Packages/*/Package.swift', 'Packages/*/Sources/**', 'Packages/*/Tests/**') }}
           restore-keys: swiftpm-${{ runner.os }}-swift6.2-
       - name: Protocol tests
         run: swift test --package-path Packages/MicYouProtocol
