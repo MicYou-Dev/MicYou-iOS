@@ -27,6 +27,7 @@ struct MicYouApp: App {
                     if let link = DeepLink(url: url) { model.handle(link) }
                 }
         }
+        .commands { StreamCommands(model: model) }
         .onChange(of: scenePhase, initial: true) { _, phase in
             // Browsing only matters while the list is visible
             if phase == .active {

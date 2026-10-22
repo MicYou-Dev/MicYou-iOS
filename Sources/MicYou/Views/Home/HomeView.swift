@@ -168,26 +168,29 @@ struct HomeHeader<Leading: View>: View {
             Spacer(minLength: 12)
             if let dim {
                 Button(action: dim) {
-                    Image(systemName: "moon.fill")
-                        .font(.title3)
-                        .frame(width: 28, height: 28)
+                    icon(L10n.Dim.button, systemImage: "moon.fill")
                 }
                 .glassButtonStyle()
                 .buttonBorderShape(.circle)
-                .accessibilityLabel(L10n.Dim.button)
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
             Button(action: openSettings) {
-                Image(systemName: "gearshape")
-                    .font(.title3)
-                    .frame(width: 28, height: 28)
+                icon(L10n.Common.settings, systemImage: "gearshape")
             }
             .glassButtonStyle()
             .buttonBorderShape(.circle)
             .tourTarget(.settings)
-            .accessibilityLabel(L10n.Common.settings)
+            .keyboardShortcut(",", modifiers: .command)
         }
         .frame(minHeight: 44)
+    }
+
+    /// The title stays in the label for VoiceOver and the list of keyboard shortcuts
+    private func icon(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .labelStyle(.iconOnly)
+            .font(.title3)
+            .frame(width: 28, height: 28)
     }
 }
 

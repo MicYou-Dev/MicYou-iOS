@@ -278,3 +278,5 @@
 
 "dim.button" = "Black Screen";
 "dim.wake" = "Tap anywhere to wake";
+
+"menu.stream" = "Stream";

@@ -343,4 +343,9 @@ public enum L10n {
         public static var button: String { string("dim.button") }
         public static var wake: String { string("dim.wake") }
     }
+
+    public enum Menu {
+        /// The menu bar menu with the session commands on iPad
+        public static var stream: String { string("menu.stream") }
+    }
 }

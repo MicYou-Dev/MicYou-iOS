@@ -212,6 +212,7 @@ private struct TargetCard: View {
             .adaptiveAnimation(value: title)
         }
         .buttonStyle(.surface)
+        .keyboardShortcut("k", modifiers: .command)
         // Long press switches between nearby and recent computers without opening the picker
         .contextMenu { quickSwitch }
         .accessibilityElement(children: .ignore)
