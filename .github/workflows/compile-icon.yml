@@ -2,14 +2,20 @@ name: Compile icon
 # actool only runs on macOS, copy the artifact into Resources/AppIcon
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   actool:
     runs-on: macos-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - name: Select newest Xcode
+      - uses: actions/checkout@v7
+      # The same choice as .github/actions/setup-xtool, a beta actool may write an icon released iOS cannot read
+      - name: Select newest stable Xcode
         run: |
-          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
           echo "Using $XCODE"
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
@@ -30,7 +36,7 @@ jobs:
           ls -la out
           cat out/partial.plist
           xcrun assetutil --info out/Assets.car | head -80
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ios-assets
           path: out/

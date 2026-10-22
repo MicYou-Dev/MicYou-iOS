@@ -1,23 +1,47 @@
 name: Check
 # The app itself needs a Darwin SDK, these run on plain Linux
 on:
+  # Pull requests cover other branches, pushing a branch with an open PR would otherwise run everything twice
   push:
+    branches:
+      - swiftui
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
   # Release runs the same checks before building
   workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   protocol:
     runs-on: ubuntu-latest
     container: swift:6.2
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
+        with:
+          path: Packages/*/.build
+          key: swiftpm-${{ runner.os }}-swift6.2-${{ hashFiles('Packages/**/*.swift') }}
+          restore-keys: swiftpm-${{ runner.os }}-swift6.2-
       - name: Protocol tests
         run: swift test --package-path Packages/MicYouProtocol
       - name: Core tests
         run: swift test --package-path Packages/MicYouCore
   strings:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Localization tables
         run: python3 Tools/check-strings.py

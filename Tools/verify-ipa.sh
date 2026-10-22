@@ -37,9 +37,12 @@ for bundle in "$app" "$widget"; do
 done
 python3 Tools/appintents-metadata.py --configuration Release --check || fail "App Intents index is out of date, run Tools/appintents-metadata.py and commit it"
 # Release strips local symbols, the type names stay in the Swift metadata
-# Every intent must be in both binaries, the widget builds them and the app performs them
+# Every intent in the index must be in both binaries, the widget builds them and the app performs them
+intents=$(python3 -c 'import json, sys; print(*json.load(open(sys.argv[1]))["actions"])' \
+    Resources/AppIntents/MicYou/Metadata.appintents/extract.actionsdata)
+[ -n "$intents" ] || fail "App Intents index lists no intents"
 for binary in "$app/MicYou" "$widget/MicYouWidget"; do
-    for intent in StartStreamingIntent StopStreamingIntent ToggleMuteIntent ToggleConnectionIntent; do
+    for intent in $intents; do
         # grep -q would stop reading at the first match, strings then fails writing and pipefail reports it
         strings "$binary" | grep -x "$intent" >/dev/null || fail "$intent was not linked into $(basename "$binary")"
     done

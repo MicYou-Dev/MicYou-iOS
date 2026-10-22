@@ -33,7 +33,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Full history for the build number and the release notes
           fetch-depth: 0
@@ -94,13 +94,13 @@ jobs:
           cp xtool/MicYou-LiveContainer.ipa "dist/MicYou-$VERSION-LiveContainer.ipa"
           (cd dist && shasum -a 256 *.ipa > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: MicYou-${{ steps.version.outputs.version }}
           path: dist/
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: MicYou-${{ steps.version.outputs.version }}-TestFlight
           path: xtool/MicYou-TestFlight.ipa
@@ -110,14 +110,15 @@ jobs:
     needs: build
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: MicYou-${{ needs.build.outputs.version }}
           path: dist
@@ -143,13 +144,14 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
           FLAGS=()
           [ "$PRERELEASE" = true ] && FLAGS+=(--prerelease)
           gh release create "$GITHUB_REF_NAME" dist/* \
             --verify-tag \
-            --title "${{ needs.build.outputs.version }}" \
+            --title "$VERSION" \
             --notes-file notes.md \
             "${FLAGS[@]}"
 
@@ -165,9 +167,9 @@ jobs:
     # The only job that can read the signing secrets
     environment: appstore
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: MicYou-${{ needs.build.outputs.version }}-TestFlight
           path: xtool

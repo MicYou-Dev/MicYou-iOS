@@ -56,7 +56,7 @@ runs:
     # A cold build spends most of its time precompiling the SDK modules, they live under .build
     # Tag builds can only read caches saved on the default branch, Build keeps those warm
     - name: Restore build cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: .build
         key: xtool-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.id }}-xtool${{ inputs.xtool-version }}-${{ hashFiles('Package.swift', 'Packages/*/Package.swift', 'Sources/**', 'Packages/*/Sources/**') }}
