@@ -98,7 +98,7 @@ git push origin v1.2.0
 - 构建号和 `release.yml` 一样取提交数（`git rev-list --count HEAD`），App 和小组件写入同一个值。App Store Connect 要求每次上传的构建号都比上一次大，同一提交重复上传时可用 `TESTFLIGHT_BUILD` 指定，如 `123.1`。
 - 构建完成后才在包里改 Bundle ID，并同步替换两份 App Intents 索引里的 ID，所以 `xtool.yml` 和提交的索引始终是侧载用的 `com.chouchiu.micyou`。
 - App Store Connect 会检查 Xcode 写入每个 bundle 的 `DTXcode`、`DTSDKName` 等字段，xtool 不会写。脚本从本次构建所用的 SDK 读取真实值并补上（Linux 上读 xtool 的 Darwin SDK，macOS 上读 `xcode-select` 选中的 Xcode，也可以用 `XCODE_DEVELOPER` 指定）。二进制记录的 SDK 版本和这个 SDK 不一致时直接报错，避免写入与实际不符的值。`BuildMachineOSBuild` 是 Mac 的系统构建号，只在 macOS 上写入。
-- 小组件的 `CFBundleSupportedPlatforms` 和 `UIDeviceFamily` 由 Xcode 自动添加，xtool 不会，所以直接写在 `Support/Widget-Info.plist` 里。
+- 小组件的 `CFBundleSupportedPlatforms`、`UIDeviceFamily` 和 `UIRequiredDeviceCapabilities`（`arm64`，缺少时上传校验报 90502）由 Xcode 自动添加，xtool 只给 App 加，所以直接写在 `Support/Widget-Info.plist` 里。
 - 包未签名。`Tools/sign-ipa.sh` 在 macOS 上用发布证书和两份 App Store 描述文件签名（先签小组件再签 App）。`release.yml` 发布 GitHub Release 后会签名并上传 TestFlight；设置 `TESTFLIGHT_IPA` 时脚本不再构建，而是转换这个已有的 IPA 并保留其构建号，`release.yml` 就是这样用的。配置见 `docs/APPSTORE.md`。
 
 升级 xtool 时，需要同步修改 `.github/actions/setup-xtool/action.yml` 里的版本号和 SHA-256 摘要。摘要可以用 `gh` 查：
